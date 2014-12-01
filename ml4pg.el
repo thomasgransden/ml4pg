@@ -1,4 +1,4 @@
-(defvar home-dir "/home/jonathan/Desktop/ML4PG_distribution/ML4PG-weka-new/")
+(defvar home-dir "/home/chris/Programming/ML4PG/")
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 (defvar *matlab-program* nil)
 
@@ -8,7 +8,7 @@
   (interactive)
   (let ((smode (read-string "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n): ")))
     (setq mode smode)
-    (cond ((string= mode "s") 
+    (cond ((string= mode "s")
 	   (progn  (load-file (concat home-dir "ssreflect/auxiliary_files.el"))
 		   (load-file (concat home-dir "ssreflect/feature_extraction_2.el"))
 		   (load-file (concat home-dir "ssreflect/matlab_interaction.el"))
@@ -28,7 +28,7 @@
 		   (load-file (concat home-dir "ssreflect/clusterdigraph.el"))
 		   (load-file (concat home-dir "ssreflect/trees.el"))
 		  ;; (init-clusters)
-		   
+
 		   ))
 	  ((string= mode "n") nil)
 	  (t (progn (load-file (concat home-dir "coq/auxiliary_files.el"))
@@ -38,7 +38,7 @@
 		   (load-file (concat home-dir "coq/menus.el"))
 		   (load-file (concat home-dir "coq/storage.el"))
 		   (load-file (concat home-dir "coq/save_lemmas.el"))
-		   (load-file (concat home-dir "coq/weka.el"))  
+		   (load-file (concat home-dir "coq/weka.el"))
 		   (load-file (concat home-dir "ssreflect/term-tree-definition.el"))
 		   (load-file (concat home-dir "ssreflect/term-tree-theorem.el"))
 		   (load-file (concat home-dir "ssreflect/extraction.el"))
@@ -60,9 +60,3 @@
              '("\\.v\\'" . (lambda ()
 			     (progn (coq-mode) (select-mode) (delete-other-windows) (previous-buffer) (previous-buffer))
                                )))
-
-
-
-
-
-
