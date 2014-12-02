@@ -5,7 +5,7 @@
 
 (with-current-buffer "*display*"
     (insert-button "test" 'action (lambda (x) 
-				    (progn (switch-to-buffer-other-window "*display2*")
-					   (insert "hola")))
-		   'face (list 'link)
-		   'follow-link t))
+                    (progn (switch-to-buffer-other-window "*display2*")
+                       (insert "hola")))
+           'face (list 'link)
+           'follow-link t))

@@ -1,24 +1,24 @@
 (defun weka (n)
   (let ((alg (cond ((string= "k" algorithm) "SimpleKMeans")
-		   ((string= "e" algorithm) "EM")
-		   ((string= "f" algorithm) "FarthestFirst")
-	 )))
+           ((string= "e" algorithm) "EM")
+           ((string= "f" algorithm) "FarthestFirst")
+     )))
     ;(comint-send-string (get-buffer-process "*matlab*") 
-;		      (concat "load " (expand-file-name "temp.csv") "; [t1,X,t3] = princomp(temp); X=normalize(X); csvwrite('" 
-;			      (expand-file-name "temp2.csv") "',X);
+;             (concat "load " (expand-file-name "temp.csv") "; [t1,X,t3] = princomp(temp); X=normalize(X); csvwrite('" 
+;                 (expand-file-name "temp2.csv") "',X);
 ;"))
     
     (shell-command  (concat "sleep 1; cat " home-dir "aux_files/headers.txt " (expand-file-name "temp.csv") " > " (expand-file-name "temp3.arff")))
     (shell-command (concat "java -classpath " 
-			 *weka-dir*
-			 " weka.filters.unsupervised.attribute.AddCluster -W \"weka.clusterers." alg " -N " (format "%s" n) " -S 42\" -I last -i "
-			 (expand-file-name "temp3.arff") " -o " (expand-file-name "out.arff")))
+             *weka-dir*
+             " weka.filters.unsupervised.attribute.AddCluster -W \"weka.clusterers." alg " -N " (format "%s" n) " -S 42\" -I last -i "
+             (expand-file-name "temp3.arff") " -o " (expand-file-name "out.arff")))
     (shell-command (concat "tail -n +37 "
-			   (expand-file-name "out.arff") " > " (expand-file-name "out_bis.arff")))
+               (expand-file-name "out.arff") " > " (expand-file-name "out_bis.arff")))
    (shell-command (concat "java -classpath " 
-			 *weka-dir*
-			 " weka.attributeSelection.CfsSubsetEval -M -s \"weka.attributeSelection.BestFirst -D 1 -N 5\" -i "
-			 (expand-file-name "temp3.arff") " > " (expand-file-name "res.txt"))) ))
+             *weka-dir*
+             " weka.attributeSelection.CfsSubsetEval -M -s \"weka.attributeSelection.BestFirst -D 1 -N 5\" -i "
+             (expand-file-name "temp3.arff") " > " (expand-file-name "res.txt"))) ))
 
 
 (defun why-are-similar ()
@@ -35,7 +35,7 @@
  (let ((comma (search "," temp)))
    (if comma
        (extract-selected-attributes (subseq temp (+ 1 comma)) 
-				    (append res (list (car (read-from-string (subseq temp 0 comma))))))
+                    (append res (list (car (read-from-string (subseq temp 0 comma))))))
      (append res (list (car (read-from-string temp)))))))
 
 
@@ -66,7 +66,7 @@
 
 (defun extract-clusters-from-file (clusters)
   (let* ((temp (0_n clusters))
-	 (lines (read-lines (expand-file-name "out_bis.arff"))))
+     (lines (read-lines (expand-file-name "out_bis.arff"))))
     (lines-to-clusters lines)))
 
 
@@ -88,7 +88,7 @@
        (temp2 nil))
       ((endp temp) temp2)
       (if (equal (car temp) n)
-	  (setf temp2 (append temp2 (list i))))))
+      (setf temp2 (append temp2 (list i))))))
        
 
 (defun remove-alone (list)
@@ -96,7 +96,7 @@
        (temp2 nil))
       ((endp temp) temp2)
       (if (not (= (length (car temp)) 1))
-	  (setf temp2 (append temp2 (list (car temp)))))))
+      (setf temp2 (append temp2 (list (car temp)))))))
 
 
 

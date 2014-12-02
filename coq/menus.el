@@ -5,89 +5,89 @@
     ("Configuration" 
      ("ML system"
 ;       ["Matlab" (change-ml-system "m")
-;	:selected (string= ml-system "m")
-;	:style toggle
-;	:help "Use Matlab as ML system"]
+;   :selected (string= ml-system "m")
+;   :style toggle
+;   :help "Use Matlab as ML system"]
        ["Weka" (change-ml-system "w")
-	:selected (string= ml-system "w")
-	:style toggle
-	:help "Use Weka as ML system"])
+    :selected (string= ml-system "w")
+    :style toggle
+    :help "Use Weka as ML system"])
      ("Level"
        ["Goal level" (change-level "g")
-	:selected (string= level "g")
-	:style toggle
-	:help "Use goal level"]
+    :selected (string= level "g")
+    :style toggle
+    :help "Use goal level"]
        ["Tactic level" (change-level "t")
-	:selected (string= level "t")
-	:style toggle
-	:help "Use tactic level"]
+    :selected (string= level "t")
+    :style toggle
+    :help "Use tactic level"]
        ["Proof tree level" (change-level "p")
-	:selected (string= level "p")
-	:style toggle
-	:help "Use Proof tree level"])
+    :selected (string= level "p")
+    :style toggle
+    :help "Use Proof tree level"])
      ("Algorithm"
        ["K-means" (change-algorithm "k")
-	:selected (string= algorithm "k")
-	:style toggle
-	:help "Use k-means algorithm"]
+    :selected (string= algorithm "k")
+    :style toggle
+    :help "Use k-means algorithm"]
        ["Gaussian" (change-algorithm "g")
-	:selected (string= algorithm "g")
-	:style toggle
-	:active (string= ml-system "m")
-	:help "Use Gaussian algorithm"]
+    :selected (string= algorithm "g")
+    :style toggle
+    :active (string= ml-system "m")
+    :help "Use Gaussian algorithm"]
        ["EM" (change-algorithm "e")
-	:selected (string= algorithm "e")
-	:style toggle
-	:active (string= ml-system "w")
-	:help "Use Simple EM algorithm"]
+    :selected (string= algorithm "e")
+    :style toggle
+    :active (string= ml-system "w")
+    :help "Use Simple EM algorithm"]
        ["FarthestFirst" (change-algorithm "f")
-	:selected (string= algorithm "f")
-	:style toggle
-	:active (string= ml-system "w")
-	:help "Use FarhestFirst algorithm"])
+    :selected (string= algorithm "f")
+    :style toggle
+    :active (string= ml-system "w")
+    :help "Use FarhestFirst algorithm"])
       ("Granularity"
        ["1"  (change-granularity 1)
-	:selected (eq granularity-level 1)
-	:style toggle
-	:help "We will use 3 clusters"]
+    :selected (eq granularity-level 1)
+    :style toggle
+    :help "We will use 3 clusters"]
        ["2"  (change-granularity 2)
-	:selected (eq granularity-level 2)
-	:style toggle
-	:help "We will use 5 clusters"]
+    :selected (eq granularity-level 2)
+    :style toggle
+    :help "We will use 5 clusters"]
        ["3"  (change-granularity 3)
-	:selected (eq granularity-level 3)
-	:style toggle
-	:help "We will use 10 clusters"]
+    :selected (eq granularity-level 3)
+    :style toggle
+    :help "We will use 10 clusters"]
        ["4"  (change-granularity 4)
-	:selected (eq granularity-level 4)
-	:style toggle
-	:help "We will use 15 clusters"]
+    :selected (eq granularity-level 4)
+    :style toggle
+    :help "We will use 15 clusters"]
        ["5"  (change-granularity 5)
-	:selected (eq granularity-level 5)
-	:style toggle
-	:help "We will use 20 clusters"])
+    :selected (eq granularity-level 5)
+    :style toggle
+    :help "We will use 20 clusters"])
       ("Frequencies"
        ["1" (change-frequency 1)
-	:selected (eq frequency-precision 1)
-	:style toggle
-	:help "The experiments will be run 100 times"]
+    :selected (eq frequency-precision 1)
+    :style toggle
+    :help "The experiments will be run 100 times"]
        ["2" (change-frequency 2)
-	:selected (eq frequency-precision 2)
-	:style toggle
-	:help "The experiments will be run 500 times"]
+    :selected (eq frequency-precision 2)
+    :style toggle
+    :help "The experiments will be run 500 times"]
        ["3" (change-frequency 3)
-	:selected (eq frequency-precision 3)
-	:style toggle
-	:help "The experiments will be run 1000 times"])
+    :selected (eq frequency-precision 3)
+    :style toggle
+    :help "The experiments will be run 1000 times"])
     ;  ["Iterative search of similarities" (change-iterative-search)
-	;:selected iterative
-	;:style toggle
-	;:available (string= ml-system "m")
-	;:help "With this option, the search of similarities is iterative"]
+    ;:selected iterative
+    ;:style toggle
+    ;:available (string= ml-system "m")
+    ;:help "With this option, the search of similarities is iterative"]
     ;["Automatically export proved theorems" (change-save)
-	;:selected save-automatically
-	;:style toggle
-	;:help "With this option, when a theorem is proved its information is automatically saved"]
+    ;:selected save-automatically
+    ;:style toggle
+    ;:help "With this option, when a theorem is proved its information is automatically saved"]
 )
     ("Generate Similarity graph"
        ["Similarity graph of definitions" (dependencygraph-defs)]
@@ -117,34 +117,34 @@
     (easy-menu-remove-item nil '("Statistics") "Activate Icons")
     (define-key coq-mode-map [tool-bar statistical-hint-statements]
       (list 'menu-item "Similar Theorems" 'show-similarities-statement
-		  :help "Similar Theorems"
-		  :image (list 'image :type 'xpm 
-				:file (concat home-dir "icons/sh-hint-thm.xpm"))))
+          :help "Similar Theorems"
+          :image (list 'image :type 'xpm 
+                :file (concat home-dir "icons/sh-hint-thm.xpm"))))
     (define-key coq-mode-map [tool-bar clustering-statements]
       (list 'menu-item "Clustering Statements" 'cluster-statements
-		  :help "Clustering Statements"
-		  :image (list 'image :type 'xpm 
-				:file (concat home-dir "icons/clustering-thms.xpm"))))
+          :help "Clustering Statements"
+          :image (list 'image :type 'xpm 
+                :file (concat home-dir "icons/clustering-thms.xpm"))))
     (define-key coq-mode-map [tool-bar statistical-hint-defs]
       (list 'menu-item "Similar Definitions" 'show-similarities-last-def
-		  :help "Similar Definitions"
-		  :image (list 'image :type 'xpm 
-				:file (concat home-dir "icons/sh-hint-def.xpm"))))
+          :help "Similar Definitions"
+          :image (list 'image :type 'xpm 
+                :file (concat home-dir "icons/sh-hint-def.xpm"))))
     (define-key coq-mode-map [tool-bar clustering-defs]
       (list 'menu-item "Clustering Definitions" 'cluster-definitions
-		  :help "Clustering Definitions"
-		  :image (list 'image :type 'xpm 
-				:file (concat home-dir "icons/clustering-defs.xpm"))))
+          :help "Clustering Definitions"
+          :image (list 'image :type 'xpm 
+                :file (concat home-dir "icons/clustering-defs.xpm"))))
     (define-key coq-mode-map [tool-bar statistical-hint]
       (list 'menu-item "Statistical Hint" 'show-clusters-of-theorem
-		  :help "Statistical Hint"
-		  :image (list 'image :type 'xpm 
-				:file (concat home-dir "icons/sh-hint.xpm"))))
+          :help "Statistical Hint"
+          :image (list 'image :type 'xpm 
+                :file (concat home-dir "icons/sh-hint.xpm"))))
     (define-key coq-mode-map [tool-bar clustering]
       (list 'menu-item "Clustering" 'show-clusters-bis
-		  :help "Clustering"
-		  :image (list 'image :type 'xpm 
-				:file (concat home-dir "icons/clustering.xpm"))))
+          :help "Clustering"
+          :image (list 'image :type 'xpm 
+                :file (concat home-dir "icons/clustering.xpm"))))
     
     ))
 
@@ -170,8 +170,8 @@
   (setq ml-system s)
   (setq algorithm "k")
   (cond ((string= s "w")
-	 (setq iterative nil)
-	 ))
+     (setq iterative nil)
+     ))
   )
   
 (defun change-granularity (n)
@@ -192,38 +192,38 @@
 (defun change-algorithm-interactive ()
   (interactive)
   (let ((alg (read-string 
-	      "What algorithm do you want to use (k-means -> k, Gaussian -> g): ")))
+          "What algorithm do you want to use (k-means -> k, Gaussian -> g): ")))
     (setf algorithm (cond ((string= "g" alg) "g") 
-			  ((string= "k" alg) "k")
-			  (t algorithm)))))
+              ((string= "k" alg) "k")
+              (t algorithm)))))
 
 (defun change-granularity-interactive ()
   (interactive)
   (let ((alg (read-string 
-	      "Introduce the granularity level (values from 1 to 5): ")))
+          "Introduce the granularity level (values from 1 to 5): ")))
     (setf granularity-level (cond ((string= "1" alg) 1) 
-				  ((string= "2" alg) 2)
-				  ((string= "3" alg) 3)
-				  ((string= "4" alg) 4)
-				  ((string= "5" alg) 5)
-				  (t granularity-level)))))
+                  ((string= "2" alg) 2)
+                  ((string= "3" alg) 3)
+                  ((string= "4" alg) 4)
+                  ((string= "5" alg) 5)
+                  (t granularity-level)))))
 
 (defun change-frequency-interactive ()
   (interactive)
   (let ((alg (read-string 
  "Introduce the precision of the frequencies that you want to obtain (values from 1 to 3): ")))
     (setf frequency-precision (cond ((string= "1" alg) 1) 
-				  ((string= "2" alg) 2)
-				  ((string= "3" alg) 3)
-				  (t frequency-precision)))))
+                  ((string= "2" alg) 2)
+                  ((string= "3" alg) 3)
+                  (t frequency-precision)))))
 
 (defun change-iterative-interactive ()
   (interactive)
   (let ((alg (read-string 
  "Do you want to perform iterative search? (yes -> y, no -> n): ")))
     (setf iterative (cond ((string= "y" alg) 1) 
-			  ((string= "n" alg) 2)
-			  (t iterative)))))
+              ((string= "n" alg) 2)
+              (t iterative)))))
 
 
 
@@ -231,12 +231,12 @@
   (interactive)
   (easy-menu-remove-item nil '("Statistics") "Show cluster libraries")
   (easy-menu-add-item nil '("Statistics") 
-		      (cons "Available libraries for clustering:"
-			   (cons ["Current" nil
-			    :selected t
-			    :style toggle
-			    :help "Use the current library for clustering"]
-			   (select-libraries)))))
+              (cons "Available libraries for clustering:"
+               (cons ["Current" nil
+                :selected t
+                :style toggle
+                :help "Use the current library for clustering"]
+               (select-libraries)))))
 
 
 (defun select-libraries ()
@@ -258,17 +258,17 @@
 (defun available-libraries ()
   (shell-command  (concat "ls " home-dir "libs/coq | grep .csv | wc -l"))
   (let ((n nil)
-	(i 0))
+    (i 0))
   (with-current-buffer "*Shell Command Output*"
     (beginning-of-buffer)
     (setq n (string-to-number (format "%s"  (read (current-buffer))))))
   (shell-command  (concat "ls " home-dir "libs/coq | grep .csv"))
   (with-current-buffer "*Shell Command Output*"
     (progn (beginning-of-buffer)
-	   (while (< i n)
-	     (let ((r (format "%s" (read (current-buffer)))))
-	       (progn (setq i (1+ i))
-		      (setq libs (append libs (list (subseq r 0 (search "." r))))))))))))
+       (while (< i n)
+         (let ((r (format "%s" (read (current-buffer)))))
+           (progn (setq i (1+ i))
+              (setq libs (append libs (list (subseq r 0 (search "." r))))))))))))
 
 
 
@@ -277,17 +277,17 @@
 (defun available-dirs ()
   (shell-command  (concat "ls -d " home-dir "libs/coq/*/ | wc -l"))
   (let ((n nil)
-	(i 0))
+    (i 0))
   (with-current-buffer "*Shell Command Output*"
     (beginning-of-buffer)
     (setq n (string-to-number (format "%s"  (read (current-buffer))))))
   (shell-command  (concat "ls -d " home-dir "libs/coq/*/"))
   (with-current-buffer "*Shell Command Output*"
     (progn (beginning-of-buffer)
-	   (while (< i n)
-	     (let ((r (format "%s" (read (current-buffer)))))
-	       (progn (setq i (1+ i))
-		      (setq dirs (append dirs (list (subseq r (length (concat home-dir "libs/coq/")) (1- (length r)))))))))))
+       (while (< i n)
+         (let ((r (format "%s" (read (current-buffer)))))
+           (progn (setq i (1+ i))
+              (setq dirs (append dirs (list (subseq r (length (concat home-dir "libs/coq/")) (1- (length r)))))))))))
   ))
 
 
@@ -304,19 +304,19 @@
 (defun libraries-dir (dir)
   (shell-command  (concat "ls " home-dir "libs/coq/" dir "/ | grep _names | wc -l"))
   (let ((n nil)
-	(i 0)
-	(temp nil))
+    (i 0)
+    (temp nil))
   (with-current-buffer "*Shell Command Output*"
     (beginning-of-buffer)
     (setq n (string-to-number (format "%s"  (read (current-buffer))))))
   (shell-command  (concat "ls " home-dir "libs/coq/" dir "/ | grep _names"))
   (with-current-buffer "*Shell Command Output*"
     (progn (beginning-of-buffer)
-	   (while (< i n)
-	     (let* ((r1 (format "%s" (read (current-buffer))))
-		    (r (subseq r1 0 (search "_names" r1))))
-	       (progn (setq i (1+ i))
-		      (setq temp (append temp (list (menu-library-dir (subseq r 0 (search "." r)) dir)))))))
+       (while (< i n)
+         (let* ((r1 (format "%s" (read (current-buffer))))
+            (r (subseq r1 0 (search "_names" r1))))
+           (progn (setq i (1+ i))
+              (setq temp (append temp (list (menu-library-dir (subseq r 0 (search "." r)) dir)))))))
 ))
   temp))
 
@@ -343,7 +343,7 @@
        (is nil))
       ((or (endp temp) is) is)
       (if (string= string (car temp))
-	  (setf is t))))
+      (setf is t))))
 
 
 (defun change-library (string)
@@ -357,7 +357,7 @@
        (temp2 nil))
       ((endp temp) (setf libs-menus temp2))
       (if (not (string= string (car temp)))
-	  (setf temp2 (append temp2 (list (car temp)))))))
+      (setf temp2 (append temp2 (list (car temp)))))))
 
 
 
@@ -365,6 +365,6 @@
   
 
 
-	  
+      
 
 

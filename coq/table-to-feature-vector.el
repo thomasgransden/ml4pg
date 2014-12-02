@@ -24,31 +24,31 @@
 
 (defun get-arity-list (i)
   (cond ((equal i 0) arity0)
-	((equal i 1) arity1)
-	((equal i 2) arity2)
-	((equal i 3) arity3)
-	((equal i 4) arity4)
-	((equal i 5) arity5)
-	))
+    ((equal i 1) arity1)
+    ((equal i 2) arity2)
+    ((equal i 3) arity3)
+    ((equal i 4) arity4)
+    ((equal i 5) arity5)
+    ))
 
 
 (defun increase-narity (i)
   (cond ((equal i 0) (setf n-arity0 (+ 1 n-arity0)))
-	((equal i 1) (setf n-arity1 (+ 1 n-arity1)))
-	((equal i 2) (setf n-arity2 (+ 1 n-arity2)))
-	((equal i 3) (setf n-arity3 (+ 1 n-arity3)))
-	((equal i 4) (setf n-arity4 (+ 1 n-arity4)))
-	((equal i 5) (setf n-arity5 (+ 1 n-arity5)))
-	)  )
+    ((equal i 1) (setf n-arity1 (+ 1 n-arity1)))
+    ((equal i 2) (setf n-arity2 (+ 1 n-arity2)))
+    ((equal i 3) (setf n-arity3 (+ 1 n-arity3)))
+    ((equal i 4) (setf n-arity4 (+ 1 n-arity4)))
+    ((equal i 5) (setf n-arity5 (+ 1 n-arity5)))
+    )  )
 
 (defun get-narity (i)
     (cond ((equal i 0) n-arity0)
-	((equal i 1) n-arity1)
-	((equal i 2) n-arity2)
-	((equal i 3) n-arity3)
-	((equal i 4) n-arity4)
-	((equal i 5) n-arity5)
-	))
+    ((equal i 1) n-arity1)
+    ((equal i 2) n-arity2)
+    ((equal i 3) n-arity3)
+    ((equal i 4) n-arity4)
+    ((equal i 5) n-arity5)
+    ))
 
 
 
@@ -64,7 +64,7 @@
 (defun remove-minus (string)
   (let ((minus (search "-" string)))
     (if minus
-	(remove-minus (concatenate 'string (subseq string 0 minus) (subseq string (1+ minus))))
+    (remove-minus (concatenate 'string (subseq string 0 minus) (subseq string (1+ minus))))
       string)))
 
 
@@ -83,34 +83,34 @@
        (temp2 ""))
       ((endp temp) (string-to-number (remove-minus-add-minus temp2)))
     (if (assoc (format "%s" (car temp)) (get-arity-list i))
-	(setf temp2 (concatenate 'string temp2 
-				 (format "%s" (cadr (assoc (format "%s" (car temp))
-						     (get-arity-list i))))))
+    (setf temp2 (concatenate 'string temp2 
+                 (format "%s" (cadr (assoc (format "%s" (car temp))
+                             (get-arity-list i))))))
       (progn 
         (cond 
-	 ((equal i 0) (setf arity0
-		   (append arity0
-			   (list (list (format "%s" (car temp)) n-arity0)))))
-	 ((equal i 1) (setf arity1
-		   (append arity1
-			   (list (list (format "%s" (car temp)) n-arity1)))))
-	 ((equal i 2) (setf arity2
-		   (append arity2
-			   (list (list (format "%s" (car temp)) n-arity2)))))
-	 ((equal i 3) (setf arity3
-		   (append arity3
-			   (list (list (format "%s" (car temp)) n-arity3)))))
-	 ((equal i 4) (setf arity4
-		   (append arity4
-			   (list (list (format "%s" (car temp)) n-arity4)))))
-	 ((equal i 5) (setf arity5
-		   (append arity5
-			   (list (list (format "%s" (car temp)) n-arity5)))))
-	)
-	(increase-narity i)
-	(setf temp2 (concatenate 'string temp2 
-				 (format "%s" (cadr (assoc (format "%s" (car temp))
-						     (get-arity-list i)))))))))))
+     ((equal i 0) (setf arity0
+           (append arity0
+               (list (list (format "%s" (car temp)) n-arity0)))))
+     ((equal i 1) (setf arity1
+           (append arity1
+               (list (list (format "%s" (car temp)) n-arity1)))))
+     ((equal i 2) (setf arity2
+           (append arity2
+               (list (list (format "%s" (car temp)) n-arity2)))))
+     ((equal i 3) (setf arity3
+           (append arity3
+               (list (list (format "%s" (car temp)) n-arity3)))))
+     ((equal i 4) (setf arity4
+           (append arity4
+               (list (list (format "%s" (car temp)) n-arity4)))))
+     ((equal i 5) (setf arity5
+           (append arity5
+               (list (list (format "%s" (car temp)) n-arity5)))))
+    )
+    (increase-narity i)
+    (setf temp2 (concatenate 'string temp2 
+                 (format "%s" (cadr (assoc (format "%s" (car temp))
+                             (get-arity-list i)))))))))))
 
 
 
@@ -120,19 +120,19 @@
        (temp2 nil))
       ((endp temp) temp2)
     (if (endp (car temp))
-	(progn (setf temp2 (append temp2 (list 0))) (setf i (+ i 1)))
+    (progn (setf temp2 (append temp2 (list 0))) (setf i (+ i 1)))
       (progn (setf temp2 (append temp2 (list (convert (car temp) i))) )
-	     (setf i (+ i 1))))))
+         (setf i (+ i 1))))))
 
 
 
 
 (defun populate-table (list)
   (let ((name (car list))
-	(features (cdr list)))
+    (features (cdr list)))
     (do ((temp features (cdr temp))
-	 (temp2 nil))
-	((endp temp) (append (list name) (list temp2)))
+     (temp2 nil))
+    ((endp temp) (append (list name) (list temp2)))
       (setf temp2 (append temp2 (list (populate-list (car temp))))))))
 
 
@@ -154,32 +154,32 @@
        (temp2 nil))
       ((endp temp) temp2)
     (if (assoc (format "%s" (car temp)) (get-arity-list i))
-	(setf temp2 (append temp2 (list (cadr (assoc (format "%s" (car temp))
-						     (get-arity-list i))))))
+    (setf temp2 (append temp2 (list (cadr (assoc (format "%s" (car temp))
+                             (get-arity-list i))))))
       (progn 
         (cond 
-	 ((equal i 0) (setf arity0
-		   (append arity0
-			   (list (list (format "%s" (car temp)) n-arity0)))))
-	 ((equal i 1) (setf arity1
-		   (append arity1
-			   (list (list (format "%s" (car temp)) n-arity1)))))
-	 ((equal i 2) (setf arity2
-		   (append arity2
-			   (list (list (format "%s" (car temp)) n-arity2)))))
-	 ((equal i 3) (setf arity3
-		   (append arity3
-			   (list (list (format "%s" (car temp)) n-arity3)))))
-	 ((equal i 4) (setf arity4
-		   (append arity4
-			   (list (list (format "%s" (car temp)) n-arity4)))))
-	 ((equal i 5) (setf arity5
-		   (append arity5
-			   (list (list (format "%s" (car temp)) n-arity5)))))
-	)
-	(increase-narity i)
-	(setf temp2 (append temp2 (list (cadr (assoc (format "%s" (car temp))
-						     (get-arity-list i)))))))))))
+     ((equal i 0) (setf arity0
+           (append arity0
+               (list (list (format "%s" (car temp)) n-arity0)))))
+     ((equal i 1) (setf arity1
+           (append arity1
+               (list (list (format "%s" (car temp)) n-arity1)))))
+     ((equal i 2) (setf arity2
+           (append arity2
+               (list (list (format "%s" (car temp)) n-arity2)))))
+     ((equal i 3) (setf arity3
+           (append arity3
+               (list (list (format "%s" (car temp)) n-arity3)))))
+     ((equal i 4) (setf arity4
+           (append arity4
+               (list (list (format "%s" (car temp)) n-arity4)))))
+     ((equal i 5) (setf arity5
+           (append arity5
+               (list (list (format "%s" (car temp)) n-arity5)))))
+    )
+    (increase-narity i)
+    (setf temp2 (append temp2 (list (cadr (assoc (format "%s" (car temp))
+                             (get-arity-list i)))))))))))
 
 
 
@@ -190,29 +190,29 @@
        (temp2 nil))
       ((endp temp) temp2)
     (if (endp (car temp))
-	(progn (setf temp2 (append temp2 (list (list 0)))) (setf i (+ i 1)))
+    (progn (setf temp2 (append temp2 (list (list 0)))) (setf i (+ i 1)))
       (progn (setf temp2 (append temp2 (list (convert-sparse (car temp) i))) )
-	     (setf i (+ i 1))))))
+         (setf i (+ i 1))))))
 
 
 
 
 (defun populate-table-sparse (list)
   (let ((name (car list))
-	(features (cdr list)))
+    (features (cdr list)))
     (do ((temp features (cdr temp))
-	 (temp2 nil))
-	((endp temp) (append (list name) (list temp2)))
+     (temp2 nil))
+    ((endp temp) (append (list name) (list temp2)))
       (setf temp2 (append temp2 (list (populate-list-sparse (car temp))))))))
 
 
 
 
 ;(populate-table (build-table (extract-info '(defthm foo 
-;		 (implies (and (consp x)
-;			       (consp y))
-;			  (equal (reverse (append x y))
-;				 (append (reverse x) (reverse y))))))))
+;        (implies (and (consp x)
+;                  (consp y))
+;             (equal (reverse (append x y))
+;                (append (reverse x) (reverse y))))))))
 
 
 
@@ -223,7 +223,7 @@
 
 (defun flatten-table (list)
   (let ((name (car list))
-	(features (cadr list)))
+    (features (cadr list)))
     (append (list name) (list (flat features)))))
 
 
@@ -233,10 +233,10 @@
 
 
 ;(flatten-table (populate-table (build-table (extract-info '(defthm foo 
-;		 (implies (and (consp x)
-;			       (consp y))
-;			  (equal (reverse (append x y))
-;				 (append (reverse x) (reverse y)))))))))
+;        (implies (and (consp x)
+;                  (consp y))
+;             (equal (reverse (append x y))
+;                (append (reverse x) (reverse y)))))))))
 
 
   

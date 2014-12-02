@@ -2,8 +2,8 @@
   (if (<= (length list) 1)
       list
       (let ((pivot (cadar list)))
-	(append	(quicksort-pair (remove-if-not #'(lambda (x) (> (cadr x) pivot)) list))
-	  (remove-if-not #'(lambda (x) (= (cadr x) pivot)) list)
+    (append (quicksort-pair (remove-if-not #'(lambda (x) (> (cadr x) pivot)) list))
+      (remove-if-not #'(lambda (x) (= (cadr x) pivot)) list)
           (quicksort-pair (remove-if-not #'(lambda (x) (< (cadr x) pivot)) list))))))
 
   
@@ -20,4 +20,4 @@
        (res2 nil))
       ((endp temp) (list (reverse res1) (reverse res2)))
     (progn (setf res1 (cons (caar temp) res1))
-	   (setf res2 (cons (cadr (car temp)) res2)))))
+       (setf res2 (cons (cadr (car temp)) res2)))))

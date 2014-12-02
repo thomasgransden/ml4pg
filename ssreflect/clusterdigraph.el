@@ -13,25 +13,25 @@
        (res ""))
       ((endp temp) res)
     (if (listp (car temp))
-	(progn (setf clustercounter (1+ clustercounter))
-	       (setf res (concat res (format "subgraph cluster%s {\n" clustercounter)
-				 (clusterofone (car temp))
-				 "\n}\n")))
+    (progn (setf clustercounter (1+ clustercounter))
+           (setf res (concat res (format "subgraph cluster%s {\n" clustercounter)
+                 (clusterofone (car temp))
+                 "\n}\n")))
       (if (and (cdr temp) (not (listp (cadr temp))))
-	  (setf res (concat res 
-			(format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n" (car (nth (1- (car temp)) tables-definitions)) 
-				(library-belong (1- (car temp)))
-				(car (nth (1- (car temp)) tables-definitions))
-				(car (nth (1- (car temp)) tables-definitions)) 
-				(car (nth (1- (cadr temp)) tables-definitions)) )))
-	(setf res (concat res 
-			  (format "%s [URL=\"./%s.html\"];\n" (car (nth (1- (car temp)) tables-definitions))
-				  (library-belong (1- (car temp))))))))))
+      (setf res (concat res 
+            (format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n" (car (nth (1- (car temp)) tables-definitions)) 
+                (library-belong (1- (car temp)))
+                (car (nth (1- (car temp)) tables-definitions))
+                (car (nth (1- (car temp)) tables-definitions)) 
+                (car (nth (1- (cadr temp)) tables-definitions)) )))
+    (setf res (concat res 
+              (format "%s [URL=\"./%s.html\"];\n" (car (nth (1- (car temp)) tables-definitions))
+                  (library-belong (1- (car temp))))))))))
 
 
 (defun clusterofseveral (lol)
   (progn (setf clustercounter 0)
-	 (concat "digraph {\n rankdir=LR;\n" (clusterofone lol) "\n}")))
+     (concat "digraph {\n rankdir=LR;\n" (clusterofone lol) "\n}")))
 
 
 
@@ -39,9 +39,9 @@
   (with-temp-file "temp.gv"
     (insert text))
   (progn (shell-command "dot -Tcmap temp.gv -o temp.map")
-	 (shell-command "dot -Tpng temp.gv -o temp.png")
-	 (createwebpage)
-	 (shell-command "xdg-open temp.html")))
+     (shell-command "dot -Tpng temp.gv -o temp.png")
+     (createwebpage)
+     (shell-command "xdg-open temp.html")))
 
 
 (defun showclustergraph (lol)
@@ -73,7 +73,7 @@
        (res nil))
       ((or (endp temp) res) (not res))
     (if (not (member (car temp) cluster2))
-	(setf res t))))
+    (setf res t))))
 
 
 
@@ -81,13 +81,13 @@
  (if (endp cluster2)
     (list cluster1)
   (if (listp (car cluster2))
-	(if (issubcluster cluster1 (car cluster2))
-	    (cons (replacecluster cluster1 (car cluster2)) 
-		  (cdr cluster2))
-	  (cons (car cluster2) (replacecluster cluster1 (cdr cluster2))))
+    (if (issubcluster cluster1 (car cluster2))
+        (cons (replacecluster cluster1 (car cluster2)) 
+          (cdr cluster2))
+      (cons (car cluster2) (replacecluster cluster1 (cdr cluster2))))
      (if (member (car cluster2) cluster1)
-	  (replacecluster cluster1 (cdr cluster2))
-	(cons (car cluster2) (replacecluster cluster1 (cdr cluster2)))))))
+      (replacecluster cluster1 (cdr cluster2))
+    (cons (car cluster2) (replacecluster cluster1 (cdr cluster2)))))))
 
 
 
@@ -99,16 +99,16 @@
    ;    (res nil))
     ;  ((or (endp temp) flag)
      ;  (if flag 
-;	   (reverse res)
-;	 (append (reverse res) (list cluster1))))
+;      (reverse res)
+;    (append (reverse res) (list cluster1))))
  ;   (cond ((listp (car temp))
-;	   (if (issubcluster cluster1 (car temp))
-;	    (progn (setf res (cons (replacecluster cluster1 (car temp)) (cdr temp)))
-;		   (setf flag t))
-;	    (setf res (cons (car temp) res))))
-;	  (t
-;	   (if (not (member (car temp) cluster1))
-;	     (setf res (cons (car temp) res)))))))
+;      (if (issubcluster cluster1 (car temp))
+;       (progn (setf res (cons (replacecluster cluster1 (car temp)) (cdr temp)))
+;          (setf flag t))
+;       (setf res (cons (car temp) res))))
+;     (t
+;      (if (not (member (car temp) cluster1))
+;        (setf res (cons (car temp) res)))))))
 
 
 
@@ -120,15 +120,15 @@
       (res nil))
      ((or (endp temp) flag flag1)
       (cond (flag (append (reverse res) temp))
-	    (flag1 clusters)
-	    (t (append (reverse res) (list cluster)))))
+        (flag1 clusters)
+        (t (append (reverse res) (list cluster)))))
    (cond ((not (issubcluster cluster (car temp)))
-	  (setf res (cons (car temp) res)))
-	 ((equal cluster (car temp))
-	  (progn (setf res (reverse clusters))
-		 (setf flag1 t)))
-	 (t (progn (setf res (cons (replacecluster cluster (car temp)) res))
-		   (setf flag t))))))
+      (setf res (cons (car temp) res)))
+     ((equal cluster (car temp))
+      (progn (setf res (reverse clusters))
+         (setf flag1 t)))
+     (t (progn (setf res (cons (replacecluster cluster (car temp)) res))
+           (setf flag t))))))
 
 
 
@@ -136,10 +136,10 @@
  ; (if (endp clusters)
   ;    (list cluster)
    ; (if (issubcluster cluster (car clusters))
-;	(if (equal cluster (car clusters))
-;	    clusters
-;	  (cons (replacecluster cluster (car clusters))
-;		(cdr clusters)))
+;   (if (equal cluster (car clusters))
+;       clusters
+;     (cons (replacecluster cluster (car clusters))
+;       (cdr clusters)))
  ;     (cons (car clusters) (subclusters cluster (cdr clusters))))))
 
 
@@ -158,8 +158,8 @@
 (defun dependencygraph-defs ()
   (interactive)
   (let ((clusters1 nil)
-;	(clusters2 nil)
-	(clusters3 nil))
+;   (clusters2 nil)
+    (clusters3 nil))
     (setf granularity-level 3)
     (weka-defs)
     (sleep-for 2)
@@ -173,7 +173,7 @@
     (sleep-for 2)
     (setf clusters3 (cdr (form-clusters (extract-clusters-from-file-defs ) (floor (length tables-definitions) 2))))
     (showclustergraph (subclustersseveral  clusters3 clusters1 ))))
-	  
+      
 
 
 
@@ -188,25 +188,25 @@
        (res ""))
       ((endp temp) res)
     (if (listp (car temp))
-	(progn (setf clustercounter (1+ clustercounter))
-	       (setf res (concat res (format "subgraph cluster%s {\n" clustercounter)
-				 (clusterofone-statements (car temp))
-				 "\n}\n")))
+    (progn (setf clustercounter (1+ clustercounter))
+           (setf res (concat res (format "subgraph cluster%s {\n" clustercounter)
+                 (clusterofone-statements (car temp))
+                 "\n}\n")))
       (if (and (cdr temp) (not (listp (cadr temp))))
-	  (setf res (concat res 
-			(format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n" (car (nth (1- (car temp)) tables-thms)) 
-				(library-belong-thm (1- (car temp)))
-				(car (nth (1- (car temp)) tables-thms))
-				(car (nth (1- (car temp)) tables-thms)) 
-				(car (nth (1- (cadr temp)) tables-thms)) )))
-	(setf res (concat res 
-			  (format "%s [URL=\"./%s.html\"];\n" (car (nth (1- (car temp)) tables-thms))
-				  (library-belong-thm (1- (car temp))))))))))
+      (setf res (concat res 
+            (format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n" (car (nth (1- (car temp)) tables-thms)) 
+                (library-belong-thm (1- (car temp)))
+                (car (nth (1- (car temp)) tables-thms))
+                (car (nth (1- (car temp)) tables-thms)) 
+                (car (nth (1- (cadr temp)) tables-thms)) )))
+    (setf res (concat res 
+              (format "%s [URL=\"./%s.html\"];\n" (car (nth (1- (car temp)) tables-thms))
+                  (library-belong-thm (1- (car temp))))))))))
 
 
 (defun clusterofseveral-statements (lol)
   (progn (setf clustercounter 0)
-	 (concat "digraph {\n rankdir=LR;\n" (clusterofone-statements lol) "\n}")))
+     (concat "digraph {\n rankdir=LR;\n" (clusterofone-statements lol) "\n}")))
 
 
 
@@ -217,8 +217,8 @@
 (defun dependencygraph-statements ()
   (interactive)
   (let ((clusters1 nil)
-;	(clusters2 nil)
-	(clusters3 nil))
+;   (clusters2 nil)
+    (clusters3 nil))
     (setf granularity-level 3)
     (weka-thms)
     (sleep-for 2)
@@ -234,7 +234,7 @@
     (showclustergraph-statements (subclustersseveral  clusters3 clusters1 ) )
    ; (showclustergraph-statements clusters1 )
     ))
-	  
+      
 
 
 
@@ -251,54 +251,54 @@
        (res ""))
       ((endp temp) res)
     (if (listp (car temp))
-	(progn (setf clustercounter (1+ clustercounter))
-	       (setf res (concat res (format "subgraph cluster%s {\n" clustercounter)
-				 (clusterofone-proof (car temp))
-				 "\n}\n")))
+    (progn (setf clustercounter (1+ clustercounter))
+           (setf res (concat res (format "subgraph cluster%s {\n" clustercounter)
+                 (clusterofone-proof (car temp))
+                 "\n}\n")))
       (if (and (cdr temp) (not (listp (cadr temp))))
-	  (let ((thm nil)
-		(thm2 nil))
-	    (progn (if (<= (car temp) (length saved-theorems))
-		       (setf thm (car (nth (1- (car temp)) saved-theorems)))
-		     (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
-						     (format "%s" (- (car temp) (length saved-theorems)))
-						  "p'")) 
-			      (with-current-buffer "*Shell Command Output*"
-				(beginning-of-buffer)
-				(read (current-buffer))
-				(setf thm (format "%s"  (read (current-buffer)))))))	
-		   (if (<= (car temp) (length saved-theorems))
-		       (setf thm2 (car (nth (1- (cadr temp)) saved-theorems)))
-		     (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
-						     (format "%s" (- (cadr temp) (length saved-theorems)))
-						  "p'")) 
-			      (with-current-buffer "*Shell Command Output*"
-				(beginning-of-buffer)
-				(read (current-buffer))
-				(setf thm2 (format "%s"  (read (current-buffer)))))))
-		   (setf res (concat res 
-			(format "%s; %s -> %s[style=invis]\n" 
-				thm 
-				thm 
-				thm2)))))
-	(let ((thm nil))
-	    (progn (if (<= (car temp) (length saved-theorems))
-		       (setf thm (car (nth (1- (car temp)) saved-theorems)))
-		     (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
-						     (format "%s" (- (car temp) (length saved-theorems)))
-						  "p'")) 
-			      (with-current-buffer "*Shell Command Output*"
-				(beginning-of-buffer)
-				(read (current-buffer))
-				(setf thm (format "%s"  (read (current-buffer)))))))	
-		   (setf res (concat res (format "%s;\n" thm)))))))))
-				  
-				 
+      (let ((thm nil)
+        (thm2 nil))
+        (progn (if (<= (car temp) (length saved-theorems))
+               (setf thm (car (nth (1- (car temp)) saved-theorems)))
+             (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+                             (format "%s" (- (car temp) (length saved-theorems)))
+                          "p'")) 
+                  (with-current-buffer "*Shell Command Output*"
+                (beginning-of-buffer)
+                (read (current-buffer))
+                (setf thm (format "%s"  (read (current-buffer)))))))    
+           (if (<= (car temp) (length saved-theorems))
+               (setf thm2 (car (nth (1- (cadr temp)) saved-theorems)))
+             (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+                             (format "%s" (- (cadr temp) (length saved-theorems)))
+                          "p'")) 
+                  (with-current-buffer "*Shell Command Output*"
+                (beginning-of-buffer)
+                (read (current-buffer))
+                (setf thm2 (format "%s"  (read (current-buffer)))))))
+           (setf res (concat res 
+            (format "%s; %s -> %s[style=invis]\n" 
+                thm 
+                thm 
+                thm2)))))
+    (let ((thm nil))
+        (progn (if (<= (car temp) (length saved-theorems))
+               (setf thm (car (nth (1- (car temp)) saved-theorems)))
+             (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+                             (format "%s" (- (car temp) (length saved-theorems)))
+                          "p'")) 
+                  (with-current-buffer "*Shell Command Output*"
+                (beginning-of-buffer)
+                (read (current-buffer))
+                (setf thm (format "%s"  (read (current-buffer)))))))    
+           (setf res (concat res (format "%s;\n" thm)))))))))
+                  
+                 
 
 
 (defun clusterofseveral-proof (lol)
   (progn (setf clustercounter 0)
-	 (concat "digraph {\n rankdir=LR;\n" (clusterofone-proof lol) "\n}")))
+     (concat "digraph {\n rankdir=LR;\n" (clusterofone-proof lol) "\n}")))
 
 
 
@@ -309,15 +309,15 @@
 (defun dependencygraph-proof ()
   (interactive)
   (if libs-menus
-	(progn (with-temp-file (expand-file-name "temp.csv")  (cond ((string= level "g") (insert (extract-features-1)))
-								     ((string= level "t") (insert (extract-features-2 tactic-level)))
-								     ((string= level "p") (insert (extract-features-2 proof-tree-level)))))
-	       (add-libraries-temp)
-	       (add-names))
+    (progn (with-temp-file (expand-file-name "temp.csv")  (cond ((string= level "g") (insert (extract-features-1)))
+                                     ((string= level "t") (insert (extract-features-2 tactic-level)))
+                                     ((string= level "p") (insert (extract-features-2 proof-tree-level)))))
+           (add-libraries-temp)
+           (add-names))
       (with-temp-file (expand-file-name "temp.csv") (insert (extract-features-1))))
   (let ((clusters1 nil)
-;	(clusters2 nil)
-	(clusters3 nil))
+;   (clusters2 nil)
+    (clusters3 nil))
     (setf granularity-level 3)
     (weka (floor (size-temp) 5))
     (sleep-for 2)
@@ -331,7 +331,7 @@
     (sleep-for 2)
     (setf clusters3 (cdr (form-clusters (extract-clusters-from-file (floor (size-temp)  2)) (floor (size-temp)  2))))
     (showclustergraph-proof (subclustersseveral (removenil (remove-if-empty clusters3)) (removenil (remove-if-empty clusters1))))))
-	  
+      
 
 
 

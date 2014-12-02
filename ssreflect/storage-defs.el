@@ -10,7 +10,7 @@
   (end-of-buffer)
   (extract-feature-theorems)
   (let* ((buf (buffer-name))
-	 (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
+     (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
     (with-temp-file (concat home-dir "/definitions/" name) 
       (insert (format "%s" listofdefinitions)))
     (with-temp-file (concat home-dir "/variables/" name) 
@@ -22,7 +22,7 @@
 (defun export-up-to-here ()
   (interactive)
   (let* ((buf (buffer-name))
-	 (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
+     (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
     (with-temp-file (concat home-dir "/definitions/" name) 
       (insert (format "%s" listofdefinitions)))
     (with-temp-file (concat home-dir "/variables/" name) 
@@ -38,7 +38,7 @@
   (end-of-buffer)
   (extract-feature-theorems)
   (let* ((buf (buffer-name))
-	 (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
+     (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
     (with-temp-file (concat home-dir "/theorems/" name) 
       (insert (format "%s" listofstatements)))
     (with-temp-file (concat home-dir "/variablesthms/" name) 
@@ -50,7 +50,7 @@
 (defun export-up-to-here-thm ()
   (interactive)
   (let* ((buf (buffer-name))
-	 (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
+     (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
     (with-temp-file (concat home-dir "/theorems/" name) 
       (insert (format "%s" listofstatements)))
     (with-temp-file (concat home-dir "/variablesthms/" name) 
@@ -67,17 +67,17 @@
   (setf libs-defs nil)
   (shell-command  (concat "ls " home-dir "definitions |  wc -l"))
   (let ((n nil)
-	(i 0))
+    (i 0))
   (with-current-buffer "*Shell Command Output*"
     (beginning-of-buffer)
     (setq n (string-to-number (format "%s"  (read (current-buffer))))))
   (shell-command  (concat "ls " home-dir "definitions"))
   (with-current-buffer "*Shell Command Output*"
     (progn (beginning-of-buffer)
-	   (while (< i n)
-	     (let ((r (format "%s" (read (current-buffer)))))
-	       (progn (setq i (1+ i))
-		      (setq libs-defs (append libs-defs (list r))))))))))
+       (while (< i n)
+         (let ((r (format "%s" (read (current-buffer)))))
+           (progn (setq i (1+ i))
+              (setq libs-defs (append libs-defs (list r))))))))))
 
 
 (defvar libs-statements nil)
@@ -86,17 +86,17 @@
   (setf libs-statements nil)
   (shell-command  (concat "ls " home-dir "theorems |  wc -l"))
   (let ((n nil)
-	(i 0))
+    (i 0))
   (with-current-buffer "*Shell Command Output*"
     (beginning-of-buffer)
     (setq n (string-to-number (format "%s"  (read (current-buffer))))))
   (shell-command  (concat "ls " home-dir "theorems"))
   (with-current-buffer "*Shell Command Output*"
     (progn (beginning-of-buffer)
-	   (while (< i n)
-	     (let ((r (format "%s" (read (current-buffer)))))
-	       (progn (setq i (1+ i))
-		      (setq libs-statements (append libs-statements (list r))))))))))
+       (while (< i n)
+         (let ((r (format "%s" (read (current-buffer)))))
+           (progn (setq i (1+ i))
+              (setq libs-statements (append libs-statements (list r))))))))))
 
 
 
@@ -148,10 +148,10 @@
   (do ((temp libs-defs (cdr temp)))
       ((endp temp) nil)
     (progn (setf number-of-defs (append number-of-defs (list (list (car temp) (length (import-definitions (car temp)))))))
-	   (setf definitions-libraries (append definitions-libraries
-					(import-definitions (car temp))))
-	   (setf variables-libraries (append variables-libraries
-					(import-variables (car temp)))))))
+       (setf definitions-libraries (append definitions-libraries
+                    (import-definitions (car temp))))
+       (setf variables-libraries (append variables-libraries
+                    (import-variables (car temp)))))))
 
 
 
@@ -167,10 +167,10 @@
   (do ((temp libs-statements (cdr temp)))
     ((endp temp) nil)
     (progn (setf number-of-thms (append number-of-thms (list (list (car temp) (length (import-statements (car temp)))))))
-	   (setf statements-libraries (append statements-libraries
-					(import-statements (car temp))))
-	   (setf variablesthm-libraries (append variablesthm-libraries
-					(import-variablesthm (car temp)))))))))
+       (setf statements-libraries (append statements-libraries
+                    (import-statements (car temp))))
+       (setf variablesthm-libraries (append variablesthm-libraries
+                    (import-variablesthm (car temp)))))))))
 
 
 
@@ -181,8 +181,8 @@
        (acc 0))
       (temp2 lib)
     (if (< n (+ acc (cadr (car temp))))
-	(progn (setf temp2 t)
-	       (setf lib (car (car temp))))
+    (progn (setf temp2 t)
+           (setf lib (car (car temp))))
       (setf acc (+ acc (cadr (car temp)))))))
 
 (defun library-belong-thm (n)
@@ -192,8 +192,8 @@
        (acc 0))
       (temp2 lib)
     (if (< n (+ acc (cadr (car temp))))
-	(progn (setf temp2 t)
-	       (setf lib (car (car temp))))
+    (progn (setf temp2 t)
+           (setf lib (car (car temp))))
       (setf acc (+ acc (cadr (car temp)))))))
 
 
