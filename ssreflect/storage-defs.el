@@ -1,8 +1,5 @@
 (require 'cl)
 
-
-
-
 (defun export-library-defs ()
   (interactive)
   (beginning-of-buffer)
@@ -11,25 +8,23 @@
   (extract-feature-theorems)
   (let* ((buf (buffer-name))
      (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
-    (with-temp-file (concat home-dir "/definitions/" name) 
+    (with-temp-file (concat home-dir "/definitions/" name)
       (insert (format "%s" listofdefinitions)))
-    (with-temp-file (concat home-dir "/variables/" name) 
+    (with-temp-file (concat home-dir "/variables/" name)
       (insert (format "%s" listofvariables)))
     )
   t)
-
 
 (defun export-up-to-here ()
   (interactive)
   (let* ((buf (buffer-name))
      (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
-    (with-temp-file (concat home-dir "/definitions/" name) 
+    (with-temp-file (concat home-dir "/definitions/" name)
       (insert (format "%s" listofdefinitions)))
-    (with-temp-file (concat home-dir "/variables/" name) 
+    (with-temp-file (concat home-dir "/variables/" name)
       (insert (format "%s" listofvariables)))
     )
   t)
-
 
 (defun export-library-thms ()
   (interactive)
@@ -39,27 +34,23 @@
   (extract-feature-theorems)
   (let* ((buf (buffer-name))
      (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
-    (with-temp-file (concat home-dir "/theorems/" name) 
+    (with-temp-file (concat home-dir "/theorems/" name)
       (insert (format "%s" listofstatements)))
-    (with-temp-file (concat home-dir "/variablesthms/" name) 
+    (with-temp-file (concat home-dir "/variablesthms/" name)
       (insert (format "%s" listofthmvariables)))
     )
   t)
-
 
 (defun export-up-to-here-thm ()
   (interactive)
   (let* ((buf (buffer-name))
      (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
-    (with-temp-file (concat home-dir "/theorems/" name) 
+    (with-temp-file (concat home-dir "/theorems/" name)
       (insert (format "%s" listofstatements)))
-    (with-temp-file (concat home-dir "/variablesthms/" name) 
+    (with-temp-file (concat home-dir "/variablesthms/" name)
       (insert (format "%s" listofthmvariables)))
     )
   t)
-
-;(defvar imported-libraries nil)
-
 
 (defvar libs-defs nil)
 
@@ -79,7 +70,6 @@
            (progn (setq i (1+ i))
               (setq libs-defs (append libs-defs (list r))))))))))
 
-
 (defvar libs-statements nil)
 
 (defun available-thm-libraries ()
@@ -98,36 +88,25 @@
            (progn (setq i (1+ i))
               (setq libs-statements (append libs-statements (list r))))))))))
 
-
-
-
-
 (defun import-definitions (name)
   (with-temp-buffer
   (insert-file-contents (concat home-dir "/definitions/" name))
-  (car (read-from-string (format "%s" (read (current-buffer)))))
-  ))
+  (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun import-variables (name)
   (with-temp-buffer
   (insert-file-contents (concat home-dir "/variables/" name))
-  (car (read-from-string (format "%s" (read (current-buffer)))))
-  ))
-
+  (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun import-statements (name)
   (with-temp-buffer
   (insert-file-contents (concat home-dir "/theorems/" name))
-  (car (read-from-string (format "%s" (read (current-buffer)))))
-  ))
+  (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun import-variablesthm (name)
   (with-temp-buffer
   (insert-file-contents (concat home-dir "/variablesthms/" name))
-  (car (read-from-string (format "%s" (read (current-buffer)))))
-  ))
-
-
+  (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defvar definitions-libraries nil)
 (defvar variables-libraries nil)
@@ -136,8 +115,6 @@
 
 (defvar number-of-defs nil)
 (defvar number-of-thms nil)
-
-
 
 (defun add-several-libraries-defs ()
   (interactive)
@@ -152,8 +129,6 @@
                     (import-definitions (car temp))))
        (setf variables-libraries (append variables-libraries
                     (import-variables (car temp)))))))
-
-
 
 (defvar alllibs nil)
 
@@ -171,8 +146,6 @@
                     (import-statements (car temp))))
        (setf variablesthm-libraries (append variablesthm-libraries
                     (import-variablesthm (car temp)))))))))
-
-
 
 (defun library-belong (n)
   (do ((temp number-of-defs (cdr temp))
@@ -195,6 +168,3 @@
     (progn (setf temp2 t)
            (setf lib (car (car temp))))
       (setf acc (+ acc (cadr (car temp)))))))
-
-
-

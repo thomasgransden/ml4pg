@@ -11,4 +11,3 @@
 (global-set-key (kbd "C-c i") 'change-iterative-interactive)
 (global-set-key (kbd "C-c C-m") 'proof-assert-next-command-interactive3)
 (global-set-key (kbd "C-c n") 'save-numbers)
-
