@@ -1,3 +1,4 @@
+;; FIXME: Don't hard-code paths
 (defvar home-dir "/home/chris/Programming/ML4PG/")
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 (defvar *matlab-program* nil)
@@ -6,8 +7,9 @@
 
 (defun select-mode ()
   (interactive)
-  (let ((smode (read-string "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n): ")))
+  (let ((smode (read-string "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")))
     (setq mode smode)
+    ;; FIXME: Copy-paste much?
     (cond ((string= mode "s") (progn  (load-file (concat home-dir "ssreflect/auxiliary_files.el"))
                                       (load-file (concat home-dir "ssreflect/feature_extraction_2.el"))
                                       (load-file (concat home-dir "ssreflect/matlab_interaction.el"))
@@ -48,6 +50,8 @@
 
 (require 'cl)
 
+;; FIXME: Why on Earth are we deleting other windows and navigating to previous
+;;        buffers? It just screws up Emacs; we should stop it.
 (add-to-list 'auto-mode-alist
              '("\\.v\\'" . (lambda ()
                              (progn (coq-mode)
