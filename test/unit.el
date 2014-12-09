@@ -1,5 +1,19 @@
 ;; Unit tests for ML4PG. Uses Emacs Lisp Regression Testing (ERT)
 
-(ert-deftest string-manipulation ()
-  "Test the various text-handling functions of ML4PG"
+(ert-deftest ml4pg-between-spaces ()
+  "Test between-spaces, for extracting Coq names"
   (should (equal (between-spaces "foo bar baz") "bar")))
+
+(ert-deftest ml4pg-after-space ()
+  "Finding the position of the text after a single space"
+  (should (equal (after-space "foo bar") 4)))
+
+(ert-deftest ml4pg-find-dot ()
+  (should (equal (find-dot "abc.") 3)))
+
+(ert-deftest ml4pg-pos-to-dot ()
+    (should (equal (pos-to-dot "abc.def.ghi" 1) "bc")))
+
+(ert-deftest ml4pg-extract-theorem-id ()
+  "Test theorem ID extraction"
+  (extract-theorem-id ""))

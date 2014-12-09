@@ -98,10 +98,9 @@
           ((string= "or" fst-symbol)     3)
           (t                             0))))
 
-;; In some cases the intro tactic does not have parameters, the following function
-;; obtain the type of the object introduced with the intro tactic in those cases
-
 (defun get-obj-intro ()
+  "In some cases the intro tactic does not have parameters. This obtains the
+   type of the object introduced with the intro tactic in those cases"
   (let* ((undo   (proof-undo-last-successful-command))
          (obj    (proof-shell-invisible-cmd-get-result (format "Show Intro")))
          (object (subseq obj 0 (search "
@@ -131,9 +130,8 @@
       (reverse (cons (subseq seq 0 pos_jump)
                      res)))))
 
-;; Given a list of objects, it obtains the value associated with their types
-
 (defun get-types-list (list res)
+  "Given a list of objects, obtain the value associated with their types"
   (if (endp list)
       (* -1 res)
     (get-types-list (cdr list)
@@ -142,18 +140,16 @@
                                       1)))
                        res))))
 
-;; To obtain the number of tactics applied
-
 (defun get-number-list (list)
+  "Obtain the number of tactics applied"
   (if (endp list)
       0
     (+ (expt 10 (- (length list)
                    1))
        (get-number-list (cdr list)))))
 
-;; To obtain the value associated with top symbol in the case of intros
-
 (defun get-top-symbols-list (len res)
+  "Obtain the value associated with top symbol in the case of intros"
   (if (= len 0)
       res
     (let ((gs (get-top-symbol))
@@ -172,23 +168,20 @@
                                                    1)))
                                  res))))))
 
-;; To obtain the values associated with intros both for the case when parameters are
-;; given and the case intros.
-
 (defun get-obj-intros ()
-  (let* ((undo (proof-undo-last-successful-command))
-         (obj (proof-shell-invisible-cmd-get-result (format "Show Intros")))
-         (dod (proof-assert-next-command-interactive))
+  "Obtain the values associated with intros both for the case when parameters
+   are given and the case intros."
+  (let* ((undo   (proof-undo-last-successful-command))
+         (obj    (proof-shell-invisible-cmd-get-result (format "Show Intros")))
+         (dod    (proof-assert-next-command-interactive))
          (params (extract-params obj nil))
-         (foo (setf hypothesis (append hypothesis params)))
-         (types (get-types-list params 0))
-         (num (get-number-list params))
-         (undo2 (proof-shell-invisible-cmd-get-result (format "Undo")))
-         (gts (get-top-symbols-list (length params)
-                                    0)))
-    (list num types (length params)
-          gts)
-    ))
+         (foo    (setf hypothesis (append hypothesis params)))
+         (types  (get-types-list params 0))
+         (num    (get-number-list params))
+         (undo2  (proof-shell-invisible-cmd-get-result (format "Undo")))
+         (gts    (get-top-symbols-list (length params)
+                                       0)))
+    (list num types (length params) gts)))
 
 (defun get-obj-intros2 (objects)
   (let* ((params (extract-params2 objects nil))
@@ -197,13 +190,10 @@
          (num (get-number-list params))
          (undo2 (proof-shell-invisible-cmd-get-result (format "Undo")))
          (gts (get-top-symbols-seq params 0)))
-    (list num types (length params)
-          gts)
-    ))
-
-;; To obtain the value associated with a theorem
+    (list num types (length params) gts)))
 
 (defun search-in-hyp (obj hyp)
+  "Obtain the value associated with a theorem"
   (if (endp hyp)
       nil
     (if (string= obj (car hyp))
@@ -213,50 +203,43 @@
 (defvar add_to 0.1)
 (defvar start 100)
 
+(defun after-space (txt)
+  "Find the position of text after the first space"
+  (1+ (search " " txt)))
+
+(defun find-dot (txt)
+  "Find the position of the first dot in a string"
+  (search "." txt))
+
+(defun pos-to-dot (cmd n)
+  (subseq cmd n (find-dot cmd)))
+
 (defun extract-theorem-id (cmd)
-  (let ((s<- (search "<-" cmd)))
+  (let* ((s<- (search "<-" cmd))
+         (dot (pos-to-dot cmd (+ 3 s<-)))
+         (s2d (subseq cmd (after-space cmd) (find-dot cmd))))
     (if s<-
-        (if (assoc (subseq cmd (+ 3 s<-)
-                           (search "." cmd))
-                   theorems_id)
-            (cdr (assoc (subseq cmd (+ 3 s<-)
-                                (search "." cmd))
-                        theorems_id))
-          (if (search-in-hyp (subseq cmd (+ 3 s<-)
-                                     (search "." cmd))
-                             hypothesis)
-              1
-            (progn (setf start (+ start add_to))
-                   (setf theorems_id
-                         (append theorems_id (list (cons (subseq cmd (+ 3 s<-)
-                                                                 (search "." cmd))
-                                                         start))))
-                   (save-lemma (subseq cmd (+ 3 s<-)
-                                       (search "." cmd))
-                               start)
-                   (setf add_to (/ add_to 2))
-                   start
-                   )))
-      (if (assoc (subseq cmd (+ 1 (search " " cmd))
-                         (search "." cmd))
-                 theorems_id)
-          (cdr (assoc (subseq cmd (+ 1 (search " " cmd))
-                              (search "." cmd))
-                      theorems_id))
-        (if (search-in-hyp (subseq cmd (+ 1 (search " " cmd))
-                                   (search "." cmd))
-                           hypothesis)
-            1
-          (progn (setf start (+ start add_to))
-                 (save-lemma (subseq cmd (+ 1 (search " " cmd))
-                                     (search "." cmd))
-                             start)
-                 (setf theorems_id
-                       (append theorems_id (list (cons (subseq cmd (+ 1 (search " " cmd))
-                                                               (search "." cmd))
-                                                       start))))
-                 (setf add_to (/ add_to 2))
-                 start))))))
+        (if (assoc dot theorems_id)
+            (cdr (assoc dot theorems_id))
+            (if (search-in-hyp dot hypothesis)
+                1
+                (progn (setf start (+ start add_to))
+                       (setf theorems_id
+                             (append theorems_id (list (cons dot start))))
+                       (save-lemma dot start)
+                       (setf add_to (/ add_to 2))
+                       start)))
+
+        (if (assoc s2d theorems_id)
+            (cdr (assoc s2d theorems_id))
+            (if (search-in-hyp s2d hypothesis)
+                1
+                (progn (setf start (+ start add_to))
+                       (save-lemma s2d start)
+                       (setf theorems_id
+                             (append theorems_id (list (cons s2d start))))
+                       (setf add_to (/ add_to 2))
+                       start))))))
 
 (defun arg-induction (object)
   (let* ((ps0 (proof-shell-invisible-cmd-get-result (format "Undo")))
@@ -338,7 +321,7 @@
         ((and (string= tactic "intro")
               (not (string= cmd "intro.")))
          (let* ((object (subseq cmd (1+ (search " " cmd))
-                                (search "." cmd)))
+                                (find-dot cmd)))
                 (type (get-type-id object))
                 (ai (add-info-to-tree (list type 0 0 0 0 0 0 1 0)
                                       current-level))
@@ -428,7 +411,7 @@
            res))
         ((string= tactic "case")
          (let* ((object (subseq cmd (1+ (search " " cmd))
-                                (search "." cmd)))
+                                (find-dot cmd)))
                 (type (get-type-id object))
                 (ai (add-info-to-tree (list 0 type 0 0 0 0 0 2 0)
                                       current-level))
@@ -465,7 +448,7 @@
                1 1 1 ts ngs))
         ((string= tactic "induction")
          (let* ((object (subseq cmd (1+ (search " " cmd))
-                                (search "." cmd)))
+                                (find-dot cmd)))
                 (arg-ind (arg-induction object))
                 (type (get-type-id-induction object arg-ind))
                 (ai (add-info-to-tree (list 0 0 0 type 0 0 0 2 0)
@@ -565,7 +548,7 @@
 (defun get-numbers2 (cmd tactic ngs ts current-level bot)
   "Function to obtain the information just about the goals."
   (cond ((and (string= tactic "intro") (not (string= cmd "intro.")))
-     (let* ((object (subseq cmd (1+ (search " " cmd)) (search "." cmd)))
+     (let* ((object (subseq cmd (1+ (search " " cmd)) (find-dot cmd)))
         (type (get-type-id object))
         (ai (add-info-to-tree (list type 0 0 0 0 0 0 1 0) current-level))
         (ait (add-info-to-tactic (list type -1 ts 1) "intro"))
@@ -619,7 +602,7 @@
         (foo2 (setf goal-level-temp (cons res goal-level-temp))))
      res))
     ((string= tactic "case")
-     (let* ((object (subseq cmd (1+ (search " " cmd)) (search "." cmd)))
+     (let* ((object (subseq cmd (1+ (search " " cmd)) (find-dot cmd)))
         (type (get-type-id object))
         (ai (add-info-to-tree (list 0 type 0 0 0 0 0 2 0) current-level))
         (ait (add-info-to-tactic (list type 1 ts 1) "case"))
@@ -641,7 +624,7 @@
      (list (cdr (assoc "induction" tactic_id))
          1 1 1 ts ngs))
     ((string= tactic "induction")
-     (let* ((object (subseq cmd (1+ (search " " cmd)) (search "." cmd)))
+     (let* ((object (subseq cmd (1+ (search " " cmd)) (find-dot cmd)))
            (arg-ind (arg-induction object))
            (type (get-type-id-induction object arg-ind))
            (ai (add-info-to-tree (list 0 0 0 type 0 0 0 2 0) current-level))
@@ -870,7 +853,7 @@
                       (proof-segment-up-to-using-cache (point))))
          (comment   (caar semis))
          (cmd       (cadar semis))
-         (pos_dot   (search "." cmd))
+         (pos_dot   (find-dot cmd))
          (pos_space (search " " cmd))
          (ts        nil))
 
@@ -1181,7 +1164,7 @@
                       (proof-segment-up-to-using-cache (point))))
              (comment (caar semis))
              (cmd (cadar semis))
-             (pos_dot (search "." cmd))
+             (pos_dot (find-dot cmd))
              (pos_space (search " " cmd))
              (ts nil))
         (cond (pos_space
