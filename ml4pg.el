@@ -1,3 +1,8 @@
+;; Package-Requires: ((dash "2.10.0") (dash-functional "1.2.0") (emacs "24"))
+
+(require 'dash)
+(require 'dash-functional)
+
 ;; FIXME: Don't hard-code paths
 (defvar home-dir "/home/chris/Programming/ML4PG/")
 (defconst *weka-dir* (concat home-dir "weka.jar"))

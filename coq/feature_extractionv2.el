@@ -1128,18 +1128,19 @@
       ((endp temp) (subseq temp2 0 (1- (length temp2))))
     (setf temp2 (concat temp2 (format "%s," (car temp))) )))
 
-
 (defun extract-features-1 ()
   (let ((fm (find-max-length)))
-    (do ((temp saved-theorems (cdr temp))
-     (temp2 ""))
-    ((endp temp) temp2)
-      (if (< (length (cadar temp)) fm)
-      (setf temp2 (concat temp2
-                  (format "%s\n"
-                      (print-list (take-30 (append (cadar temp)
-                              (generate-zeros (- fm (length (cadar temp))))))))))
-    (setf temp2 (concat temp2 (format "%s\n" (print-list (take-30 (cadar temp))))))))))
+    (do ((temp  saved-theorems (cdr temp))
+         (temp2 ""))
+        ((endp temp)
+         temp2)
+      (if (< (length (cadar temp))
+             fm)
+          (setf temp2 (concat temp2
+                              (format "%s\n"
+                                      (print-list (take-30 (append (cadar temp)
+                                                                   (generate-zeros (- fm (length (cadar temp))))))))))
+        (setf temp2 (concat temp2 (format "%s\n" (print-list (take-30 (cadar temp))))))))))
 
 (defun extract-features-2 (list)
   (do ((temp list (cdr temp))
@@ -1148,23 +1149,21 @@
       (setf temp2 (concat temp2 (format "%s\n" (print-list (car temp)))))))
 
 (defun generate-zeros (n)
-  (do ((i 0 (1+ i))
-       (temp nil (cons 0 temp)))
-      ((= i n) temp)))
+  (generate-zeros-aux nil n))
+
+(defun generate-zeros-aux (lst n)
+  (case n
+    (0 lst)
+    (otherwise (generate-zeros-aux (cons 0 lst) (- n 1)))))
 
 (defun find-max-length ()
-  (do ((temp saved-theorems (cdr temp))
-       (i 0))
-      ((endp temp) i)
-    (if (< i (length (cadar temp)))
-    (setf i (length (cadar temp)))
-      nil)))
+  (find-max-length-aux saved-theorems))
+
+(defun find-max-length-aux (lst)
+  (-reduce-from (-compose 'max 'length) 0 lst))
 
 (defun take-30 (list)
-  (do ((i 0 (1+ i))
-       (temp list (cdr temp))
-       (temp2 nil (cons (car temp) temp2)))
-      ((= i 30) (reverse temp2))))
+  (-take 30 list))
 
 (defun extract-info-up-to-here ()
   "Extract the info of a theorem up to a concrete point"
