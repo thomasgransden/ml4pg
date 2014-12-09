@@ -836,9 +836,12 @@
         ((= i (+ j 30))
          (reverse temp2)))))
 
-(defun between-spaces (cmd)
-  (let (space (1+ (search " " cmd)))
-    (subseq cmd space (search " " cmd :start2 space))))
+(defun between-spaces (txt)
+  (let ((space (1+ (search " " txt))))
+    (subseq txt space (search " " txt :start2 space))))
+
+(defun rem-jumps (cmd)
+  (remove-jumps (between-spaces cmd)))
 
 (defun export-theorem-aux (result name current-level dot-level i)
   (let* ((semis     (save-excursion
@@ -850,6 +853,7 @@
          (pos_dot   (search "." cmd))
          (pos_space (search " " cmd))
          (ts        nil))
+
     (cond ((or (string= comment "comment")
                (is-in-search cmd))
            (progn (proof-assert-next-command-interactive)
@@ -859,6 +863,7 @@
            (search-forward "Defined")
            (proof-goto-point)
            (proof-assert-next-command-interactive))
+
           ((or (search "Definition" cmd)
                (search "Fixpoint"   cmd))
            (progn (proof-assert-next-command-interactive)
@@ -867,34 +872,40 @@
                                       (between-spaces cmd)
                                       current-level dot-level i))
            (proof-assert-next-command-interactive))
+
           ((search "Lemma" cmd)
            (progn (proof-assert-next-command-interactive)
 
                   (export-theorem-aux result
-                                      (remove-jumps (between-spaces cmd))
+                                      (rem-jumps cmd)
                                       current-level dot-level i)))
+
           ((search "Proof" cmd)
            (progn (proof-assert-next-command-interactive)
                   (export-theorem-aux result name current-level dot-level i)))
+
           ((search "Instance" cmd)
            (progn (proof-assert-next-command-interactive)
                   (export-theorem-aux result
-                                      (remove-jumps (between-spaces cmd))
+                                      (rem-jumps cmd)
                                       current-level dot-level i)))
+
           ((search "Theorem" cmd)
            (progn (proof-assert-next-command-interactive)
                   (export-theorem-aux result
-                                      (remove-jumps (between-spaces cmd))
+                                      (rem-jumps cmd)
                                       current-level dot-level i)))
+
           ((search "Remark" cmd)
            (progn (proof-assert-next-command-interactive)
                   (export-theorem-aux result
-                                      (remove-jumps (between-spaces cmd))
+                                      (rem-jumps cmd)
                                       current-level dot-level i)))
+
           ((search "Corollary" cmd)
            (progn (proof-assert-next-command-interactive)
                   (export-theorem-aux result
-                                      (remove-jumps (between-spaces cmd))
+                                      (rem-jumps cmd)
                                       current-level dot-level i)))
 
           ((or (search "Qed." cmd)
@@ -905,6 +916,7 @@
                          (if name
                              (split-feature-vector name (flat (reverse result))))
                          (ignore-errors (addthm name)))))
+
           (pos_space
            (progn (setf ts (get-top-symbol))
                   (setf ng (get-number-of-goals))
@@ -928,6 +940,7 @@
                           (1+ current-level)
                           (1+ current-level)
                           (1+ i)))
+
                         ((< ng2 ng)
                          (export-theorem-aux
                           (do ((temp (list-of-commands cmd)
@@ -946,6 +959,7 @@
                           current-level
                           dot-level
                           (1+ i)))
+
                         (t (export-theorem-aux
                             (do ((temp (list-of-commands cmd)
                                        (cdr temp))
