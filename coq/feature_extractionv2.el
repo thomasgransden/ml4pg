@@ -20,6 +20,29 @@
 
 (defvar init 0)
 
+(defun first-space (txt)
+  "Find the position of the first space in a string"
+  (search " " txt))
+
+(defun after-space (txt)
+  "Find the position of text after the first space"
+  (1+ (first-space txt)))
+
+(defun first-dot (txt)
+  "Find the position of the first dot in a string"
+  (search "." txt))
+
+(defun pos-to-dot (cmd n)
+  "Extract a sub-string from the given position to the first dot"
+  (subseq cmd n (first-dot cmd)))
+
+(defun between-spaces (txt)
+  (let ((space (after-space txt)))
+    (subseq txt space (search " " txt :start2 space))))
+
+(defun rem-jumps (cmd)
+  (remove-jumps (between-spaces cmd)))
+
 (defun export-theorem ()
   (interactive)
   (progn (setf tdl1         nil
@@ -36,15 +59,13 @@
                trivial      nil
                hypothesis   nil
                goal-level   nil)
-         (if (equal init 0)
-             (progn (read-lemmas)
-                    (setq init 1)))
+         (init-lemmas)
          (export-theorem-aux nil "" 1 1 0)
          (proof-shell-invisible-cmd-get-result (format "Unset Printing All"))))
 
-(defvar saved-theorems nil)
-(defvar goal-level-temp nil)
-(defvar tactic-level nil)
+(defvar saved-theorems   nil)
+(defvar goal-level-temp  nil)
+(defvar tactic-level     nil)
 (defvar proof-tree-level nil)
 
 ;; Variables to store the different values associated with the tactics, the
@@ -67,12 +88,13 @@
 
 (defvar theorems_id nil)
 
-;; A function to obtain the type associated with an object
+(defconst nl "
+")
 
 (defun get-type-id (object)
+  "A function to obtain the type associated with an object"
   (let* ((a (proof-shell-invisible-cmd-get-result (format (concat "Check " object))))
-         (pos_jump (search "
-" a :start2 (+ 2 (search " " a))))
+         (pos_jump (search nl a :start2 (+ 2 (search " " a))))
          (pos_space (search " " a :start2 (+ 2 (search ": " a))))
          (type (if pos_space
                    (cdr (assoc (subseq a (+ 2 (search ": " a))
@@ -103,16 +125,14 @@
    type of the object introduced with the intro tactic in those cases"
   (let* ((undo   (proof-undo-last-successful-command))
          (obj    (proof-shell-invisible-cmd-get-result (format "Show Intro")))
-         (object (subseq obj 0 (search "
-" obj)))
+         (object (subseq obj 0 (search nl obj)))
          (dod    (proof-assert-next-command-interactive))
          (foo    (setf hypothesis (append hypothesis (list object)))))
     (get-type-id object)))
 
 (defun extract-params (seq res)
   (let ((pos_space (search " " seq))
-        (pos_jump (search "
-" seq)))
+        (pos_jump (search nl seq)))
     (if pos_space
         (extract-params (subseq seq (+ 1 pos_space))
                         (cons (subseq seq 0 pos_space)
@@ -203,21 +223,10 @@
 (defvar add_to 0.1)
 (defvar start 100)
 
-(defun after-space (txt)
-  "Find the position of text after the first space"
-  (1+ (search " " txt)))
-
-(defun find-dot (txt)
-  "Find the position of the first dot in a string"
-  (search "." txt))
-
-(defun pos-to-dot (cmd n)
-  (subseq cmd n (find-dot cmd)))
-
 (defun extract-theorem-id (cmd)
   (let* ((s<- (search "<-" cmd))
          (dot (pos-to-dot cmd (+ 3 s<-)))
-         (s2d (subseq cmd (after-space cmd) (find-dot cmd))))
+         (s2d (subseq cmd (after-space cmd) (first-dot cmd))))
     (if s<-
         (if (assoc dot theorems_id)
             (cdr (assoc dot theorems_id))
@@ -320,8 +329,8 @@
                    0 0 0 ts ngs))))
         ((and (string= tactic "intro")
               (not (string= cmd "intro.")))
-         (let* ((object (subseq cmd (1+ (search " " cmd))
-                                (find-dot cmd)))
+         (let* ((object (subseq cmd (after-space cmd)
+                                (first-dot cmd)))
                 (type (get-type-id object))
                 (ai (add-info-to-tree (list type 0 0 0 0 0 0 1 0)
                                       current-level))
@@ -364,7 +373,7 @@
                                               12 (length cmd)))
                             "intros until"))
               (not (search ";intros" cmd)))
-         (let* ((params (get-obj-intros2 (subseq cmd (1+ (search " " cmd)))))
+         (let* ((params (get-obj-intros2 (subseq cmd (after-space cmd))))
                 (nparams (car params))
                 (types-params (cadr params))
                 (len (caddr params))
@@ -410,8 +419,8 @@
                 (foo2 (setf goal-level-temp (cons res goal-level-temp))))
            res))
         ((string= tactic "case")
-         (let* ((object (subseq cmd (1+ (search " " cmd))
-                                (find-dot cmd)))
+         (let* ((object (subseq cmd (after-space cmd)
+                                (first-dot cmd)))
                 (type (get-type-id object))
                 (ai (add-info-to-tree (list 0 type 0 0 0 0 0 2 0)
                                       current-level))
@@ -447,8 +456,8 @@
          (list (cdr (assoc "induction" tactic_id))
                1 1 1 ts ngs))
         ((string= tactic "induction")
-         (let* ((object (subseq cmd (1+ (search " " cmd))
-                                (find-dot cmd)))
+         (let* ((object (subseq cmd (after-space cmd)
+                                (first-dot cmd)))
                 (arg-ind (arg-induction object))
                 (type (get-type-id-induction object arg-ind))
                 (ai (add-info-to-tree (list 0 0 0 type 0 0 0 2 0)
@@ -547,103 +556,137 @@
 
 (defun get-numbers2 (cmd tactic ngs ts current-level bot)
   "Function to obtain the information just about the goals."
-  (cond ((and (string= tactic "intro") (not (string= cmd "intro.")))
-     (let* ((object (subseq cmd (1+ (search " " cmd)) (find-dot cmd)))
-        (type (get-type-id object))
-        (ai (add-info-to-tree (list type 0 0 0 0 0 0 1 0) current-level))
-        (ait (add-info-to-tactic (list type -1 ts 1) "intro"))
-        (foo (setf hypothesis (append hypothesis (list object))))
-        (res (list (cdr (assoc "intro" tactic_id))
-         1
-         type
-         -1
-         ts ngs))
-        (foo2 (setf goal-level-temp (cons res goal-level-temp))))
-       res))
-    ((string= tactic "intro")
-     (let* ((type (get-obj-intro))
-        (ai (add-info-to-tree (list type 0 0 0 0 0 0 1 0) current-level))
-        (ait (add-info-to-tactic (list type -1 ts 1) "intro"))
-        (res (list (cdr (assoc "intro" tactic_id))
-         1
-         (get-obj-intro)
-         -1
-         ts ngs))
-        (foo2 (setf goal-level-temp (cons res goal-level-temp))))
-       res))
-    ((and (string= tactic "intros") (not (string= cmd "intros.")))
-     (let* ((params (get-obj-intros2 (subseq cmd (1+ (search " " cmd)))))
-        (nparams (car params))
-        (types-params (cadr params))
-        (len (caddr params))
-        (gts (cadddr params))
-        (ai (add-info-to-tree (list types-params 0 0 0 0 0 0 1 0) current-level))
-        (ait (add-info-to-tactic (list types-params -1 gts len) "intro"))
-        (res (list nparams
-                 len
-         types-params
-         -1
-         gts ngs))
-        (foo2 (setf goal-level-temp (cons res goal-level-temp))))
-       res))
-    ((string= tactic "intros")
-     (let* ((params (get-obj-intros))
-        (nparams (car params))
-        (types-params (cadr params))
-        (len (caddr params))
-        (gts (cadddr params))
-        (ai (add-info-to-tree (list types-params 0 0 0 0 0 0 1 0) current-level))
-        (ait (add-info-to-tactic (list types-params -1 gts len) "intro"))
-        (res (list   nparams
-                 len
-         types-params
-         -1
-         gts ngs))
-        (foo2 (setf goal-level-temp (cons res goal-level-temp))))
-     res))
-    ((string= tactic "case")
-     (let* ((object (subseq cmd (1+ (search " " cmd)) (find-dot cmd)))
-        (type (get-type-id object))
-        (ai (add-info-to-tree (list 0 type 0 0 0 0 0 2 0) current-level))
-        (ait (add-info-to-tactic (list type 1 ts 1) "case"))
-        (res (list (cdr (assoc "case" tactic_id))
-         1
-         type
-         1 ts ngs))
-        (foo2 (setf goal-level-temp (cons res goal-level-temp))))
-       res))
-    ((string= tactic "simpl")
-     (progn (add-info-to-tree (list 0 0 0 0 ts 0 0 1 0) current-level)
-        (add-info-to-tactic (list 0 0 ts 1) "simpl")
-       (list (cdr (assoc "simpl" tactic_id)) 1 0 0 ts ngs)))
-    ((string= tactic "trivial")
-     (progn (add-info-to-tree (list 0 0 0 0 0 0 ts 1 1) current-level)
-        (add-info-to-tactic (list 0 0 ts 1) "trivial")
-        (list (cdr (assoc "trivial" tactic_id)) 1 0 0 ts ngs)))
-    ((string= "induction 1" (subseq cmd 0 (if (< 11 (length cmd)) 11 (length cmd))))
-     (list (cdr (assoc "induction" tactic_id))
-         1 1 1 ts ngs))
-    ((string= tactic "induction")
-     (let* ((object (subseq cmd (1+ (search " " cmd)) (find-dot cmd)))
-           (arg-ind (arg-induction object))
-           (type (get-type-id-induction object arg-ind))
-           (ai (add-info-to-tree (list 0 0 0 type 0 0 0 2 0) current-level))
-           (ait (add-info-to-tactic (list type arg-ind ts 1) "induction"))
-            (ih (setf theorems_id (append theorems_id (list (cons (concat "IH" object) 10)))))
-           (res (list (cdr (assoc "induction" tactic_id))
-         1 type arg-ind ts ngs))
-           (foo2 (setf goal-level-temp (cons res goal-level-temp))))
-       res))
-    ((string= tactic "rewrite")
-     (progn   (add-info-to-tree (list 0 0 0 0 0 (extract-theorem-id cmd) 0 1 0) current-level)
-        (add-info-to-tactic (list -4 (extract-theorem-id cmd) ts 1) "rewrite")
-        (list (cdr (assoc "rewrite" tactic_id)) 1 -4
-              (extract-theorem-id cmd) ts ngs))
-     )
-    ((string= cmd "simpl; trivial.")
-     (progn (add-info-to-tree (list 0 0 ts 0 0 0 0 1 1) current-level)
-        (add-info-to-tactic (list 0 0 ts 1) "simpltrivial")
-        (list (cdr (assoc "simpl; trivial" tactic_id)) 2 0 0 ts ngs)))))
+  (cond ((and (string= tactic "intro")
+              (not (string= cmd "intro.")))
+         (let* ((object (subseq cmd (after-space cmd)
+                                (first-dot cmd)))
+                (type (get-type-id object))
+                (ai (add-info-to-tree (list type 0 0 0 0 0 0 1 0)
+                                      current-level))
+                (ait (add-info-to-tactic (list type -1 ts 1)
+                                         "intro"))
+                (foo (setf hypothesis (append hypothesis (list object))))
+                (res (list (cdr (assoc "intro" tactic_id))
+                           1
+                           type
+                           -1
+                           ts ngs))
+                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+           res))
+        ((string= tactic "intro")
+         (let* ((type (get-obj-intro))
+                (ai (add-info-to-tree (list type 0 0 0 0 0 0 1 0)
+                                      current-level))
+                (ait (add-info-to-tactic (list type -1 ts 1)
+                                         "intro"))
+                (res (list (cdr (assoc "intro" tactic_id))
+                           1
+                           (get-obj-intro)
+                           -1
+                           ts ngs))
+                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+           res))
+        ((and (string= tactic "intros")
+              (not (string= cmd "intros.")))
+         (let* ((params (get-obj-intros2 (subseq cmd (after-space cmd))))
+                (nparams (car params))
+                (types-params (cadr params))
+                (len (caddr params))
+                (gts (cadddr params))
+                (ai (add-info-to-tree (list types-params 0 0 0 0 0 0 1 0)
+                                      current-level))
+                (ait (add-info-to-tactic (list types-params -1 gts len)
+                                         "intro"))
+                (res (list nparams
+                           len
+                           types-params
+                           -1
+                           gts ngs))
+                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+           res))
+        ((string= tactic "intros")
+         (let* ((params (get-obj-intros))
+                (nparams (car params))
+                (types-params (cadr params))
+                (len (caddr params))
+                (gts (cadddr params))
+                (ai (add-info-to-tree (list types-params 0 0 0 0 0 0 1 0)
+                                      current-level))
+                (ait (add-info-to-tactic (list types-params -1 gts len)
+                                         "intro"))
+                (res (list   nparams
+                             len
+                             types-params
+                             -1
+                             gts ngs))
+                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+           res))
+        ((string= tactic "case")
+         (let* ((object (subseq cmd (after-space cmd)
+                                (first-dot cmd)))
+                (type (get-type-id object))
+                (ai (add-info-to-tree (list 0 type 0 0 0 0 0 2 0)
+                                      current-level))
+                (ait (add-info-to-tactic (list type 1 ts 1)
+                                         "case"))
+                (res (list (cdr (assoc "case" tactic_id))
+                           1
+                           type
+                           1 ts ngs))
+                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+           res))
+        ((string= tactic "simpl")
+         (progn (add-info-to-tree (list 0 0 0 0 ts 0 0 1 0)
+                                  current-level)
+                (add-info-to-tactic (list 0 0 ts 1)
+                                    "simpl")
+                (list (cdr (assoc "simpl" tactic_id))
+                      1 0 0 ts ngs)))
+        ((string= tactic "trivial")
+         (progn (add-info-to-tree (list 0 0 0 0 0 0 ts 1 1)
+                                  current-level)
+                (add-info-to-tactic (list 0 0 ts 1)
+                                    "trivial")
+                (list (cdr (assoc "trivial" tactic_id))
+                      1 0 0 ts ngs)))
+        ((string= "induction 1" (subseq cmd 0 (if (< 11 (length cmd))
+                                                  11 (length cmd))))
+         (list (cdr (assoc "induction" tactic_id))
+               1 1 1 ts ngs))
+        ((string= tactic "induction")
+         (let* ((object (subseq cmd (after-space cmd)
+                                (first-dot cmd)))
+                (arg-ind (arg-induction object))
+                (type (get-type-id-induction object arg-ind))
+                (ai (add-info-to-tree (list 0 0 0 type 0 0 0 2 0)
+                                      current-level))
+                (ait (add-info-to-tactic (list type arg-ind ts 1)
+                                         "induction"))
+                (ih (setf theorems_id (append theorems_id (list (cons (concat "IH" object)
+                                                                      10)))))
+                (res (list (cdr (assoc "induction" tactic_id))
+                           1 type arg-ind ts ngs))
+                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+           res))
+        ((string= tactic "rewrite")
+         (progn   (add-info-to-tree (list 0 0 0 0 0 (extract-theorem-id cmd)
+                                          0 1 0)
+                                    current-level)
+                  (add-info-to-tactic (list -4 (extract-theorem-id cmd)
+                                            ts 1)
+                                      "rewrite")
+                  (list (cdr (assoc "rewrite" tactic_id))
+                        1 -4
+                        (extract-theorem-id cmd)
+                        ts ngs))
+         )
+        ((string= cmd "simpl; trivial.")
+         (progn (add-info-to-tree (list 0 0 ts 0 0 0 0 1 1)
+                                  current-level)
+                (add-info-to-tactic (list 0 0 ts 1)
+                                    "simpltrivial")
+                (list (cdr (assoc "simpl; trivial" tactic_id))
+                      2 0 0 ts ngs)))))
 
 (defun count-seq (item seq)
   (let ((is? (search item seq)))
@@ -739,7 +782,7 @@
 (defun digits (n)
   (if (= (mod n 10) 0)
       0
-    (1+ (digits (/ n 10)))))
+      (1+ (digits (/ n 10)))))
 
 (defun first-digit (n digits)
   (/ n (expt 10 (1- digits))))
@@ -839,13 +882,6 @@
         ((= i (+ j 30))
          (reverse temp2)))))
 
-(defun between-spaces (txt)
-  (let ((space (1+ (search " " txt))))
-    (subseq txt space (search " " txt :start2 space))))
-
-(defun rem-jumps (cmd)
-  (remove-jumps (between-spaces cmd)))
-
 (defun export-theorem-aux (result name current-level dot-level i)
   (let* ((semis     (save-excursion
                       (skip-chars-backward " \t\n"
@@ -853,8 +889,8 @@
                       (proof-segment-up-to-using-cache (point))))
          (comment   (caar semis))
          (cmd       (cadar semis))
-         (pos_dot   (find-dot cmd))
-         (pos_space (search " " cmd))
+         (pos_dot   (first-dot cmd))
+         (pos_space (first-space cmd))
          (ts        nil))
 
     (cond ((or (string= comment "comment")
@@ -1052,23 +1088,17 @@
        (setf temp (subseq temp (1+ pos)))
        (setf pos (search ";" temp)))))
 
-
-
-
-
-
-
-;;; Functions to save the files
-
 (defun save-file-conventions1 ()
+  "Save the files"
   (interactive)
-  (let ((file (read-file-name "Save in file (don't include the extension): ")))
-    (progn (with-temp-file (concat file "_goals.csv") (insert (extract-features-1)))
-       (with-temp-file (concat file "_proof_tree.csv") (insert (extract-features-2 proof-tree-level)))
-       (with-temp-file (concat file "_tactic.csv") (insert (extract-features-2 tactic-level)))
-       (with-temp-file (concat file (format "_summary.txt")) (insert (extract-names))))))
-
-
+  (let* ((file (read-file-name "Save in file (don't include the extension): "))
+         (func (lambda (name content)
+                 (with-temp-file (concat file name) (insert content)))))
+    (progn
+      (func "_goals.csv"            extract-features-1)
+      (func "_proof_tree.csv"       (extract-features-2 proof-tree-level))
+      (func "_tactic.csv"           (extract-features-2 tactic-level))
+      (func (format "_summary.txt") extract-names))))
 
 (defun remove-last-col (str)
   (if (string= (subseq str (1- (length str))) ":")
@@ -1139,34 +1169,34 @@
 (defun extract-info-up-to-here ()
   "Extract the info of a theorem up to a concrete point"
   (interactive)
-  (setf tdl1 nil
-        tdl2 nil
-        tdl3 nil
-        tdl4 nil
-        tdl5 nil
-        intro nil
-        case nil
+  (setf tdl1         nil
+        tdl2         nil
+        tdl3         nil
+        tdl4         nil
+        tdl5         nil
+        intro        nil
+        case         nil
         simpltrivial nil
-        induction nil
-        simpl nil
-        rewrite nil
-        trivial nil)
-  (let ((final (point))
-        (result nil)
+        induction    nil
+        simpl        nil
+        rewrite      nil
+        trivial      nil)
+  (let ((final         (point))
+        (result        nil)
         (current-level 1))
     (search-backward "Proof.")
     (proof-goto-point)
     (while (< (point)
               final)
-      (let* ((semis (save-excursion
-                      (skip-chars-backward " \t\n"
-                                           (proof-queue-or-locked-end))
-                      (proof-segment-up-to-using-cache (point))))
-             (comment (caar semis))
-             (cmd (cadar semis))
-             (pos_dot (find-dot cmd))
-             (pos_space (search " " cmd))
-             (ts nil))
+      (let* ((semis     (save-excursion
+                          (skip-chars-backward " \t\n"
+                                               (proof-queue-or-locked-end))
+                          (proof-segment-up-to-using-cache (point))))
+             (comment   (caar semis))
+             (cmd       (cadar semis))
+             (pos_dot   (first-dot cmd))
+             (pos_space (first-space cmd))
+             (ts        nil))
         (cond (pos_space
                (progn (setf ts (get-top-symbol))
                       (setf ng (get-number-of-goals))
@@ -1233,17 +1263,15 @@
 (defun extract-feature-theorems ()
   "Extract the information from all the theorems up to a point"
   (interactive)
-  (let ((final (point))
+  (let ((final         (point))
         (current-level 1))
     (export-theorem)
-    (while (< (point)
-              final)
-      (export-theorem))
-    )
+    (while (< (point) final)
+      (export-theorem)))
   (setf saved-theorems (remove-nil-cases)))
 
 (defun remove-nil-cases ()
-  (do ((temp saved-theorems (cdr temp))
+  (do ((temp  saved-theorems (cdr temp))
        (temp2 nil))
       ((endp temp)
        temp2)
@@ -1252,5 +1280,5 @@
             (string= (car (car temp))
                      ""))
         nil
-      (setf temp2 (append (list (car temp))
-                          temp2)))))
+        (setf temp2 (append (list (car temp))
+                            temp2)))))
