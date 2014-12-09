@@ -1,5 +1,8 @@
 ;; Unit tests for ML4PG. Uses Emacs Lisp Regression Testing (ERT)
 
+;; We only focus on plain Coq for now. Feel free to add SSReflect tests!
+(ml4pg-load-coq)
+
 (ert-deftest ml4pg-between-spaces ()
   "Test between-spaces, for extracting Coq names"
   (should (equal (between-spaces "foo bar baz") "bar")))
@@ -16,4 +19,4 @@
 
 (ert-deftest ml4pg-extract-theorem-id ()
   "Test theorem ID extraction"
-  (extract-theorem-id ""))
+  (should (equal (extract-theorem-id "foo bar <- baz.") 123)))

@@ -5,9 +5,11 @@
 
 (defvar mode nil)
 
+;; FIXME: We should use lexical scope. I used quote splicing instead because
+;;        I don't know if this whole system will fall over with lexical scope...
 (defun load-els (dir)
-  (lambda (f)
-    (concat home-dir dir "/" f ".el")))
+  `(lambda (f)
+     (concat home-dir ,dir "/" f ".el")))
 
 (defun ml4pg-load-coq ()
   (mapc (load-els "coq")
@@ -19,7 +21,7 @@
           "clusterdigraph" "trees")))
 
 (defun ml4pg-load-ss ()
-  (mapc (lambda (f) (concat home-dir "ssreflect/" f ".el"))
+  (mapc (load-els "ssreflect")
         '("auxiliary_files" "feature_extraction_2" "matlab_interaction"
           "shortcuts" "menus" "storage" "save_lemmas" "weka"
           "term-tree-definition" "term-tree-theorem" "extraction"
