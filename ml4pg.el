@@ -5,48 +5,34 @@
 
 (defvar mode nil)
 
+(defun load-els (dir)
+  (lambda (f)
+    (concat home-dir dir "/" f ".el")))
+
+(defun ml4pg-load-coq ()
+  (mapc (load-els "coq")
+        '("auxiliary_files" "feature_extractionv2" "matlab_interaction"
+          "shortcuts" "menus" "storage" "save_lemmas" "weka" "automaton"))
+  (mapc (load-els "ssreflect")
+        '("term-tree-definition" "term-tree-theorem" "extraction"
+          "table-to-feature-vector" "weka-definitions" "storage-defs" "diagraph"
+          "clusterdigraph" "trees")))
+
+(defun ml4pg-load-ss ()
+  (mapc (lambda (f) (concat home-dir "ssreflect/" f ".el"))
+        '("auxiliary_files" "feature_extraction_2" "matlab_interaction"
+          "shortcuts" "menus" "storage" "save_lemmas" "weka"
+          "term-tree-definition" "term-tree-theorem" "extraction"
+          "table-to-feature-vector" "weka-definitions" "storage-defs"
+          "automaton" "diagraph" "clusterdigraph" "trees")))
+
 (defun select-mode ()
   (interactive)
   (let ((smode (read-string "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")))
     (setq mode smode)
-    ;; FIXME: Copy-paste much?
-    (cond ((string= mode "s") (progn  (load-file (concat home-dir "ssreflect/auxiliary_files.el"))
-                                      (load-file (concat home-dir "ssreflect/feature_extraction_2.el"))
-                                      (load-file (concat home-dir "ssreflect/matlab_interaction.el"))
-                                      (load-file (concat home-dir "ssreflect/shortcuts.el"))
-                                      (load-file (concat home-dir "ssreflect/menus.el"))
-                                      (load-file (concat home-dir "ssreflect/storage.el"))
-                                      (load-file (concat home-dir "ssreflect/save_lemmas.el"))
-                                      (load-file (concat home-dir "ssreflect/weka.el"))
-                                      (load-file (concat home-dir "ssreflect/term-tree-definition.el"))
-                                      (load-file (concat home-dir "ssreflect/term-tree-theorem.el"))
-                                      (load-file (concat home-dir "ssreflect/extraction.el"))
-                                      (load-file (concat home-dir "ssreflect/table-to-feature-vector.el"))
-                                      (load-file (concat home-dir "ssreflect/weka-definitions.el"))
-                                      (load-file (concat home-dir "ssreflect/storage-defs.el"))
-                                      (load-file (concat home-dir "ssreflect/automaton.el"))
-                                      (load-file (concat home-dir "ssreflect/diagraph.el"))
-                                      (load-file (concat home-dir "ssreflect/clusterdigraph.el"))
-                                      (load-file (concat home-dir "ssreflect/trees.el"))))
+    (cond ((string= mode "s") ml4pg-load-ss)
           ((string= mode "n") nil)
-          (t (progn (load-file (concat home-dir "coq/auxiliary_files.el"))
-                    (load-file (concat home-dir "coq/feature_extractionv2.el"))
-                    (load-file (concat home-dir "coq/matlab_interaction.el"))
-                    (load-file (concat home-dir "coq/shortcuts.el"))
-                    (load-file (concat home-dir "coq/menus.el"))
-                    (load-file (concat home-dir "coq/storage.el"))
-                    (load-file (concat home-dir "coq/save_lemmas.el"))
-                    (load-file (concat home-dir "coq/weka.el"))
-                    (load-file (concat home-dir "ssreflect/term-tree-definition.el"))
-                    (load-file (concat home-dir "ssreflect/term-tree-theorem.el"))
-                    (load-file (concat home-dir "ssreflect/extraction.el"))
-                    (load-file (concat home-dir "ssreflect/table-to-feature-vector.el"))
-                    (load-file (concat home-dir "ssreflect/weka-definitions.el"))
-                    (load-file (concat home-dir "ssreflect/storage-defs.el"))
-                    (load-file (concat home-dir "coq/automaton.el"))
-                    (load-file (concat home-dir "ssreflect/diagraph.el"))
-                    (load-file (concat home-dir "ssreflect/clusterdigraph.el"))
-                    (load-file (concat home-dir "ssreflect/trees.el")))))))
+          (t                  ml4pg-load-coq))))
 
 (require 'cl)
 
