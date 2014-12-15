@@ -357,9 +357,9 @@
 
         ((string= tactic "intros")
            (let* ((params       (get-obj-intros))
-                  (nparams      (car params))
-                  (types-params (cadr params))
-                  (len          (caddr params))
+                  (nparams      (car    params))
+                  (types-params (cadr   params))
+                  (len          (caddr  params))
                   (gts          (cadddr params))
                   (ai           (append-tree types-params 0 0 0 0 0 0 1 0))
                   (ait          (add-info-to-tactic (list types-params -1 gts len) "intro"))
