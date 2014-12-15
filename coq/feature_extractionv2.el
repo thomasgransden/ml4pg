@@ -301,6 +301,9 @@
          (setf trivial (append trivial (list info))))
         (t nil)))
 
+(defun append-to-goal (x)
+  (setf goal-level-temp (cons g goal-level-temp)))
+
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
    the third one is the argument type, the fourth one is if the
@@ -313,9 +316,7 @@
              (string= cmd "3: eauto."))
            (unless (assoc "eauto" tactic_id)
                    (setf tactic_id (append tactic_id (list (cons "eauto" (1+ (length tactic_id)))))))
-           (setf goal-level-temp (cons  (list (cdr (assoc "eauto" tactic_id))
-                                              0 0 0 ts ngs)
-                                        goal-level-temp))
+           (append-to-goal (list (cdr (assoc "eauto" tactic_id)) 0 0 0 ts ngs))
            (when ((assoc "eauto" tactic_id)
                   (export-tactics)))
            (list (cdr (assoc "eauto" tactic_id)) 0 0 0 ts ngs))
@@ -331,7 +332,7 @@
                                            "intro"))
                   (foo (setf hypothesis (append hypothesis (list object))))
                   (res (list (cdr (assoc "intro" tactic_id)) 1 type -1 ts ngs))
-                  (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                  (foo2 (append-to-goal res)))
              res))
 
         ((string= tactic "intro")
@@ -345,7 +346,7 @@
                              (get-obj-intro)
                              -1
                              ts ngs))
-                  (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                  (foo2 (append-to-goal res)))
              res))
 
         ((string= tactic "intros")
@@ -375,7 +376,7 @@
                                types-params
                                -1
                                gts ngs))
-                  (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                  (foo2 (append-to-goal res)))
              res))
 
         ((string= tactic "case")
@@ -390,7 +391,7 @@
                              1
                              type
                              1 ts ngs))
-                  (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                  (foo2 (append-to-goal res)))
              res))
 
         ((string= tactic "simpl")
@@ -398,20 +399,15 @@
                                     current-level)
                   (add-info-to-tactic (list 0 0 ts 1)
                                       "simpl")
-                  (setf goal-level-temp (cons (list (cdr (assoc "simpl" tactic_id))
-                                                    1 0 0 ts ngs)
-                                              goal-level-temp))
-                  (list (cdr (assoc "simpl" tactic_id))
-                        1 0 0 ts ngs)))
+                  (append-to-goal (list (cdr (assoc "simpl" tactic_id)) 1 0 0 ts ngs))
+                  (list (cdr (assoc "simpl" tactic_id)) 1 0 0 ts ngs)))
 
         ((string= tactic "trivial")
            (add-info-to-tree (list 0 0 0 0 0 0 ts 1 1)
                              current-level)
            (add-info-to-tactic (list 0 0 ts 1)
                                "trivial")
-           (setf goal-level-temp (cons (list (cdr (assoc "trivial" tactic_id))
-                                             1 0 0 ts ngs)
-                                       goal-level-temp))
+           (append-to-goal (list (cdr (assoc "trivial" tactic_id)) 1 0 0 ts ngs))
            (list (cdr (assoc "trivial" tactic_id)) 1 0 0 ts ngs))
 
         ((search "induction 1" cmd)
@@ -431,7 +427,7 @@
                                                                         10)))))
                   (res (list (cdr (assoc "induction" tactic_id))
                              1 type arg-ind ts ngs))
-                  (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                  (foo2 (append-to-goal res)))
              res))
 
         ((string= tactic "rewrite")
@@ -441,11 +437,10 @@
            (add-info-to-tactic (list -4 (extract-theorem-id cmd)
                                      ts 1)
                                "rewrite")
-           (setf goal-level-temp (cons (list (cdr (assoc "rewrite" tactic_id))
-                                             1 -4
-                                             (extract-theorem-id cmd)
-                                             ts ngs)
-                                       goal-level-temp))
+           (append-to-goal (list (cdr (assoc "rewrite" tactic_id))
+                                   1 -4
+                                   (extract-theorem-id cmd)
+                                   ts ngs))
            (list (cdr (assoc "rewrite" tactic_id)) 1 -4 (extract-theorem-id cmd) ts ngs))
 
         ((string= cmd "simpl; trivial.")
@@ -453,23 +448,18 @@
                              current-level)
            (add-info-to-tactic (list 0 0 ts 1)
                                "simpltrivial")
-           (setf goal-level-temp (cons  (list (cdr (assoc "simpl; trivial" tactic_id))
-                                              2 0 0 ts ngs)
-                                        goal-level-temp))
+           (append-to-goal (list (cdr (assoc "simpl; trivial" tactic_id))
+                                   2 0 0 ts ngs))
            (list (cdr (assoc "simpl; trivial" tactic_id)) 2 0 0 ts ngs))
 
         ((string= tactic "red.")
-           (setf goal-level-temp (cons  (list (cdr (assoc "red" tactic_id))
-                                              0 0 0 ts ngs)
-                                        goal-level-temp))
+         (append-to-goal (list (cdr (assoc "red" tactic_id)) 0 0 0 ts ngs))
            (list (cdr (assoc "red" tactic_id)) 0 0 0 ts ngs))
 
         (t
            (unless (assoc tactic tactic_id)
              (setf tactic_id (append tactic_id (list (cons tactic (1+ (length tactic_id)))))))
-           (setf goal-level-temp (cons (list (cdr (assoc tactic tactic_id))
-                                             0 0 0 ts ngs)
-                                       goal-level-temp))
+           (append-to-goal (list (cdr (assoc tactic tactic_id)) 0 0 0 ts ngs))
            (unless (assoc tactic tactic_id)
              (export-tactics))
            (list (cdr (assoc tactic tactic_id)) 0 0 0 ts ngs))))
@@ -525,7 +515,7 @@
                            type
                            -1
                            ts ngs))
-                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                (foo2 (append-to-goal res)))
            res))
         ((string= tactic "intro")
          (let* ((type (get-obj-intro))
@@ -538,7 +528,7 @@
                            (get-obj-intro)
                            -1
                            ts ngs))
-                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                (foo2 (append-to-goal res)))
            res))
         ((and (string= tactic "intros")
               (not (string= cmd "intros.")))
@@ -556,7 +546,7 @@
                            types-params
                            -1
                            gts ngs))
-                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                (foo2 (append-to-goal res)))
            res))
         ((string= tactic "intros")
          (let* ((params (get-obj-intros))
@@ -573,7 +563,7 @@
                              types-params
                              -1
                              gts ngs))
-                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                (foo2 (append-to-goal res)))
            res))
         ((string= tactic "case")
          (let* ((object (subseq cmd (after-space cmd)
@@ -587,7 +577,7 @@
                            1
                            type
                            1 ts ngs))
-                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                (foo2 (append-to-goal res)))
            res))
         ((string= tactic "simpl")
          (progn (add-info-to-tree (list 0 0 0 0 ts 0 0 1 0)
@@ -620,7 +610,7 @@
                                                                       10)))))
                 (res (list (cdr (assoc "induction" tactic_id))
                            1 type arg-ind ts ngs))
-                (foo2 (setf goal-level-temp (cons res goal-level-temp))))
+                (foo2 (append-to-goal res)))
            res))
         ((string= tactic "rewrite")
          (progn   (add-info-to-tree (list 0 0 0 0 0 (extract-theorem-id cmd)
