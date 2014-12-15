@@ -20,6 +20,9 @@
 
 (defvar init 0)
 
+(defun append-hyp (x)
+  (setf hypothesis (append hypothesis x)))
+
 (defun first-space (txt)
   "Find the position of the first space in a string"
   (search " " txt))
@@ -93,16 +96,13 @@
 
 (defun get-type-id (object)
   "A function to obtain the type associated with an object"
-  (let* ((a (proof-shell-invisible-cmd-get-result (format (concat "Check " object))))
-         (pos_jump (search nl a :start2 (+ 2 (search " " a))))
+  (let* ((a         (proof-shell-invisible-cmd-get-result (format (concat "Check " object))))
+         (pos_jump  (search nl  a :start2 (+ 2 (search " "  a))))
          (pos_space (search " " a :start2 (+ 2 (search ": " a))))
-         (type (if pos_space
-                   (cdr (assoc (subseq a (+ 2 (search ": " a))
-                                       pos_space)
-                               types_id))
-                 (cdr (assoc (subseq a (+ 2 (search ": " a))
-                                     pos_jump)
-                             types_id)))))
+         (type (cdr (assoc (subseq a (+ 2 (search ": " a))
+                                   (if pos_space pos_space
+                                                 pos_jump)
+                                   types_id)))))
     (if type type -4)))
 
 ;; A function to obtain the value of a top symbol
@@ -127,7 +127,7 @@
          (obj    (proof-shell-invisible-cmd-get-result (format "Show Intro")))
          (object (subseq obj 0 (search nl obj)))
          (dod    (proof-assert-next-command-interactive))
-         (foo    (setf hypothesis (append hypothesis (list object)))))
+         (foo    (append-hyp (list object))))
     (get-type-id object)))
 
 (defun extract-params (seq res)
@@ -194,7 +194,7 @@
          (obj    (proof-shell-invisible-cmd-get-result (format "Show Intros")))
          (dod    (proof-assert-next-command-interactive))
          (params (extract-params obj nil))
-         (foo    (setf hypothesis (append hypothesis params)))
+         (foo    (append-hyp params))
          (types  (get-types-list params 0))
          (num    (get-number-list params))
          (undo2  (proof-shell-invisible-cmd-get-result (format "Undo")))
@@ -204,11 +204,11 @@
 
 (defun get-obj-intros2 (objects)
   (let* ((params (extract-params2 objects nil))
-         (foo (setf hypothesis (append hypothesis params)))
-         (types (get-types-list params 0))
-         (num (get-number-list params))
-         (undo2 (proof-shell-invisible-cmd-get-result (format "Undo")))
-         (gts (get-top-symbols-seq params 0)))
+         (foo    (append-hyp params))
+         (types  (get-types-list params 0))
+         (num    (get-number-list params))
+         (undo2  (proof-shell-invisible-cmd-get-result (format "Undo")))
+         (gts    (get-top-symbols-seq params 0)))
     (list num types (length params) gts)))
 
 (defun search-in-hyp (obj hyp)
@@ -333,7 +333,7 @@
                   (type   (get-type-id object))
                   (ai     (append-tree type 0 0 0 0 0 0 1 0))
                   (ait    (add-info-to-tactic (list type -1 ts 1) "intro"))
-                  (foo    (setf hypothesis (append hypothesis (list object))))
+                  (foo    (append-hyp (list object)))
                   (res    (list (cdr (assoc "intro" tactic_id)) 1 type -1 ts ngs))
                   (foo2   (append-to-goal res)))
              res))
@@ -468,7 +468,7 @@
                   (type (get-type-id object))
                   (ai   (append-tree type 0 0 0 0 0 0 1 0))
                   (ait  (add-info-to-tactic (list type -1 ts 1) "intro"))
-                  (foo  (setf hypothesis (append hypothesis (list object))))
+                  (foo  (append-hyp (list object)))
                   (res  (list (cdr (assoc "intro" tactic_id)) 1 type -1 ts ngs))
                   (foo2 (append-to-goal res)))
              res))
@@ -750,196 +750,204 @@
                       (skip-chars-backward " \t\n"
                                            (proof-queue-or-locked-end))
                       (proof-segment-up-to-using-cache (point))))
-         (comment   (caar semis))
+         (comment   (caar  semis))
          (cmd       (cadar semis))
-         (pos_dot   (first-dot cmd))
+         (pos_dot   (first-dot   cmd))
          (pos_space (first-space cmd))
          (ts        nil))
 
     (cond ((or (string= comment "comment")
                (is-in-search cmd))
-           (progn (proof-assert-next-command-interactive)
-                  (export-theorem-aux result name current-level dot-level i)))
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result name current-level dot-level i))
 
           ((is-problematic cmd)
-           (search-forward "Defined")
-           (proof-goto-point)
-           (proof-assert-next-command-interactive))
+             (search-forward "Defined")
+             (proof-goto-point)
+             (proof-assert-next-command-interactive))
 
           ((or (search "Definition" cmd)
                (search "Fixpoint"   cmd))
-           (progn (proof-assert-next-command-interactive)
-                  (ignore-errors(adddefinition (between-spaces cmd)))
-                  (export-theorem-aux result
-                                      (between-spaces cmd)
-                                      current-level dot-level i))
-           (proof-assert-next-command-interactive))
+             (proof-assert-next-command-interactive)
+             (ignore-errors(adddefinition (between-spaces cmd)))
+             (export-theorem-aux result
+                                 (between-spaces cmd)
+                                 current-level dot-level i)
+             (proof-assert-next-command-interactive))
 
           ((search "Lemma" cmd)
-           (progn (proof-assert-next-command-interactive)
-
-                  (export-theorem-aux result
-                                      (rem-jumps cmd)
-                                      current-level dot-level i)))
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result
+                                 (rem-jumps cmd)
+                                 current-level dot-level i))
 
           ((search "Proof" cmd)
-           (progn (proof-assert-next-command-interactive)
-                  (export-theorem-aux result name current-level dot-level i)))
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result name current-level dot-level i))
 
           ((search "Instance" cmd)
-           (progn (proof-assert-next-command-interactive)
-                  (export-theorem-aux result
-                                      (rem-jumps cmd)
-                                      current-level dot-level i)))
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result
+                                 (rem-jumps cmd)
+                                 current-level dot-level i))
 
           ((search "Theorem" cmd)
-           (progn (proof-assert-next-command-interactive)
-                  (export-theorem-aux result
-                                      (rem-jumps cmd)
-                                      current-level dot-level i)))
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result
+                                 (rem-jumps cmd)
+                                 current-level dot-level i))
 
           ((search "Remark" cmd)
-           (progn (proof-assert-next-command-interactive)
-                  (export-theorem-aux result
-                                      (rem-jumps cmd)
-                                      current-level dot-level i)))
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result
+                                 (rem-jumps cmd)
+                                 current-level dot-level i))
 
           ((search "Corollary" cmd)
-           (progn (proof-assert-next-command-interactive)
-                  (export-theorem-aux result
-                                      (rem-jumps cmd)
-                                      current-level dot-level i)))
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result
+                                 (rem-jumps cmd)
+                                 current-level dot-level i))
 
           ((or (search "Qed." cmd)
                (search "Defined." cmd))
-           (progn (proof-assert-next-command-interactive)
-                  (progn (setf proof-tree-level (append proof-tree-level (list (compute-proof-result))))
-                         (setf tactic-level (append tactic-level (list (compute-tactic-result))))
-                         (if name
-                             (split-feature-vector name (flat (reverse result))))
-                         (ignore-errors (addthm name)))))
+             (proof-assert-next-command-interactive)
+             (setf proof-tree-level (append proof-tree-level (list (compute-proof-result))))
+             (setf tactic-level (append tactic-level (list (compute-tactic-result))))
+             (if name
+                 (split-feature-vector name (flat (reverse result))))
+             (ignore-errors (addthm name)))
 
           (pos_space
-           (progn (setf ts (get-top-symbol))
-                  (setf ng (get-number-of-goals))
-                  (proof-assert-next-command-interactive)
-                  (setf ng2 (get-number-of-goals))
-                  (cond ((< ng ng2)
-                         (export-theorem-aux
-                          (do ((temp (list-of-commands cmd)
-                                     (cdr temp))
-                               (temp2 result))
-                              ((endp temp)
-                               temp2)
-                            (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                                       0 (if (search " " (car temp))
-                                                                             (search " " (car temp))
-                                                                           (length (car temp))))
-                                                           (get-number-of-goals)
-                                                           ts current-level 1)
-                                              temp2)))
-                          name
-                          (1+ current-level)
-                          (1+ current-level)
-                          (1+ i)))
+             (setf ts (get-top-symbol))
+             (setf ng (get-number-of-goals))
+             (proof-assert-next-command-interactive)
+             (setf ng2 (get-number-of-goals))
+             (cond
+              ((< ng ng2)
+                 (export-theorem-aux
+                  (do ((temp (list-of-commands cmd)
+                             (cdr temp))
+                       (temp2 result))
+                      ((endp temp)
+                       temp2)
+                    (setf temp2 (cons (get-numbers cmd (subseq (car temp)
+                                                               0 (if (search " " (car temp))
+                                                                     (search " " (car temp))
+                                                                   (length (car temp))))
+                                                   (get-number-of-goals)
+                                                   ts current-level 1)
+                                      temp2)))
+                  name
+                  (1+ current-level)
+                  (1+ current-level)
+                  (1+ i)))
 
-                        ((< ng2 ng)
-                         (export-theorem-aux
-                          (do ((temp (list-of-commands cmd)
-                                     (cdr temp))
-                               (temp2 result))
-                              ((endp temp)
-                               temp2)
-                            (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                                       0 (if (search " " (car temp))
-                                                                             (search " " (car temp))
-                                                                           (length (car temp))))
-                                                           (get-number-of-goals)
-                                                           ts current-level 1)
-                                              temp2)))
-                          name
-                          current-level
-                          dot-level
-                          (1+ i)))
+              ((< ng2 ng)
+                 (export-theorem-aux
+                  (do ((temp (list-of-commands cmd)
+                             (cdr temp))
+                       (temp2 result))
+                      ((endp temp)
+                       temp2)
+                    (setf temp2 (cons (get-numbers cmd (subseq (car temp)
+                                                               0 (if (search " " (car temp))
+                                                                     (search " " (car temp))
+                                                                   (length (car temp))))
+                                                   (get-number-of-goals)
+                                                   ts current-level 1)
+                                      temp2)))
+                  name
+                  current-level
+                  dot-level
+                  (1+ i)))
 
-                        (t (export-theorem-aux
-                            (do ((temp (list-of-commands cmd)
-                                       (cdr temp))
-                                 (temp2 result))
-                                ((endp temp)
-                                 temp2)
-                              (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                                         0 (if (search " " (car temp))
-                                                                               (search " " (car temp))
-                                                                             (length (car temp))))
-                                                             (get-number-of-goals)
-                                                             ts current-level 1)
-                                                temp2)))
+              (t
+                 (export-theorem-aux
+                  (do ((temp (list-of-commands cmd)
+                             (cdr temp))
+                       (temp2 result))
+                      ((endp temp)
+                       temp2)
+                    (setf temp2 (cons (get-numbers cmd (subseq (car temp)
+                                                               0 (if (search " " (car temp))
+                                                                     (search " " (car temp))
+                                                                   (length (car temp))))
+                                                   (get-number-of-goals)
+                                                   ts current-level 1)
+                                      temp2)))
 
-                            name
-                            (1+ current-level)
-                            dot-level
-                            (1+ i))))))
-          (t (progn (setf ts (get-top-symbol))
+                  name
+                  (1+ current-level)
+                  dot-level
+                  (1+ i)))))
+
+          (t
+             (progn (setf ts (get-top-symbol))
                     (setf ng (get-number-of-goals))
                     (proof-assert-next-command-interactive)
 
                     (setf ng2 (get-number-of-goals))
-                    (cond ((< ng ng2)
-                           (export-theorem-aux
-                            (do ((temp (list-of-commands cmd)
-                                       (cdr temp))
-                                 (temp2 result))
-                                ((endp temp)
-                                 temp2)
-                              (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                                         0 (if (search " " (car temp))
-                                                                               (search " " (car temp))
-                                                                             (length (car temp))))
-                                                             (get-number-of-goals)
-                                                             ts current-level 1)
-                                                temp2)))
-                            name
-                            (1+ current-level)
-                            (1+ current-level)
-                            (1+ i)))
-                          ((< ng2 ng)
-                           (export-theorem-aux
-                            (do ((temp (list-of-commands cmd)
-                                       (cdr temp))
-                                 (temp2 result))
-                                ((endp temp)
-                                 temp2)
-                              (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                                         0 (if (search " " (car temp))
-                                                                               (search " " (car temp))
-                                                                             (length (car temp))))
-                                                             (get-number-of-goals)
-                                                             ts current-level 1)
-                                                temp2)))
+                    (cond
+                     ((< ng ng2)
+                        (export-theorem-aux
+                         (do ((temp (list-of-commands cmd)
+                                    (cdr temp))
+                              (temp2 result))
+                             ((endp temp)
+                              temp2)
+                           (setf temp2 (cons (get-numbers cmd (subseq (car temp)
+                                                                      0 (if (search " " (car temp))
+                                                                            (search " " (car temp))
+                                                                          (length (car temp))))
+                                                          (get-number-of-goals)
+                                                          ts current-level 1)
+                                             temp2)))
+                         name
+                         (1+ current-level)
+                         (1+ current-level)
+                         (1+ i)))
 
-                            name
-                            current-level
-                            dot-level
-                            (1+ i)))
-                          (t (export-theorem-aux
-                              (do ((temp (list-of-commands cmd)
-                                         (cdr temp))
-                                   (temp2 result))
-                                  ((endp temp)
-                                   temp2)
-                                (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                                           0 (if (search " " (car temp))
-                                                                                 (search " " (car temp))
-                                                                               (length (car temp))))
-                                                               (get-number-of-goals)
-                                                               ts current-level 1)
-                                                  temp2)))
+                     ((< ng2 ng)
+                        (export-theorem-aux
+                         (do ((temp (list-of-commands cmd)
+                                    (cdr temp))
+                              (temp2 result))
+                             ((endp temp)
+                              temp2)
+                           (setf temp2 (cons (get-numbers cmd
+                                                          (subseq (car temp)
+                                                                  0
+                                                                  (cond (search " " (car temp))
+                                                                        (t (length (car temp)))))
+                                                          (get-number-of-goals)
+                                                          ts
+                                                          current-level
+                                                          1)
+                                             temp2)))
 
-                              name
-                              (1+ current-level)
-                              dot-level
-                              (1+ i)))))))))
+                         name
+                         current-level
+                         dot-level
+                         (1+ i)))
+
+                     (t
+                        (export-theorem-aux
+                         (do ((temp (list-of-commands cmd)
+                                    (cdr temp))
+                              (temp2 result))
+                             ((endp temp)
+                              temp2)
+                           (setf temp2 (cons (get-numbers cmd (subseq (car temp)
+                                                                      0 (cond (search " " (car temp))
+                                                                              (t (length (car temp)))))
+                                                          (get-number-of-goals)
+                                                          ts current-level 1)
+                                             temp2)))
+                         name
+                         (1+ current-level)
+                         dot-level
+                         (1+ i)))))))))
 
 (defun list-of-commands (str)
   (do ((temp (subseq str 0 (1- (length str))))
