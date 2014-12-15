@@ -117,7 +117,7 @@
           ((string= "@eq" fst-symbol)    6)
           ((string= "and" fst-symbol)    4)
           ((string= "iff" fst-symbol)    8)
-          ((string= "or" fst-symbol)     3)
+          ((string= "or"  fst-symbol)     3)
           (t                             0))))
 
 (defun get-obj-intro ()
@@ -130,25 +130,20 @@
          (foo    (append-hyp (list object))))
     (get-type-id object)))
 
-(defun extract-params (seq res)
+(defun extract-params-aux (sep seq res)
   (let ((pos_space (search " " seq))
-        (pos_jump (search nl seq)))
+        (pos_jump  (search sep seq)))
     (if pos_space
-        (extract-params (subseq seq (+ 1 pos_space))
-                        (cons (subseq seq 0 pos_space)
-                              res))
-      (reverse (cons (subseq seq 0 pos_jump)
-                     res)))))
+        (extract-params-aux sep
+                            (subseq seq (+ 1 pos_space))
+                            (cons (subseq seq 0 pos_space) res))
+        (reverse (cons (subseq seq 0 pos_jump) res)))))
+
+(defun extract-params (seq res)
+  (extract-params-aux nl seq res))
 
 (defun extract-params2 (seq res)
-  (let ((pos_space (search " " seq))
-        (pos_jump (search "." seq)))
-    (if pos_space
-        (extract-params2 (subseq seq (+ 1 pos_space))
-                         (cons (subseq seq 0 pos_space)
-                               res))
-      (reverse (cons (subseq seq 0 pos_jump)
-                     res)))))
+  (extract-params-aux "." seq res))
 
 (defun get-types-list (list res)
   "Given a list of objects, obtain the value associated with their types"
