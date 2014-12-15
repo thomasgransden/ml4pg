@@ -215,7 +215,7 @@
       (search-in-hyp obj (cdr hyp)))))
 
 (defvar add_to 0.1)
-(defvar start 100)
+(defvar start  100)
 
 (defun extract-theorem-id (cmd)
   (let* ((s<- (search "<-" cmd))
@@ -252,17 +252,16 @@
     (if err -1 1)))
 
 (defun get-type-id-induction (object arg-ind)
-  (if (equal arg-ind 1)
-      (let ((ps0 (proof-shell-invisible-cmd-get-result (format "Undo")))
-            (gt (get-type-id object))
-            (ps3 (proof-shell-invisible-cmd-get-result (concat "induction " object))))
-        gt)
-    (let ((ps0 (proof-shell-invisible-cmd-get-result (format "Undo")))
-          (ps (proof-shell-invisible-cmd-get-result (concat "intro " object)))
-          (gt (get-type-id object))
-          (ps2 (proof-shell-invisible-cmd-get-result (format "Undo")))
-          (ps3 (proof-shell-invisible-cmd-get-result (concat "induction " object))))
-      gt)))
+  (let (gt
+        (check (equal arg-ind 1)))
+    (proof-shell-invisible-cmd-get-result (format "Undo"))
+    (unless check
+      (proof-shell-invisible-cmd-get-result (concat "intro " object)))
+    (setf gt (get-type-id object))
+    (unless check
+      (proof-shell-invisible-cmd-get-result (format "Undo")))
+    (proof-shell-invisible-cmd-get-result (concat "induction " object))
+    gt))
 
 (defun add-info-to-tree (info level)
   "Add the information to the corresponding tree depth level"
