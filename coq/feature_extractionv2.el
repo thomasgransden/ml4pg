@@ -351,35 +351,6 @@
         ((string= tactic "intros")
            (list (cdr (assoc "intro" tactic_id)) 1 1 -1 ngs ngs))
 
-        ((and (string= tactic "intros")
-              (not (string= cmd "intros."))
-              (not (string= (subseq cmd 0 (if (< 7 (length cmd))
-                                              7 (length cmd)))
-                            "intros;"))
-              (not (string= (subseq cmd 0 (if (< 8 (length cmd))
-                                              8 (length cmd)))
-                            "intros ["))
-              (not (string= (subseq cmd 0 (if (< 12 (length cmd))
-                                              12 (length cmd)))
-                            "intros until"))
-              (not (search ";intros" cmd)))
-           (let* ((params (get-obj-intros2 (subseq cmd (after-space cmd))))
-                  (nparams (car params))
-                  (types-params (cadr params))
-                  (len (caddr params))
-                  (gts (cadddr params))
-                  (ai (add-info-to-tree (list types-params 0 0 0 0 0 0 1 0)
-                                        current-level))
-                  (ait (add-info-to-tactic (list types-params -1 gts len)
-                                           "intro"))
-                  (res (list nparams
-                             len
-                             types-params
-                             -1
-                             gts ngs))
-                  (foo2 (setf goal-level-temp (cons res goal-level-temp))))
-             res))
-
         ((or (string= (subseq cmd 0 (if (< 8 (length cmd))
                                         8 (length cmd)))
                       "intros [")

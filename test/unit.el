@@ -33,3 +33,7 @@
 (ert-deftest ml4pg-extract-theorem-id ()
   "Test theorem ID extraction"
   (should (equal (extract-theorem-id "foo bar <- baz.") 123)))
+
+(ert-deftest ml4pg-get-numbers-dead-branch ()
+  "Check for dead branches is get-numbers"
+  (should (equal (get-numbers nil "intros" nil nil nil nil) 123)))
