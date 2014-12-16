@@ -14,7 +14,7 @@
 ;;        I don't know if this whole system will fall over with lexical scope...
 (defun load-els (dir)
   `(lambda (f)
-     (concat home-dir ,dir "/" f ".el")))
+     (load-file (concat home-dir ,dir "/" f ".el"))))
 
 (defun ml4pg-load-coq ()
   (mapc (load-els "coq")
@@ -37,9 +37,9 @@
   (interactive)
   (let ((smode (read-string "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")))
     (setq mode smode)
-    (cond ((string= mode "s") ml4pg-load-ss)
+    (cond ((string= mode "s") (ml4pg-load-ss))
           ((string= mode "n") nil)
-          (t                  ml4pg-load-coq))))
+          (t                  (ml4pg-load-coq)))))
 
 (require 'cl)
 

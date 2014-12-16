@@ -1,8 +1,8 @@
 (defun str-between (str start end)
-  (subseq str (search start str) (search end str)))
+  (subseq str (1+ (search start str)) (search end str)))
 
 (defun str-to (str end)
-  (substr str 0 end))
+  (subseq str 0 end))
 
 ;; FIXME: we're saving to home-dir/*.txt but reading from home-dir/coq/*.txt
 
@@ -48,5 +48,5 @@
           (amper  (search "&" temp)))
       (progn
         (setf temp2 (append temp2 (list (cons (str-to temp amper)
-                                              (string-to-number (str-between temp (1+ amper) dollar))))))
+                                              (string-to-number (str-between temp "&" "$"))))))
         (setf temp  (subseq temp (1+ dollar)))))))

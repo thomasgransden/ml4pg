@@ -45,3 +45,6 @@
 (ert-deftest ml4pg-first-space ()
   "Check we can find the first space in a string"
   (should (equal (first-space "abc def") 3)))
+
+(ert-deftest ml4pg-str-between ()
+  (should (equal (str-between "abcdefghijkl" "c" "ijk") "defgh")))
