@@ -295,11 +295,11 @@
          (setf trivial (append trivial (list info))))
         (t nil)))
 
-(defun append-to-goal (x)
-  (setf goal-level-temp (cons g goal-level-temp)))
+(defmacro append-to-goal (x)
+  `(setf goal-level-temp (cons ,x goal-level-temp)))
 
-(defun append-to-tactic (tactic)
-  (setf tactic_id (append tactic_id (list (cons tactic  (1+ (length tactic_id)))))))
+(defmacro append-to-tactic (tactic)
+  `(setf tactic_id (append tactic_id (list (cons ,tactic  (1+ (length tactic_id)))))))
 
 (defun append-tree (a b c d e f g h i)
   (add-info-to-tree (list a b c d e f g h i) current-level))
@@ -685,45 +685,43 @@
           (obtain-tactic-result rewrite)
           (obtain-tactic-result trivial)))
 
-(defvar useless-terms '("Structure" "Section" "Add Ring" "Hypothesis"
+(defvar problematic-lemmas )
+
+(defun is-in-search (cmd)
+  (do ((useless-terms '("Structure" "Section" "Add Ring" "Hypothesis"
                         "Hypotheses" "Include" "Export" "Parameter" "Axiom"
                         "End" "Notation" "Hint" "Inductive" "Variable"
                         "Implicit" "Import" "Canonical" "Coercion" "Next"
                         "Local" "Set" "Instance" "Module" "Ltac" "Let" "Opaque"
                         "Bind" "Scope" "Require" "Infix" "Record" "Fact" "Print"
-                        "Arguments" "Function"))
+                        "Arguments" "Function")
+                      (cdr useless-terms))
+       (is nil))
+      ((or (endp useless-terms)
+           is)
+       is)
+    (if (search (car useless-terms) cmd)
+        (setf is t))))
 
-(defvar problematic-lemmas '("exists T; auto."
+(defun is-problematic (cmd)
+  (do ((problematic-lemmas '("exists T; auto."
                              "assert (Mem.perm m1 b i Max Nonempty)."
                              "assert (UNCHANGED:" "destruct idg as"
                              "eapply T.lub_right; eauto."
                              "eapply T.glb_right; eauto."
                              "+ subst e'; simpl in *."
-                             "eapply T.glb_left; eauto. "))
-
-(defun is-in-search (cmd)
-  (do ((temp useless-terms (cdr temp))
+                             "eapply T.glb_left; eauto. ")
+                           (cdr problematic-lemmas))
        (is nil))
-      ((or (endp temp)
+      ((or (endp problematic-lemmas)
            is)
        is)
-    (if (search (car temp) cmd)
+    (if (search (car problematic-lemmas) cmd)
         (setf is t))))
-
-(defun is-problematic (cmd)
-  (do ((temp problematic-lemmas (cdr temp))
-       (is nil))
-      ((or (endp temp)
-           is)
-       is)
-    (if (search (car temp) cmd)
-        (setf is t))))
-
-(defvar var-cl 1)
 
 (defun split-feature-vector (name fv)
   (let ((len (1+ (floor (length fv) 30))))
-    (do ((i 0 (+ i 1)))
+    (do ((i 0 (1+ i)))
         ((equal i len)
          nil)
       (setf saved-theorems (append saved-theorems
@@ -764,16 +762,12 @@
                (search "Fixpoint"   cmd))
              (proof-assert-next-command-interactive)
              (ignore-errors(adddefinition (between-spaces cmd)))
-             (export-theorem-aux result
-                                 (between-spaces cmd)
-                                 current-level dot-level i)
+             (export-theorem-aux result (between-spaces cmd) current-level dot-level i)
              (proof-assert-next-command-interactive))
 
           ((search "Lemma" cmd)
              (proof-assert-next-command-interactive)
-             (export-theorem-aux result
-                                 (rem-jumps cmd)
-                                 current-level dot-level i))
+             (export-theorem-aux result (rem-jumps cmd) current-level dot-level i))
 
           ((search "Proof" cmd)
              (proof-assert-next-command-interactive)
@@ -817,131 +811,45 @@
              (setf ng (get-number-of-goals))
              (proof-assert-next-command-interactive)
              (setf ng2 (get-number-of-goals))
-             (cond
-              ((< ng ng2)
-                 (export-theorem-aux
-                  (do ((temp (list-of-commands cmd)
-                             (cdr temp))
-                       (temp2 result))
-                      ((endp temp)
-                       temp2)
-                    (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                               0 (if (search " " (car temp))
-                                                                     (search " " (car temp))
-                                                                   (length (car temp))))
-                                                   (get-number-of-goals)
-                                                   ts current-level 1)
-                                      temp2)))
-                  name
-                  (1+ current-level)
-                  (1+ current-level)
-                  (1+ i)))
+             (let ((arg (look-through-commands cmd result ts current-level)))
+               (cond
+                ((< ng ng2)
+                   (export-theorem-aux arg name (1+ current-level) (1+ current-level) (1+ i)))
 
-              ((< ng2 ng)
-                 (export-theorem-aux
-                  (do ((temp (list-of-commands cmd)
-                             (cdr temp))
-                       (temp2 result))
-                      ((endp temp)
-                       temp2)
-                    (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                               0 (if (search " " (car temp))
-                                                                     (search " " (car temp))
-                                                                   (length (car temp))))
-                                                   (get-number-of-goals)
-                                                   ts current-level 1)
-                                      temp2)))
-                  name
-                  current-level
-                  dot-level
-                  (1+ i)))
+                ((< ng2 ng)
+                   (export-theorem-aux arg name current-level      dot-level          (1+ i)))
 
-              (t
-                 (export-theorem-aux
-                  (do ((temp (list-of-commands cmd)
-                             (cdr temp))
-                       (temp2 result))
-                      ((endp temp)
-                       temp2)
-                    (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                               0 (if (search " " (car temp))
-                                                                     (search " " (car temp))
-                                                                   (length (car temp))))
-                                                   (get-number-of-goals)
-                                                   ts current-level 1)
-                                      temp2)))
-
-                  name
-                  (1+ current-level)
-                  dot-level
-                  (1+ i)))))
+                (t
+                   (export-theorem-aux arg name (1+ current-level) dot-level          (1+ i))))))
 
           (t
-             (progn (setf ts (get-top-symbol))
-                    (setf ng (get-number-of-goals))
-                    (proof-assert-next-command-interactive)
+             (setf ts (get-top-symbol))
+             (setf ng (get-number-of-goals))
+             (proof-assert-next-command-interactive)
+             (setf ng2 (get-number-of-goals))
+             (let ((arg (look-through-commands cmd result ts current-level)))
+              (cond
+               ((< ng ng2)
+                  (export-theorem-aux arg name (1+ current-level) (1+ current-level) (1+ i)))
 
-                    (setf ng2 (get-number-of-goals))
-                    (cond
-                     ((< ng ng2)
-                        (export-theorem-aux
-                         (do ((temp (list-of-commands cmd)
-                                    (cdr temp))
-                              (temp2 result))
-                             ((endp temp)
-                              temp2)
-                           (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                                      0 (if (search " " (car temp))
-                                                                            (search " " (car temp))
-                                                                          (length (car temp))))
-                                                          (get-number-of-goals)
-                                                          ts current-level 1)
-                                             temp2)))
-                         name
-                         (1+ current-level)
-                         (1+ current-level)
-                         (1+ i)))
+               ((< ng2 ng)
+                  (export-theorem-aux arg name current-level dot-level (1+ i)))
 
-                     ((< ng2 ng)
-                        (export-theorem-aux
-                         (do ((temp (list-of-commands cmd)
-                                    (cdr temp))
-                              (temp2 result))
-                             ((endp temp)
-                              temp2)
-                           (setf temp2 (cons (get-numbers cmd
-                                                          (subseq (car temp)
-                                                                  0
-                                                                  (cond (search " " (car temp))
-                                                                        (t (length (car temp)))))
-                                                          (get-number-of-goals)
-                                                          ts
-                                                          current-level
-                                                          1)
-                                             temp2)))
+               (t
+                  (export-theorem-aux arg name (1+ current-level) dot-level (1+ i)))))))))
 
-                         name
-                         current-level
-                         dot-level
-                         (1+ i)))
-
-                     (t
-                        (export-theorem-aux
-                         (do ((temp (list-of-commands cmd)
-                                    (cdr temp))
-                              (temp2 result))
-                             ((endp temp)
-                              temp2)
-                           (setf temp2 (cons (get-numbers cmd (subseq (car temp)
-                                                                      0 (cond (search " " (car temp))
-                                                                              (t (length (car temp)))))
-                                                          (get-number-of-goals)
-                                                          ts current-level 1)
-                                             temp2)))
-                         name
-                         (1+ current-level)
-                         dot-level
-                         (1+ i)))))))))
+(defun look-through-commands (cmd, start-result, ts, current-level)
+  (do ((cmds       (list-of-commands cmd)
+                   (cdr cmds))
+       (end-result start-result))
+      ((endp cmds)
+       end-result)
+    (setf end-result (cons (get-numbers cmd (subseq (car cmds)
+                                                    0 (cond (search " " (car cmds))
+                                                            (t (length (car cmds)))))
+                                        (get-number-of-goals)
+                                        ts current-level 1)
+                           end-result))))
 
 (defun list-of-commands (str)
   (do ((temp (subseq str 0 (1- (length str))))
