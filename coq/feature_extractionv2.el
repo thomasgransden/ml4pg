@@ -20,8 +20,8 @@
 
 (defvar init 0)
 
-(defun append-hyp (x)
-  (setf hypothesis (append hypothesis x)))
+(defmacro append-hyp (x)
+  `(setf hypothesis (append hypothesis ,x)))
 
 (defun first-space (txt)
   "Find the position of the first space in a string"
@@ -105,9 +105,8 @@
                                    types_id)))))
     (if type type -4)))
 
-;; A function to obtain the value of a top symbol
-
 (defun get-top-symbol ()
+  "Obtain the value of a top symbol"
   (proof-shell-invisible-cmd-get-result (format "Set Printing All"))
   (let* ((res        (proof-shell-invisible-cmd-get-result (format "Focus")))
          (res2       (subseq res (+ 32 (search "============================" res))))
@@ -135,7 +134,7 @@
         (pos_jump  (search sep seq)))
     (if pos_space
         (extract-params-aux sep
-                            (subseq seq (+ 1 pos_space))
+                            (subseq seq (1+ pos_space))
                             (cons (subseq seq 0 pos_space) res))
         (reverse (cons (subseq seq 0 pos_jump) res)))))
 
@@ -151,15 +150,14 @@
       (* -1 res)
     (get-types-list (cdr list)
                     (+ (* -1 (get-type-id (car list))
-                          (expt 10 (- (length list)
-                                      1)))
+                          (expt 10 (1- (length list))))
                        res))))
 
 (defun get-number-list (list)
   "Obtain the number of tactics applied"
   (if (endp list)
       0
-      (+ (expt 10 (- (length list) 1))
+      (+ (expt 10 (1- (length list)))
          (get-number-list (cdr list)))))
 
 (defun get-top-symbols-list (len res)
@@ -168,8 +166,8 @@
       res
     (let ((gs (get-top-symbol))
           (ps (proof-shell-invisible-cmd-get-result (format "intro"))))
-      (+ (get-top-symbols-list (- len 1)
-                               (+ (* gs (expt 10 (- len 1)))
+      (+ (get-top-symbols-list (1- len)
+                               (+ (* gs (expt 10 (1- len)))
                                   res))))))
 
 (defun get-top-symbols-seq (seq res)
@@ -178,8 +176,7 @@
     (let ((gs (get-top-symbol))
           (ps (proof-shell-invisible-cmd-get-result (format (concat "intro " (car seq))))))
       (+ (get-top-symbols-seq (cdr seq)
-                              (+ (* gs (expt 10 (- (length seq)
-                                                   1)))
+                              (+ (* gs (expt 10 (1- (length seq))))
                                  res))))))
 
 (defun get-obj-intros ()
@@ -262,6 +259,9 @@
       (proof-shell-invisible-cmd-get-result (format "Undo")))
     (proof-shell-invisible-cmd-get-result (concat "induction " object))
     gt))
+
+(defmacro append-to (name val)
+  `(setf ,name (append ,name (list ,val))))
 
 (defun add-info-to-tree (info level)
   "Add the information to the corresponding tree depth level"
