@@ -744,8 +744,6 @@
                       (proof-segment-up-to-using-cache (point))))
          (comment   (caar  semis))
          (cmd       (cadar semis))
-         (pos_dot   (first-dot   cmd))
-         (pos_space (first-space cmd))
          (ts        nil))
 
     (cond ((or (string= comment "comment")
