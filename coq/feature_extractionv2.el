@@ -806,22 +806,6 @@
                  (split-feature-vector name (flat (reverse result))))
              (ignore-errors (addthm name)))
 
-          (pos_space
-             (setf ts (get-top-symbol))
-             (setf ng (get-number-of-goals))
-             (proof-assert-next-command-interactive)
-             (setf ng2 (get-number-of-goals))
-             (let ((arg (look-through-commands cmd result ts current-level)))
-               (cond
-                ((< ng ng2)
-                   (export-theorem-aux arg name (1+ current-level) (1+ current-level) (1+ i)))
-
-                ((< ng2 ng)
-                   (export-theorem-aux arg name current-level      dot-level          (1+ i)))
-
-                (t
-                   (export-theorem-aux arg name (1+ current-level) dot-level          (1+ i))))))
-
           (t
              (setf ts (get-top-symbol))
              (setf ng (get-number-of-goals))
@@ -833,10 +817,10 @@
                   (export-theorem-aux arg name (1+ current-level) (1+ current-level) (1+ i)))
 
                ((< ng2 ng)
-                  (export-theorem-aux arg name current-level dot-level (1+ i)))
+                  (export-theorem-aux arg name current-level      dot-level          (1+ i)))
 
                (t
-                  (export-theorem-aux arg name (1+ current-level) dot-level (1+ i)))))))))
+                  (export-theorem-aux arg name (1+ current-level) dot-level          (1+ i)))))))))
 
 (defun look-through-commands (cmd, start-result, ts, current-level)
   (do ((cmds       (list-of-commands cmd)
