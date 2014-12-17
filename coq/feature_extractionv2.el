@@ -96,41 +96,58 @@
 
 (defun get-type-id (object)
   "A function to obtain the type associated with an object"
-  (let* ((a         (proof-shell-invisible-cmd-get-result (format (concat "Check " object))))
-         (pos_jump  (search nl  a :start2 (+ 2 (search " "  a))))
-         (pos_space (search " " a :start2 (+ 2 (search ": " a))))
+  (get-type-id-aux (check-object object)))
+
+(defun check-object (object)
+  (proof-shell-invisible-cmd-get-result (format (concat "Check " object))))
+
+(defun get-type-id-aux (a)
+  (let* ((pos_jump  (search nl  a :start2 (+ 2 (first-space  a))))
+         (pos_space (search " " a :start2 (+ 2 (search ": "  a))))
          (type (cdr (assoc (subseq a (+ 2 (search ": " a))
-                                   (if pos_space pos_space
-                                                 pos_jump))
+                                   (cond ((pos_space) (pos_jump))))
                            types_id))))
-    (if type type -4)))
+    (cond ((type) (-4)))))
+
+(defun get-top-symbol-aux (fst-symbol goal)
+  (cond ((string= "forall" fst-symbol) 5)
+        ((search  "->"     goal)       7)
+        ((string= "@eq"    fst-symbol) 6)
+        ((string= "and"    fst-symbol) 4)
+        ((string= "iff"    fst-symbol) 8)
+        ((string= "or"     fst-symbol) 3)
+                                      (0)))
+
+(defun goal-str ()
+  (proof-shell-invisible-cmd-get-result (format "Set Printing All"))
+  (let* ((raw (proof-shell-invisible-cmd-get-result (format "Focus")))
+         (goal   (str-after raw "============================")))
+    (goal)))
+
+(defun str-after (str pattern)
+  (subseq str (+ (length pattern) (search pattern str))))
 
 (defun get-top-symbol ()
   "Obtain the value of a top symbol"
-  (proof-shell-invisible-cmd-get-result (format "Set Printing All"))
-  (let* ((res        (proof-shell-invisible-cmd-get-result (format "Focus")))
-         (res2       (subseq res (+ 32 (search "============================" res))))
-         (fst-symbol (subseq res2 0 (search " " res2))))
-    (cond ((string= fst-symbol "forall") 5)
-          ((search "->" res2)            7)
-          ((string= "@eq" fst-symbol)    6)
-          ((string= "and" fst-symbol)    4)
-          ((string= "iff" fst-symbol)    8)
-          ((string= "or"  fst-symbol)    3)
-          (t                             0))))
+  (let* ((goal       (goal-str))
+         (fst-symbol (subseq goal 0 (first-space goal))))
+    (get-top-symbol-aux fst-symbol goal)))
+
+(defun show-intro ()
+  (proof-shell-invisible-cmd-get-result (format "Show Intro")))
 
 (defun get-obj-intro ()
   "In some cases the intro tactic does not have parameters. This obtains the
    type of the object introduced with the intro tactic in those cases"
   (let* ((undo   (proof-undo-last-successful-command))
-         (obj    (proof-shell-invisible-cmd-get-result (format "Show Intro")))
+         (obj    (show-intro))
          (object (subseq obj 0 (search nl obj)))
          (dod    (proof-assert-next-command-interactive))
          (foo    (append-hyp (list object))))
     (get-type-id object)))
 
 (defun extract-params-aux (sep seq res)
-  (let ((pos_space (search " " seq))
+  (let ((pos_space (first-space seq))
         (pos_jump  (search sep seq)))
     (if pos_space
         (extract-params-aux sep
@@ -179,19 +196,24 @@
                               (+ (* gs (expt 10 (1- (length seq))))
                                  res))))))
 
+(defun do-show-intros ()
+  (proof-shell-invisible-cmd-get-result (format "Show Intros")))
+
+(defun do-undo ()
+  (proof-shell-invisible-cmd-get-result (format "Undo")))
+
 (defun get-obj-intros ()
   "Obtain the values associated with intros both for the case when parameters
    are given and the case intros."
   (let* ((undo   (proof-undo-last-successful-command))
-         (obj    (proof-shell-invisible-cmd-get-result (format "Show Intros")))
+         (obj    (do-show-intros))
          (dod    (proof-assert-next-command-interactive))
          (params (extract-params obj nil))
          (foo    (append-hyp params))
          (types  (get-types-list params 0))
          (num    (get-number-list params))
-         (undo2  (proof-shell-invisible-cmd-get-result (format "Undo")))
-         (gts    (get-top-symbols-list (length params)
-                                       0)))
+         (undo2  (do-undo))
+         (gts    (get-top-symbols-list (length params) 0)))
     (list num types (length params) gts)))
 
 (defun get-obj-intros2 (objects)
@@ -205,41 +227,33 @@
 
 (defun search-in-hyp (obj hyp)
   "Obtain the value associated with a theorem"
-  (if (endp hyp)
-      nil
+  (unless (endp hyp)
     (if (string= obj (car hyp))
         t
-      (search-in-hyp obj (cdr hyp)))))
+        (search-in-hyp obj (cdr hyp)))))
 
 (defvar add_to 0.1)
 (defvar start  100)
 
-(defun extract-theorem-id (cmd)
-  (let* ((s<- (cond ((search "<-" cmd)) (0)))
-         (dot (pos-to-dot cmd (+ 3 s<-)))
-         (s2d (subseq cmd (after-space cmd) (first-dot cmd))))
-    (if s<-
-        (if (assoc dot theorems_id)
-            (cdr (assoc dot theorems_id))
-            (if (search-in-hyp dot hypothesis)
-                1
-                (progn (setf start (+ start add_to))
-                       (setf theorems_id
-                             (append theorems_id (list (cons dot start))))
-                       (save-lemma dot start)
-                       (setf add_to (/ add_to 2))
-                       start)))
+(defun extract-theorem-id-aux (arg)
+  (cond
+     ((assoc arg theorems_id)
+        (cdr (assoc arg theorems_id)))
 
-        (if (assoc s2d theorems_id)
-            (cdr (assoc s2d theorems_id))
-            (if (search-in-hyp s2d hypothesis)
-                1
-                (progn (setf start (+ start add_to))
-                       (save-lemma s2d start)
-                       (setf theorems_id
-                             (append theorems_id (list (cons s2d start))))
-                       (setf add_to (/ add_to 2))
-                       start))))))
+     ((search-in-hyp arg hypothesis)
+        1)
+
+     (t
+        (setf start (+ start add_to))
+        (append-to theorems_id (cons arg start))
+        (save-lemma arg start)
+        (setf add_to (/ add_to 2))
+        start)))
+
+(defun extract-theorem-id (cmd)
+  (let ((s<- (cond ((search "<-" cmd)) (0))))
+    (extract-theorem-id-aux (pos-to-dot cmd (if s<- (+ 3 s<-)
+                                                    (after-space cmd))))))
 
 (defun arg-induction (object)
   (let* ((ps0 (proof-shell-invisible-cmd-get-result (format "Undo")))
@@ -265,17 +279,15 @@
 
 (defun add-info-to-tree (info level)
   "Add the information to the corresponding tree depth level"
-  (cond ((= level 1)
-         (setf tdl1 (append tdl1 (list info))))
-        ((= level 2)
-         (setf tdl2 (append tdl2 (list info))))
-        ((= level 3)
-         (setf tdl3 (append tdl3 (list info))))
-        ((= level 4)
-         (setf tdl4 (append tdl4 (list info))))
-        ((= level 5)
-         (setf tdl5 (append tdl5 (list info))))
-        (t nil)))
+  (let ((tdl (eval (case level
+                     (1 'tdl1)
+                     (2 'tdl2)
+                     (3 'tdl3)
+                     (4 'tdl4)
+                     (5 'tdl5)))))
+      (if (< level 6)
+          (append-to tdl
+                     info))))
 
 (defun add-info-to-tactic (info tactic)
   "Function to add the information to the corresponding tactic"
@@ -303,6 +315,9 @@
 
 (defun append-tree (a b c d e f g h i)
   (add-info-to-tree (list a b c d e f g h i) current-level))
+
+(defmacro cons-prepend (name val)
+  `(setf ,name (cons ,val ,name)))
 
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
@@ -824,13 +839,12 @@
        (end-result start-result))
       ((endp cmds)
        end-result)
-    (setf end-result (cons (get-numbers cmd (subseq (car cmds)
-                                                    0
-                                                    (cond ((search " " (car cmds)))
-                                                          ((length (car cmds)))))
-                                        (get-number-of-goals)
-                                        ts current-level 1)
-                           end-result))))
+    (cons-prepend end-result (get-numbers cmd (subseq (car cmds)
+                                                      0
+                                                      (cond ((first-space (car cmds)))
+                                                            ((length (car cmds)))))
+                                          (get-number-of-goals)
+                                          ts current-level 1))))
 
 (defun list-of-commands (str)
   (do ((temp (subseq str 0 (1- (length str))))
@@ -857,50 +871,50 @@
 (defun remove-last-col (str)
   (if (string= (subseq str (1- (length str))) ":")
       (subseq str 0 (1- (length str)))
-    str))
+      str))
+
+(defmacro concat-to (name lst)
+  `(setf ,name (concat ,name ,lst)))
 
 (defun extract-names ()
-  (do ((temp saved-theorems (cdr temp))
-       (temp2 "")
-       (i 1 (1+ i)))
-      ((endp temp) temp2)
-    (setf temp2 (concat temp2 (format "%s %s\n" i (remove_last_colon (caar temp)))) )))
+  (do ((theorems saved-theorems (cdr theorems))
+       (names    "")
+       (i        1              (1+ i)))
+      ((endp theorems) names)
+    (concat-to names (format "%s %s\n" i (remove_last_colon (caar theorems))))))
 
 (defun extract-names2 (nam)
-  (do ((temp  saved-theorems (cdr temp))
-       (temp2 "")
-       (i 1 (1+ i)))
-      ((endp temp)
-       temp2)
-    (if (not (string= (remove-jumps (caar temp))
-                      ""))
-        (setf temp2 (concat temp2 (format "%s %s:%s\n" i nam (remove-last-col (remove-jumps (caar temp)))))))))
+  (do ((theorems saved-theorems (cdr theorems))
+       (names    "")
+       (i        1              (1+ i)))
+      ((endp theorems)
+       names)
+    (let ((rjct (remove-jumps (caar theorems))))
+      (if (not (string= rjct ""))
+          (concat-to names (format "%s %s:%s\n" i nam (remove-last-col rjct)))))))
 
 (defun print-list (list)
-  (do ((temp list (cdr temp))
-       (temp2 ""))
-      ((endp temp) (subseq temp2 0 (1- (length temp2))))
-    (setf temp2 (concat temp2 (format "%s," (car temp))) )))
+  (do ((lst list (cdr lst))
+       (str ""))
+      ((endp lst) (subseq str 0 (1- (length str))))
+    (concat-to str (format "%s," (car lst)))))
 
 (defun extract-features-1 ()
   (let ((fm (longest-theorem)))
-    (do ((temp  saved-theorems (cdr temp))
-         (temp2 ""))
-        ((endp temp)
-         temp2)
-      (if (< (length (cadar temp))
-             fm)
-          (setf temp2 (concat temp2
-                              (format "%s\n"
-                                      (print-list (take-30 (append (cadar temp)
-                                                                   (generate-zeros (- fm (length (cadar temp))))))))))
-        (setf temp2 (concat temp2 (format "%s\n" (print-list (take-30 (cadar temp))))))))))
+    (do ((theorems saved-theorems (cdr theorems))
+         (features ""))
+        ((endp theorems)
+         features)
+      (let ((theorem (cadar theorems)))
+        (concat-to features (format "%s\n" (print-list (take-30 (if (< (length theorem) fm)
+                                                                    (append theorem (generate-zeros (- fm (length theorem))))
+                                                                  theorem)))))))))
 
 (defun extract-features-2 (list)
-  (do ((temp list (cdr temp))
-       (temp2 ""))
-      ((endp temp) temp2)
-      (setf temp2 (concat temp2 (format "%s\n" (print-list (car temp)))))))
+  (do ((feature-list list (cdr feature-list))
+       (features     ""))
+      ((endp feature-list) features)
+    (concat-to features (format "%s\n" (print-list (car feature-list))))))
 
 (defun generate-zeros (n)
   (-unfold (lambda (x)
@@ -964,23 +978,23 @@
         (setf current-level (1+ current-level))))
 
     (take-30 (append (flat (reverse result))
-                     (generate-zeros 20))))
+                     (generate-zeros 20)))))
 
 (defun extract-features-1-bis (thm)
   (let ((fm (longest-theorem)))
-    (do ((temp saved-theorems (cdr temp))
-         (temp2 ""))
-        ((endp temp)
-         (concat temp2 (format "%s\n" (print-list thm))))
+    (do ((all-theorems saved-theorems (cdr all-theorems))
+         (str-result   ""))
+        ((endp all-theorems)
+         (concat str-result (format "%s\n" (print-list thm))))
 
-      (let* ((len (length (cadar temp)))
-             (lst ))
-        (setf temp2 (concat temp2
-                            (format "%s\n"
-                                    (print-list (take-30 (if (< len fm)
-                                                             (cadar temp)
-                                                             (append (cadar temp)
-                                                                     (generate-zeros (- fm len)))))))))))))
+      (let* ((theorem (cadar all-theorems))
+             (len     (length theorem)))
+        (setf str-result (concat str-result
+                                 (format "%s\n"
+                                         (print-list (take-30 (if (< len fm)
+                                                                  theorem
+                                                                (append theorem
+                                                                        (generate-zeros (- fm len)))))))))))))
 
 (defun extract-feature-theorems ()
   "Extract the information from all the theorems up to a point"
@@ -993,14 +1007,11 @@
   (setf saved-theorems (remove-nil-cases)))
 
 (defun remove-nil-cases ()
-  (do ((temp  saved-theorems (cdr temp))
-       (temp2 nil))
-      ((endp temp)
-       temp2)
-    (if (or (equal (car (car temp))
-                   nil)
-            (string= (car (car temp))
-                     ""))
-        nil
-        (setf temp2 (append (list (car temp))
-                            temp2)))))
+  (do ((all-theorems  saved-theorems (cdr all-theorems))
+       (keep-theorems nil))
+      ((endp all-theorems)
+       keep-theorems)
+    (let ((theorem (car all-theorems)))
+      (unless (or (equal   (car theorem) nil)
+                  (string= (car theorem) ""))
+        (setf keep-theorems (append (list theorem) keep-theorems))))))
