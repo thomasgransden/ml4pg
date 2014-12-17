@@ -941,8 +941,7 @@
         (current-level 1))
     (search-backward "Proof.")
     (proof-goto-point)
-    (while (< (point)
-              final)
+    (while (< (point) final)
       (let* ((semis     (save-excursion
                           (skip-chars-backward " \t\n"
                                                (proof-queue-or-locked-end))
@@ -962,10 +961,10 @@
                                          ts current-level (if (< ng ng2) 1 0))
                            result))
 
-        (setf current-level (1+ current-level)))
+        (setf current-level (1+ current-level))))
 
     (take-30 (append (flat (reverse result))
-                     (generate-zeros 20)))))
+                     (generate-zeros 20))))
 
 (defun extract-features-1-bis (thm)
   (let ((fm (longest-theorem)))
