@@ -46,34 +46,33 @@
 
 ;; Impure functions and macros for building up results
 
-(defmacro append-hyp (x)
-  `(setf hypothesis (append hypothesis ,x)))
+(defun append-hyp (x)
+  (setq hypothesis (append hypothesis x)))
 
 (defmacro append-to (name val)
   `(setf ,name (append ,name (list ,val))))
 
-(defmacro append-to-goal (x)
-  `(setf goal-level-temp (cons ,x goal-level-temp)))
+(defun append-to-goal (x)
+  (setq goal-level-temp (x . goal-level-temp)))
 
-(defmacro append-to-tactic (tactic)
-  `(setf tactic_id (append tactic_id (list (cons ,tactic  (1+ (length tactic_id)))))))
+(defun append-to-tactic (tactic)
+  (append-to tactic_id (cons tactic (1+ (length tactic_id)))))
 
-(defmacro append-to-theorems (val)
-  `(setf theorems_id (append theorems_id (list val))))
+(defun append-to-theorems (val)
+  (append-to theorems_id val))
 
 (defun append-tree (a b c d e f g h i)
   (add-info-to-tree (list a b c d e f g h i) current-level))
 
 (defmacro cons-prepend (name val)
-  `(setf ,name (cons ,val ,name)))
+  `(setf ,name (,val . ,name)))
 
 (defmacro concat-to (name lst)
   `(setf ,name (concat ,name ,lst)))
 
-(defmacro append-to-goal-chain (val)
-  `(let ((atgc ,val))
-     (append-to-goal atgc)
-     atgc))
+(defun append-to-goal-chain (val)
+  (append-to-goal atgc)
+  val)
 
 ;; Pure functions for text manipulation
 
@@ -282,6 +281,7 @@
         (search-in-hyp obj (cdr hyp)))))
 
 (defun extract-theorem-id (cmd)
+  "Look up a theorem's ID. Results are cached, hypotheses have ID 1."
   (let ((s<- (cond ((search "<-" cmd)) (0))))
     (extract-theorem-id-aux (pos-to-dot cmd (if s<- (+ 3 s<-)
                                                     (after-space cmd))))))
@@ -339,6 +339,17 @@
                ("trivial"      'trivial))))
     (when tac (set tac (append (symbol-value tac) (list info))))))
 
+(defun gn-aux (tree-args tac-info tac hyp thm goal-arg)
+  "Perform the common operations of get-numbers. If hyp or thm are nil, no
+   hypothesis/theorem will be appended. To make this clearer, you can create
+   your nil values using (not 'some-arbitrary-name), eg.
+   (not 'adding-hypothesis) or (not 'adding-theorem)"
+  (apply 'append-tree tree-args)
+  (add-info-to-tactic tac-info tac)
+  (when hyp (append-hyp hyp))
+  (when thm (append-to-theorems thm))
+  (append-to-goal-chain goal-arg))
+
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
    the third one is the argument type, the fourth one is if the
@@ -358,16 +369,21 @@
               (not (string= cmd "intro.")))
            (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
                   (type   (get-type-id object)))
-             (append-tree type 0 0 0 0 0 0 1 0)
-             (add-info-to-tactic (list type -1 ts 1) "intro")
-             (append-hyp (list object))
-             (append-to-goal-chain (list (cdr (assoc "intro" tactic_id)) 1 type -1 ts ngs))))
+             (gn-aux (list type 0 0 0 0 0 0 1 0)
+                     (list type -1 ts 1)
+                     "intro"
+                     (list object)
+                     (not 'adding-theorem)
+                     (list (cdr (assoc "intro" tactic_id)) 1 type -1 ts ngs))))
 
         ((string= tactic "intro")
          (let* ((type (get-obj-intro)))
-           (append-tree type 0 0 0 0 0 0 1 0)
-           (add-info-to-tactic (list type -1 ts 1) "intro")
-           (append-to-goal-chain (list (cdr (assoc "intro" tactic_id)) 1 (get-obj-intro) -1 ts ngs))))
+           (gn-aux (list type 0 0 0 0 0 0 1 0)
+                   (list type -1 ts 1)
+                   "intro"
+                   (not 'adding-hypothesis)
+                   (not 'adding-theorem)
+                   (list (cdr (assoc "intro" tactic_id)) 1 (get-obj-intro) -1 ts ngs))))
 
         ((or (string= tactic "intros")
              (string= (subseq cmd 0 (min 8  (length cmd))) "intros [")
@@ -379,19 +395,28 @@
         ((string= tactic "case")
            (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
                   (type   (get-type-id object)))
-             (append-tree 0 type 0 0 0 0 0 2 0)
-             (add-info-to-tactic (list type 1 ts 1) "case")
-             (append-to-goal-chain (list (cdr (assoc "case" tactic_id)) 1 type 1 ts ngs))))
+             (gn-aux (list 0 type 0 0 0 0 0 2 0)
+                     (list type 1 ts 1)
+                     "case"
+                     (not 'adding-hypothesis)
+                     (not 'adding-theorem)
+                     (list (cdr (assoc "case" tactic_id)) 1 type 1 ts ngs))))
 
         ((string= tactic "simpl")
-           (append-tree 0 0 0 0 ts 0 0 1 0)
-           (add-info-to-tactic (list 0 0 ts 1) "simpl")
-           (append-to-goal-chain (list (cdr (assoc "simpl" tactic_id)) 1 0 0 ts ngs)))
+         (gn-aux (list 0 0 0 0 ts 0 0 1 0)
+                 (list 0 0 ts 1)
+                 "simpl"
+                 (not 'adding-hypothesis)
+                 (not 'adding-theorem)
+                 (list (cdr (assoc "simpl" tactic_id)) 1 0 0 ts ngs)))
 
         ((string= tactic "trivial")
-           (append-tree 0 0 0 0 0 0 ts 1 1)
-           (add-info-to-tactic (list 0 0 ts 1) "trivial")
-           (append-to-goal-chain (list (cdr (assoc "trivial" tactic_id)) 1 0 0 ts ngs)))
+         (gn-aux (list 0 0 0 0 0 0 ts 1 1)
+                 (list 0 0 ts 1)
+                 "trivial"
+                 (not 'adding-hypothesis)
+                 (not 'adding-theorem)
+                 (list (cdr (assoc "trivial" tactic_id)) 1 0 0 ts ngs)))
 
         ((search "induction 1" cmd)
            (list (cdr (assoc "induction" tactic_id)) 1 1 1 ts ngs))
@@ -400,21 +425,28 @@
            (let* ((object  (subseq cmd (after-space cmd) (first-dot cmd)))
                   (arg-ind (arg-induction object))
                   (type    (get-type-id-induction object arg-ind)))
-             (append-tree 0 0 0 type 0 0 0 2 0)
-             (add-info-to-tactic (list type arg-ind ts 1) "induction")
-             (append-to-theorems (cons (concat "IH" object) 10))
-             (append-to-goal-chain (list (cdr (assoc "induction" tactic_id)) 1 type arg-ind ts ngs))))
+             (gn-aux (list 0 0 0 type 0 0 0 2 0)
+                     (list type arg-ind ts 1)
+                     "induction"
+                     (not 'adding-hypothesis)
+                     ((concat "IH" object) . 10)
+                     (list (cdr (assoc "induction" tactic_id)) 1 type arg-ind ts ngs))))
 
         ((string= tactic "rewrite")
-           (append-tree 0 0 0 0 0 (extract-theorem-id cmd) 0 1 0)
-           (add-info-to-tactic (list -4 (extract-theorem-id cmd) ts 1) "rewrite")
-           (append-to-goal (list (cdr (assoc "rewrite" tactic_id)) 1 -4 (extract-theorem-id cmd) ts ngs))
-           (list (cdr (assoc "rewrite" tactic_id)) 1 -4 (extract-theorem-id cmd) ts ngs))
+           (gn-aux (list 0 0 0 0 0 (extract-theorem-id cmd) 0 1 0)
+                   (list -4 (extract-theorem-id cmd) ts 1)
+                   "rewrite"
+                   (not 'adding-hypothesis)
+                   (not 'adding-theorem)
+                   (list (cdr (assoc "rewrite" tactic_id)) 1 -4 (extract-theorem-id cmd) ts ngs)))
 
         ((string= cmd "simpl; trivial.")
-           (append-tree 0 0 ts 0 0 0 0 1 1)
-           (add-info-to-tactic (list 0 0 ts 1) "simpltrivial")
-           (append-to-goal-chain (list (cdr (assoc "simpl; trivial" tactic_id)) 2 0 0 ts ngs)))
+           (gn-aux (list 0 0 ts 0 0 0 0 1 1)
+                   (list 0 0 ts 1)
+                   "simpltrivial"
+                   (not 'adding-hypothesis)
+                   (not 'adding-theorem)
+                   (list (cdr (assoc "simpl; trivial" tactic_id)) 2 0 0 ts ngs)))
 
         ((string= tactic "red.")
            (append-to-goal-chain (list (cdr (assoc "red" tactic_id)) 0 0 0 ts ngs)))
