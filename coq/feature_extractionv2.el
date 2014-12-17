@@ -371,19 +371,19 @@
                   (type   (get-type-id object)))
              (gn-aux (list type 0 0 0 0 0 0 1 0)
                      (list type -1 ts 1)
-                     "intro"
+                     tactic
                      (list object)
                      (not 'adding-theorem)
-                     (list (cdr (assoc "intro" tactic_id)) 1 type -1 ts ngs))))
+                     (list (cdr (assoc tactic tactic_id)) 1 type -1 ts ngs))))
 
         ((string= tactic "intro")
          (let* ((type (get-obj-intro)))
            (gn-aux (list type 0 0 0 0 0 0 1 0)
                    (list type -1 ts 1)
-                   "intro"
+                   tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   (list (cdr (assoc "intro" tactic_id)) 1 (get-obj-intro) -1 ts ngs))))
+                   (list (cdr (assoc tactic tactic_id)) 1 (get-obj-intro) -1 ts ngs))))
 
         ((or (string= tactic "intros")
              (string= (subseq cmd 0 (min 8  (length cmd))) "intros [")
@@ -397,26 +397,26 @@
                   (type   (get-type-id object)))
              (gn-aux (list 0 type 0 0 0 0 0 2 0)
                      (list type 1 ts 1)
-                     "case"
+                     tactic
                      (not 'adding-hypothesis)
                      (not 'adding-theorem)
-                     (list (cdr (assoc "case" tactic_id)) 1 type 1 ts ngs))))
+                     (list (cdr (assoc tactic tactic_id)) 1 type 1 ts ngs))))
 
         ((string= tactic "simpl")
-         (gn-aux (list 0 0 0 0 ts 0 0 1 0)
-                 (list 0 0 ts 1)
-                 "simpl"
-                 (not 'adding-hypothesis)
-                 (not 'adding-theorem)
-                 (list (cdr (assoc "simpl" tactic_id)) 1 0 0 ts ngs)))
+           (gn-aux (list 0 0 0 0 ts 0 0 1 0)
+                   (list 0 0 ts 1)
+                   tactic
+                   (not 'adding-hypothesis)
+                   (not 'adding-theorem)
+                   (list (cdr (assoc tactic tactic_id)) 1 0 0 ts ngs)))
 
         ((string= tactic "trivial")
-         (gn-aux (list 0 0 0 0 0 0 ts 1 1)
-                 (list 0 0 ts 1)
-                 "trivial"
-                 (not 'adding-hypothesis)
-                 (not 'adding-theorem)
-                 (list (cdr (assoc "trivial" tactic_id)) 1 0 0 ts ngs)))
+           (gn-aux (list 0 0 0 0 0 0 ts 1 1)
+                   (list 0 0 ts 1)
+                   tactic
+                   (not 'adding-hypothesis)
+                   (not 'adding-theorem)
+                   (list (cdr (assoc tactic tactic_id)) 1 0 0 ts ngs)))
 
         ((search "induction 1" cmd)
            (list (cdr (assoc "induction" tactic_id)) 1 1 1 ts ngs))
@@ -427,18 +427,18 @@
                   (type    (get-type-id-induction object arg-ind)))
              (gn-aux (list 0 0 0 type 0 0 0 2 0)
                      (list type arg-ind ts 1)
-                     "induction"
+                     tactic
                      (not 'adding-hypothesis)
                      ((concat "IH" object) . 10)
-                     (list (cdr (assoc "induction" tactic_id)) 1 type arg-ind ts ngs))))
+                     (list (cdr (assoc tactic tactic_id)) 1 type arg-ind ts ngs))))
 
         ((string= tactic "rewrite")
            (gn-aux (list 0 0 0 0 0 (extract-theorem-id cmd) 0 1 0)
                    (list -4 (extract-theorem-id cmd) ts 1)
-                   "rewrite"
+                   tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   (list (cdr (assoc "rewrite" tactic_id)) 1 -4 (extract-theorem-id cmd) ts ngs)))
+                   (list (cdr (assoc tactic tactic_id)) 1 -4 (extract-theorem-id cmd) ts ngs)))
 
         ((string= cmd "simpl; trivial.")
            (gn-aux (list 0 0 ts 0 0 0 0 1 1)
