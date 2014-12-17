@@ -8,20 +8,66 @@
 
 ;; Variables to store the information about the tactic level
 
-(defvar intro nil)
-(defvar case nil)
-(defvar simpltrivial nil)
-(defvar induction nil)
-(defvar simpl nil)
-(defvar rewrite nil)
-(defvar trivial nil)
+(defvar   intro            nil)
+(defvar   case             nil)
+(defvar   simpltrivial     nil)
+(defvar   induction        nil)
+(defvar   simpl            nil)
+(defvar   rewrite          nil)
+(defvar   trivial          nil)
+(defvar   hypothesis       nil)
+(defvar   init             0)
+(defvar   saved-theorems   nil)
+(defvar   goal-level-temp  nil)
+(defvar   tactic-level     nil)
+(defvar   proof-tree-level nil)
+(defvar   theorems_id      nil)
+(defvar   add_to           0.1)
+(defvar   start            100)
+(defconst nl               "
+")
 
-(defvar hypothesis nil)
+;; The integer values associated with the tactics, types and rewrite rules
 
-(defvar init 0)
+(defvar tactic_id '(("intro"          . 1)
+                    ("case"           . 2)
+                    ("simpl"          . 3)
+                    ("trivial"        . 4)
+                    ("induction"      . 5)
+                    ("rewrite"        . 6)
+                    ("red"            . 7)
+                    ("simpl; trivial" . 34)))
+
+(defvar types_id '(("nat"  . -2)
+                   ("Prop" . -4)
+                   ("bool" . -3)
+                   ("A"    . -1)
+                   ("list" . -5)))
+
+;; Impure functions and macros for building up results
 
 (defmacro append-hyp (x)
   `(setf hypothesis (append hypothesis ,x)))
+
+(defmacro append-to (name val)
+  `(setf ,name (append ,name (list ,val))))
+
+(defmacro append-to-goal (x)
+  `(setf goal-level-temp (cons ,x goal-level-temp)))
+
+(defmacro append-to-tactic (tactic)
+  `(setf tactic_id (append tactic_id (list (cons ,tactic  (1+ (length tactic_id)))))))
+
+(defun append-tree (a b c d e f g h i)
+  (add-info-to-tree (list a b c d e f g h i) current-level))
+
+(defmacro cons-prepend (name val)
+  `(setf ,name (cons ,val ,name)))
+
+(defmacro concat-to (name lst)
+  `(setf ,name (concat ,name ,lst)))
+
+;; Pure functions for text manipulation
 
 (defun first-space (txt)
   "Find the position of the first space in a string"
@@ -46,6 +92,46 @@
 (defun rem-jumps (cmd)
   (remove-jumps (between-spaces cmd)))
 
+(defun str-after (str pattern)
+  (subseq str (+ (length pattern) (search pattern str))))
+
+;; Sending commands to Coq
+
+(defun do-unset-printing ()
+  (proof-shell-invisible-cmd-get-result (format "Unset Printing All")))
+
+(defun do-check-object (object)
+  (proof-shell-invisible-cmd-get-result (concat "Check " object)))
+
+(defun do-set-printing ()
+  (proof-shell-invisible-cmd-get-result (format "Set Printing All")))
+
+(defun do-focus ()
+  (proof-shell-invisible-cmd-get-result "Focus"))
+
+(defun do-show-intro ()
+  (proof-shell-invisible-cmd-get-result "Show Intro"))
+
+(defun do-intro ()
+  (proof-shell-invisible-cmd-get-result "intro"))
+
+(defun do-intro-of (name)
+  (proof-shell-invisible-cmd-get-result (concat "intro " name)))
+
+(defun do-show-intros ()
+  (proof-shell-invisible-cmd-get-result (format "Show Intros")))
+
+(defun do-undo ()
+  (proof-shell-invisible-cmd-get-result (format "Undo")))
+
+(defun do-induction-on (name)
+  (proof-shell-invisible-cmd-get-result (concat "induction " name)))
+
+(defun do-show-proof ()
+  (proof-shell-invisible-cmd-get-result "Show Proof"))
+
+;; Extracting features
+
 (defun export-theorem ()
   (interactive)
   (progn (setf tdl1         nil
@@ -64,42 +150,11 @@
                goal-level   nil)
          (init-lemmas)
          (export-theorem-aux nil "" 1 1 0)
-         (proof-shell-invisible-cmd-get-result (format "Unset Printing All"))))
-
-(defvar saved-theorems   nil)
-(defvar goal-level-temp  nil)
-(defvar tactic-level     nil)
-(defvar proof-tree-level nil)
-
-;; Variables to store the different values associated with the tactics, the
-;; types or the rewrite rules
-
-(defvar tactic_id '(("intro"          . 1)
-                    ("case"           . 2)
-                    ("simpl"          . 3)
-                    ("trivial"        . 4)
-                    ("induction"      . 5)
-                    ("rewrite"        . 6)
-                    ("red"            . 7)
-                    ("simpl; trivial" . 34)))
-
-(defvar types_id '(("nat"  . -2)
-                   ("Prop" . -4)
-                   ("bool" . -3)
-                   ("A"    . -1)
-                   ("list" . -5)))
-
-(defvar theorems_id nil)
-
-(defconst nl "
-")
+         (do-unset-printing)))
 
 (defun get-type-id (object)
   "A function to obtain the type associated with an object"
-  (get-type-id-aux (check-object object)))
-
-(defun check-object (object)
-  (proof-shell-invisible-cmd-get-result (format (concat "Check " object))))
+  (get-type-id-aux (do-check-object object)))
 
 (defun get-type-id-aux (a)
   (let* ((pos_jump  (search nl  a :start2 (+ 2 (first-space  a))))
@@ -109,23 +164,9 @@
                            types_id))))
     (cond ((type) (-4)))))
 
-(defun get-top-symbol-aux (fst-symbol goal)
-  (cond ((string= "forall" fst-symbol) 5)
-        ((search  "->"     goal)       7)
-        ((string= "@eq"    fst-symbol) 6)
-        ((string= "and"    fst-symbol) 4)
-        ((string= "iff"    fst-symbol) 8)
-        ((string= "or"     fst-symbol) 3)
-                                      (0)))
-
 (defun goal-str ()
-  (proof-shell-invisible-cmd-get-result (format "Set Printing All"))
-  (let* ((raw (proof-shell-invisible-cmd-get-result (format "Focus")))
-         (goal   (str-after raw "============================")))
-    (goal)))
-
-(defun str-after (str pattern)
-  (subseq str (+ (length pattern) (search pattern str))))
+  (do-set-printing)
+  (str-after (do-focus) "============================"))
 
 (defun get-top-symbol ()
   "Obtain the value of a top symbol"
@@ -133,18 +174,30 @@
          (fst-symbol (subseq goal 0 (first-space goal))))
     (get-top-symbol-aux fst-symbol goal)))
 
-(defun show-intro ()
-  (proof-shell-invisible-cmd-get-result (format "Show Intro")))
+(defun get-top-symbol-aux (fst-symbol goal)
+  (cond ((string= "forall" fst-symbol) 5)
+        ((search  "->"     goal)       7)
+        ((string= "@eq"    fst-symbol) 6)
+        ((string= "and"    fst-symbol) 4)
+        ((string= "iff"    fst-symbol) 8)
+        ((string= "or"     fst-symbol) 3)
+        (0)))
 
 (defun get-obj-intro ()
   "In some cases the intro tactic does not have parameters. This obtains the
    type of the object introduced with the intro tactic in those cases"
   (let* ((undo   (proof-undo-last-successful-command))
-         (obj    (show-intro))
+         (obj    (do-show-intro))
          (object (subseq obj 0 (search nl obj)))
          (dod    (proof-assert-next-command-interactive))
          (foo    (append-hyp (list object))))
     (get-type-id object)))
+
+(defun extract-params (seq res)
+  (extract-params-aux nl seq res))
+
+(defun extract-params2 (seq res)
+  (extract-params-aux "." seq res))
 
 (defun extract-params-aux (sep seq res)
   (let ((pos_space (first-space seq))
@@ -153,13 +206,7 @@
         (extract-params-aux sep
                             (subseq seq (1+ pos_space))
                             (cons (subseq seq 0 pos_space) res))
-        (reverse (cons (subseq seq 0 pos_jump) res)))))
-
-(defun extract-params (seq res)
-  (extract-params-aux nl seq res))
-
-(defun extract-params2 (seq res)
-  (extract-params-aux "." seq res))
+      (reverse (cons (subseq seq 0 pos_jump) res)))))
 
 (defun get-types-list (list res)
   "Given a list of objects, obtain the value associated with their types"
@@ -182,7 +229,7 @@
   (if (= len 0)
       res
     (let ((gs (get-top-symbol))
-          (ps (proof-shell-invisible-cmd-get-result (format "intro"))))
+          (ps (do-intro)))
       (+ (get-top-symbols-list (1- len)
                                (+ (* gs (expt 10 (1- len)))
                                   res))))))
@@ -190,17 +237,11 @@
 (defun get-top-symbols-seq (seq res)
   (if (endp seq)
       res
-    (let ((gs (get-top-symbol))
-          (ps (proof-shell-invisible-cmd-get-result (format (concat "intro " (car seq))))))
-      (+ (get-top-symbols-seq (cdr seq)
-                              (+ (* gs (expt 10 (1- (length seq))))
-                                 res))))))
-
-(defun do-show-intros ()
-  (proof-shell-invisible-cmd-get-result (format "Show Intros")))
-
-(defun do-undo ()
-  (proof-shell-invisible-cmd-get-result (format "Undo")))
+      (let ((gs (get-top-symbol)))
+        (do-intro-of (car seq))
+        (+ (get-top-symbols-seq (cdr seq)
+                                (+ (* gs (expt 10 (1- (length seq))))
+                                   res))))))
 
 (defun get-obj-intros ()
   "Obtain the values associated with intros both for the case when parameters
@@ -221,7 +262,7 @@
          (foo    (append-hyp params))
          (types  (get-types-list params 0))
          (num    (get-number-list params))
-         (undo2  (proof-shell-invisible-cmd-get-result (format "Undo")))
+         (undo2  (do-undo))
          (gts    (get-top-symbols-seq params 0)))
     (list num types (length params) gts)))
 
@@ -232,92 +273,63 @@
         t
         (search-in-hyp obj (cdr hyp)))))
 
-(defvar add_to 0.1)
-(defvar start  100)
-
-(defun extract-theorem-id-aux (arg)
-  (cond
-     ((assoc arg theorems_id)
-        (cdr (assoc arg theorems_id)))
-
-     ((search-in-hyp arg hypothesis)
-        1)
-
-     (t
-        (setf start (+ start add_to))
-        (append-to theorems_id (cons arg start))
-        (save-lemma arg start)
-        (setf add_to (/ add_to 2))
-        start)))
-
 (defun extract-theorem-id (cmd)
   (let ((s<- (cond ((search "<-" cmd)) (0))))
     (extract-theorem-id-aux (pos-to-dot cmd (if s<- (+ 3 s<-)
                                                     (after-space cmd))))))
 
+(defun extract-theorem-id-aux (arg)
+  (cond
+   ((assoc arg theorems_id)
+    (cdr (assoc arg theorems_id)))
+
+   ((search-in-hyp arg hypothesis)
+    1)
+
+   (t
+    (setf start (+ start add_to))
+    (append-to theorems_id (cons arg start))
+    (save-lemma arg start)
+    (setf add_to (/ add_to 2))
+    start)))
+
 (defun arg-induction (object)
-  (let* ((ps0 (proof-shell-invisible-cmd-get-result (format "Undo")))
-         (res (proof-shell-invisible-cmd-get-result (concat "Check " object)))
-         (ps3 (proof-shell-invisible-cmd-get-result (concat "induction " object)))
-         (err (search "Error" res)))
-    (if err -1 1)))
+  (do-undo)
+  (let ((res (do-check-object object)))
+    (do-induction-on object)
+    (if (search "Error" res) -1 1)))
 
 (defun get-type-id-induction (object arg-ind)
-  (let (gt
-        (check (equal arg-ind 1)))
-    (proof-shell-invisible-cmd-get-result (format "Undo"))
-    (unless check
-      (proof-shell-invisible-cmd-get-result (concat "intro " object)))
+  (let ((check (equal arg-ind 1))
+        gt)
+    (do-undo)
+    (unless check (do-intro-of object))
     (setf gt (get-type-id object))
-    (unless check
-      (proof-shell-invisible-cmd-get-result (format "Undo")))
-    (proof-shell-invisible-cmd-get-result (concat "induction " object))
+    (unless check (do-undo))
+    (do-induction-on object)
     gt))
-
-(defmacro append-to (name val)
-  `(setf ,name (append ,name (list ,val))))
 
 (defun add-info-to-tree (info level)
   "Add the information to the corresponding tree depth level"
-  (let ((tdl (eval (case level
-                     (1 'tdl1)
-                     (2 'tdl2)
-                     (3 'tdl3)
-                     (4 'tdl4)
-                     (5 'tdl5)))))
-      (if (< level 6)
-          (append-to tdl
-                     info))))
+  (let ((tdl (case level
+               (1 'tdl1)
+               (2 'tdl2)
+               (3 'tdl3)
+               (4 'tdl4)
+               (5 'tdl5))))
+    (when tdl (set tdl (append (symbol-value tdl) (list info))))))
 
 (defun add-info-to-tactic (info tactic)
-  "Function to add the information to the corresponding tactic"
-  (cond ((string= tactic "intro")
-         (setf intro (append intro (list info))))
-        ((string= tactic "case")
-         (setf case (append case (list info))))
-        ((string= tactic "simpltrivial")
-         (setf simpltrivial (append simpltrivial (list info))))
-        ((string= tactic "induction")
-         (setf induction (append induction (list info))))
-        ((string= tactic "simpl")
-         (setf simpl (append simpl (list info))))
-        ((string= tactic "rewrite")
-         (setf rewrite (append rewrite (list info))))
-        ((string= tactic "trivial")
-         (setf trivial (append trivial (list info))))
-        (t nil)))
-
-(defmacro append-to-goal (x)
-  `(setf goal-level-temp (cons ,x goal-level-temp)))
-
-(defmacro append-to-tactic (tactic)
-  `(setf tactic_id (append tactic_id (list (cons ,tactic  (1+ (length tactic_id)))))))
-
-(defun append-tree (a b c d e f g h i)
-  (add-info-to-tree (list a b c d e f g h i) current-level))
-
-(defmacro cons-prepend (name val)
-  `(setf ,name (cons ,val ,name)))
+  "Add the information to the corresponding tactic"
+  (let ((tac (case tactic
+               ("intro"        'intro)
+               ("case"         'case)
+               ("simpltrivial" 'simpltrivial)
+               ("induction"    'induction)
+               ("simpl"        'simpl)
+               ("rewrite"      'rewrite)
+               ("trivial"      'trivial))))
+    (when tac (set tac (append (symbol-value tac) (list info))))))
 
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
@@ -565,7 +577,7 @@
     0)))
 
 (defun get-number-of-goals ()
-  (let ((r (proof-shell-invisible-cmd-get-result (format "Show Proof"))))
+  (let ((r (do-show-proof)))
     (count-seq "?" r)))
 
 (defun flat (ll)
@@ -872,9 +884,6 @@
   (if (string= (subseq str (1- (length str))) ":")
       (subseq str 0 (1- (length str)))
       str))
-
-(defmacro concat-to (name lst)
-  `(setf ,name (concat ,name ,lst)))
 
 (defun extract-names ()
   (do ((theorems saved-theorems (cdr theorems))
