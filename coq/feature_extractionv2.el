@@ -101,8 +101,8 @@
          (pos_space (search " " a :start2 (+ 2 (search ": " a))))
          (type (cdr (assoc (subseq a (+ 2 (search ": " a))
                                    (if pos_space pos_space
-                                                 pos_jump)
-                                   types_id)))))
+                                                 pos_jump))
+                           types_id))))
     (if type type -4)))
 
 (defun get-top-symbol ()
@@ -116,7 +116,7 @@
           ((string= "@eq" fst-symbol)    6)
           ((string= "and" fst-symbol)    4)
           ((string= "iff" fst-symbol)    8)
-          ((string= "or"  fst-symbol)     3)
+          ((string= "or"  fst-symbol)    3)
           (t                             0))))
 
 (defun get-obj-intro ()
@@ -215,7 +215,7 @@
 (defvar start  100)
 
 (defun extract-theorem-id (cmd)
-  (let* ((s<- (search "<-" cmd))
+  (let* ((s<- (cond ((search "<-" cmd)) (0)))
          (dot (pos-to-dot cmd (+ 3 s<-)))
          (s2d (subseq cmd (after-space cmd) (first-dot cmd))))
     (if s<-
@@ -317,8 +317,8 @@
            (unless (assoc "eauto" tactic_id)
              (append-to-tactic "eauto"))
            (append-to-goal (list (cdr (assoc "eauto" tactic_id)) 0 0 0 ts ngs))
-           (when ((assoc "eauto" tactic_id)
-                  (export-tactics)))
+           (when (assoc "eauto" tactic_id)
+             (export-tactics))
            (list (cdr (assoc "eauto" tactic_id)) 0 0 0 ts ngs))
 
         ((and (string= tactic "intro")
@@ -343,9 +343,9 @@
         ((string= tactic "intros")
            (list (cdr (assoc "intro" tactic_id)) 1 1 -1 ngs ngs))
 
-        ((or (string= (subseq cmd 0 (max 8 (length cmd)))  "intros [")
-             (string= (subseq cmd 0 (max 7 (length cmd)))  "intros;")
-             (string= (subseq cmd 0 (max 12 (length cmd))) "intros until")
+        ((or (string= (subseq cmd 0 (min 8  (length cmd))) "intros [")
+             (string= (subseq cmd 0 (min 7  (length cmd))) "intros;")
+             (string= (subseq cmd 0 (min 12 (length cmd))) "intros until")
              (search ";intros" cmd))
            (list (cdr (assoc "intro" tactic_id)) 1 1 -1 ngs ngs))
 
@@ -501,8 +501,7 @@
              res))
 
         ((string= tactic "case")
-           (let* ((object (subseq cmd (after-space cmd)
-                                  (first-dot cmd)))
+           (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
                   (type (get-type-id object))
                   (ai   (append-tree 0 type 0 0 0 0 0 2 0))
                   (ait  (add-info-to-tactic (list type 1 ts 1) "case"))
@@ -520,8 +519,7 @@
            (add-info-to-tactic (list 0 0 ts 1) "trivial")
            (list (cdr (assoc "trivial" tactic_id)) 1 0 0 ts ngs))
 
-        ((string= "induction 1" (subseq cmd 0 (if (< 11 (length cmd))
-                                                  11 (length cmd))))
+        ((string= "induction 1" (subseq cmd 0 (min 11 (length cmd))))
            (list (cdr (assoc "induction" tactic_id)) 1 1 1 ts ngs))
 
         ((string= tactic "induction")
@@ -820,15 +818,16 @@
                (t
                   (export-theorem-aux arg name (1+ current-level) dot-level          (1+ i)))))))))
 
-(defun look-through-commands (cmd, start-result, ts, current-level)
+(defun look-through-commands (cmd start-result ts current-level)
   (do ((cmds       (list-of-commands cmd)
                    (cdr cmds))
        (end-result start-result))
       ((endp cmds)
        end-result)
     (setf end-result (cons (get-numbers cmd (subseq (car cmds)
-                                                    0 (cond (search " " (car cmds))
-                                                            (t (length (car cmds)))))
+                                                    0
+                                                    (cond ((search " " (car cmds)))
+                                                          ((length (car cmds)))))
                                         (get-number-of-goals)
                                         ts current-level 1)
                            end-result))))
