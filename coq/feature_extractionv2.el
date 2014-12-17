@@ -56,7 +56,9 @@
   (setq goal-level-temp (x . goal-level-temp)))
 
 (defun append-to-tactic (tactic)
-  (append-to tactic_id (cons tactic (1+ (length tactic_id)))))
+  (unless (assoc tactic tactic_id)
+    (append-to tactic_id (cons tactic (1+ (length tactic_id)))))
+  (assoc tactic tactic_id))
 
 (defun append-to-theorems (val)
   (append-to theorems_id val))
@@ -339,16 +341,19 @@
                ("trivial"      'trivial))))
     (when tac (set tac (append (symbol-value tac) (list info))))))
 
-(defun gn-aux (tree-args tac-info tac hyp thm goal-arg)
+(defun remove-dots (str)
+  (replace-regexp-in-string (regexp-quote ".") "" str))
+
+(defun gn-aux (tree-args tac-info tac hyp thm goal-arg goal-args)
   "Perform the common operations of get-numbers. If hyp or thm are nil, no
    hypothesis/theorem will be appended. To make this clearer, you can create
    your nil values using (not 'some-arbitrary-name), eg.
    (not 'adding-hypothesis) or (not 'adding-theorem)"
   (apply 'append-tree tree-args)
-  (add-info-to-tactic tac-info tac)
+  (add-info-to-tactic tac-info (replace-regexp-in-string "[^a-z]" "" tac))
   (when hyp (append-hyp hyp))
   (when thm (append-to-theorems thm))
-  (append-to-goal-chain goal-arg))
+  (append-to-goal-chain ((cdr (assoc goal-arg tactic_id)) . goal-args)))
 
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
@@ -360,10 +365,10 @@
 
         ((or (string= cmd "2: eauto.")
              (string= cmd "3: eauto."))
-           (unless (assoc "eauto" tactic_id) (append-to-tactic "eauto"))
-           (append-to-goal (list (cdr (assoc "eauto" tactic_id)) 0 0 0 ts ngs))
-           (when (assoc "eauto" tactic_id) (export-tactics))
-           (list (cdr (assoc "eauto" tactic_id)) 0 0 0 ts ngs))
+         (let ((tid (append-to-tactic "eauto")))
+           (append-to-goal (list (cdr (tid)) 0 0 0 ts ngs))
+           (when (tid) (export-tactics))
+           (list (cdr (tid)) 0 0 0 ts ngs)))
 
         ((and (string= tactic "intro")
               (not (string= cmd "intro.")))
@@ -374,7 +379,8 @@
                      tactic
                      (list object)
                      (not 'adding-theorem)
-                     (list (cdr (assoc tactic tactic_id)) 1 type -1 ts ngs))))
+                     tactic
+                     (list 1 type -1 ts ngs))))
 
         ((string= tactic "intro")
          (let* ((type (get-obj-intro)))
@@ -383,7 +389,8 @@
                    tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   (list (cdr (assoc tactic tactic_id)) 1 (get-obj-intro) -1 ts ngs))))
+                   tactic
+                   (list 1 (get-obj-intro) -1 ts ngs))))
 
         ((or (string= tactic "intros")
              (string= (subseq cmd 0 (min 8  (length cmd))) "intros [")
@@ -400,7 +407,8 @@
                      tactic
                      (not 'adding-hypothesis)
                      (not 'adding-theorem)
-                     (list (cdr (assoc tactic tactic_id)) 1 type 1 ts ngs))))
+                     tactic
+                     (list 1 type 1 ts ngs))))
 
         ((string= tactic "simpl")
            (gn-aux (list 0 0 0 0 ts 0 0 1 0)
@@ -408,7 +416,8 @@
                    tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   (list (cdr (assoc tactic tactic_id)) 1 0 0 ts ngs)))
+                   tactic
+                   (list 1 0 0 ts ngs)))
 
         ((string= tactic "trivial")
            (gn-aux (list 0 0 0 0 0 0 ts 1 1)
@@ -416,7 +425,8 @@
                    tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   (list (cdr (assoc tactic tactic_id)) 1 0 0 ts ngs)))
+                   tactic
+                   (list 1 0 0 ts ngs)))
 
         ((search "induction 1" cmd)
            (list (cdr (assoc "induction" tactic_id)) 1 1 1 ts ngs))
@@ -430,7 +440,8 @@
                      tactic
                      (not 'adding-hypothesis)
                      ((concat "IH" object) . 10)
-                     (list (cdr (assoc tactic tactic_id)) 1 type arg-ind ts ngs))))
+                     tactic
+                     (list 1 type arg-ind ts ngs))))
 
         ((string= tactic "rewrite")
            (gn-aux (list 0 0 0 0 0 (extract-theorem-id cmd) 0 1 0)
@@ -438,24 +449,26 @@
                    tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   (list (cdr (assoc tactic tactic_id)) 1 -4 (extract-theorem-id cmd) ts ngs)))
+                   tactic
+                   (list 1 -4 (extract-theorem-id cmd) ts ngs)))
 
         ((string= cmd "simpl; trivial.")
            (gn-aux (list 0 0 ts 0 0 0 0 1 1)
                    (list 0 0 ts 1)
-                   "simpltrivial"
+                   cmd
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   (list (cdr (assoc "simpl; trivial" tactic_id)) 2 0 0 ts ngs)))
+                   (remove-dots cmd)
+                   (list 2 0 0 ts ngs)))
 
         ((string= tactic "red.")
-           (append-to-goal-chain (list (cdr (assoc "red" tactic_id)) 0 0 0 ts ngs)))
+         (append-to-goal-chain (list (cdr (assoc (remove-dots tactic) tactic_id)) 0 0 0 ts ngs)))
 
         (t
-           (unless (assoc tactic tactic_id)(append-to-tactic tactic))
-           (append-to-goal (list (cdr (assoc tactic tactic_id)) 0 0 0 ts ngs))
-           (unless (assoc tactic tactic_id) (export-tactics))
-           (list (cdr (assoc tactic tactic_id)) 0 0 0 ts ngs))))
+           (let ((tid (append-to-tactic tactic)))
+             (append-to-goal (list (cdr tid) 0 0 0 ts ngs))
+             (unless tid (export-tactics))
+             (list (cdr tid) 0 0 0 ts ngs)))))
 
 (defun replace-colon (str)
   (let ((colon (search ";" str)))
