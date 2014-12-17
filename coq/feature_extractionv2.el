@@ -344,7 +344,7 @@
 (defun remove-dots (str)
   (replace-regexp-in-string (regexp-quote ".") "" str))
 
-(defun gn-aux (tree-args tac-info tac hyp thm goal-arg goal-args)
+(defun gn-aux (tree-args tac-info tac hyp thm goal-args)
   "Perform the common operations of get-numbers. If hyp or thm are nil, no
    hypothesis/theorem will be appended. To make this clearer, you can create
    your nil values using (not 'some-arbitrary-name), eg.
@@ -353,7 +353,7 @@
   (add-info-to-tactic tac-info (replace-regexp-in-string "[^a-z]" "" tac))
   (when hyp (append-hyp hyp))
   (when thm (append-to-theorems thm))
-  (append-to-goal-chain ((cdr (assoc goal-arg tactic_id)) . goal-args)))
+  (append-to-goal-chain ((cdr (assoc (remove-dots tac) tactic_id)) . goal-args)))
 
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
@@ -379,7 +379,6 @@
                      tactic
                      (list object)
                      (not 'adding-theorem)
-                     tactic
                      (list 1 type -1 ts ngs))))
 
         ((string= tactic "intro")
@@ -389,7 +388,6 @@
                    tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   tactic
                    (list 1 (get-obj-intro) -1 ts ngs))))
 
         ((or (string= tactic "intros")
@@ -407,7 +405,6 @@
                      tactic
                      (not 'adding-hypothesis)
                      (not 'adding-theorem)
-                     tactic
                      (list 1 type 1 ts ngs))))
 
         ((string= tactic "simpl")
@@ -416,7 +413,6 @@
                    tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   tactic
                    (list 1 0 0 ts ngs)))
 
         ((string= tactic "trivial")
@@ -425,7 +421,6 @@
                    tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   tactic
                    (list 1 0 0 ts ngs)))
 
         ((search "induction 1" cmd)
@@ -440,7 +435,6 @@
                      tactic
                      (not 'adding-hypothesis)
                      ((concat "IH" object) . 10)
-                     tactic
                      (list 1 type arg-ind ts ngs))))
 
         ((string= tactic "rewrite")
@@ -449,7 +443,6 @@
                    tactic
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   tactic
                    (list 1 -4 (extract-theorem-id cmd) ts ngs)))
 
         ((string= cmd "simpl; trivial.")
@@ -458,7 +451,6 @@
                    cmd
                    (not 'adding-hypothesis)
                    (not 'adding-theorem)
-                   (remove-dots cmd)
                    (list 2 0 0 ts ngs)))
 
         ((string= tactic "red.")
