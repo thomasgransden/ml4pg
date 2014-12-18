@@ -498,7 +498,7 @@
 
 (defun get-numbers2 (cmd tactic ngs ts current-level bot)
   "Function to obtain the information just about the goals."
-  (let ((tacid (assoc tactic tactic_id)))
+  (let ((tacid (cdr (assoc tactic tactic_id))))
     (cond
      ((string= tactic "intro")
       (let* ((cmd-intro (string= cmd "intro."))
@@ -531,17 +531,17 @@
              (type (get-type-id object)))
         (append-tree 0 type 0 0 0 0 0 2 0)
         (add-info-to-tactic (list type 1 ts 1) tactic)
-        (append-to-goal-chain (list (cdr tacid) 1 type 1 ts ngs))))
+        (append-to-goal-chain (list tacid 1 type 1 ts ngs))))
 
      ((string= tactic "simpl")
       (append-tree 0 0 0 0 ts 0 0 1 0)
       (add-info-to-tactic (list 0 0 ts 1) tactic)
-      (list (cdr tacid) 1 0 0 ts ngs))
+      (list tacid 1 0 0 ts ngs))
 
      ((string= tactic "trivial")
       (append-tree 0 0 0 0 0 0 ts 1 1)
       (add-info-to-tactic (list 0 0 ts 1) tactic)
-      (list (cdr tacid) 1 0 0 ts ngs))
+      (list tacid 1 0 0 ts ngs))
 
      ((string= "induction 1" (subseq cmd 0 (min 11 (length cmd))))
       (list (cdr (assoc "induction" tactic_id)) 1 1 1 ts ngs))
@@ -553,17 +553,24 @@
         (append-tree 0 0 0 type 0 0 0 2 0)
         (add-info-to-tactic (list type arg-ind ts 1) tactic)
         (setf theorems_id (append theorems_id (list (cons (concat "IH" object) 10))))
-        (append-to-goal-chain (list (cdr tacid) 1 type arg-ind ts ngs))))
+        (append-to-goal-chain (list tacid 1 type arg-ind ts ngs))))
 
-     ((string= tactic "rewrite")
-      (append-tree 0 0 0 0 0 (extract-theorem-id cmd) 0 1 0)
-      (add-info-to-tactic (list -4 (extract-theorem-id cmd) ts 1) tactic)
-      (list (cdr tacid) 1 -4 (extract-theorem-id cmd) ts ngs))
-
-     ((string= cmd "simpl; trivial.")
-      (append-tree 0 0 ts 0 0 0 0 1 1)
-      (add-info-to-tactic (list 0 0 ts 1) (remove-nonalpha cmd))
-      (list (cdr (assoc (remove-dots cmd) tactic_id)) 2 0 0 ts ngs)))))
+     ((or (string= tactic "rewrite")
+          (string= cmd "simpl; trivial."))
+      (let ((tac-rewrite (string= tactic "rewrite"))
+            (bit1        (if tac-rewrite  0 ts))
+            (bit2        (if tac-rewrite (extract-theorem-id cmd)
+                                          0))
+            (bit3        (if tac-rewrite  0 1))
+            (bit4        (if tac-rewrite -4 0))
+            (bit6        (if tac-rewrite  tacid
+                                         (cdr (assoc (remove-dots cmd) tactic_id))))
+            (bit7        (if tac-rewrite  1 2)
+                         ))
+        (append-tree 0 0 bit1 0 0 bit2 0 1 bit3)
+        (add-info-to-tactic (list bit4 bit2 ts 1)
+                            (if tac-rewrite tactic (remove-nonalpha cmd)))
+        (list bit6 bit7 bit4 bit2 ts ngs))))))
 
 (defun count-seq (item seq)
   (let ((is? (search item seq)))
