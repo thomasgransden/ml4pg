@@ -364,7 +364,7 @@
           (hyp       ,hy)
           (thm       ,th)
           (gargs     ,ga)
-          (goal-args ((cdr (assoc (remove-dots tac) tactic_id)) .
+          (goal-args ((get-tactic-id tac) .
                       (concat gargs (list ts ngs)))))
       (apply 'append-tree tree-args)
       (add-info-to-tactic tac-info (remove-nonalpha tac))
@@ -378,7 +378,7 @@
    argument is a hypothesis of a theorem, the fifth one is the top-symbol
    and the last one the number of subgoals"
   (cond ((search "- inv H" cmd)
-           (list (cdr (assoc "inv" tactic_id)) 1 1 -1 ngs ngs))
+           (list (get-tactic-id "inv") 1 1 -1 ngs ngs))
 
         ((or (string= cmd "2: eauto.")
              (string= cmd "3: eauto."))
@@ -409,7 +409,7 @@
              (string= (subseq cmd 0 (min 7  (length cmd))) "intros;")
              (string= (subseq cmd 0 (min 12 (length cmd))) "intros until")
              (search ";intros" cmd))
-           (list (cdr (assoc "intro" tactic_id)) 1 1 -1 ngs ngs))
+           (list (get-tactic-id "intro") 1 1 -1 ngs ngs))
 
         ((string= tactic "case")
            (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
@@ -429,7 +429,7 @@
                          (list 1 0 0)))
 
         ((search "induction 1" cmd)
-           (list (cdr (assoc "induction" tactic_id)) 1 1 1 ts ngs))
+           (list (get-tactic-id "induction") 1 1 1 ts ngs))
 
         ((string= tactic "induction")
            (let* ((object  (subseq cmd (after-space cmd) (first-dot cmd)))
@@ -457,7 +457,7 @@
                    (list 2 0 0)))
 
         ((string= tactic "red.")
-           (append-to-goal-chain (list (cdr (assoc (remove-dots tactic) tactic_id)) 0 0 0 ts ngs)))
+           (append-to-goal-chain (list (get-tactic-id tactic) 0 0 0 ts ngs)))
 
         (t
            (append-to-goal-chain (list (cdr (append-to-tactic tactic)) 0 0 0 ts ngs)))))
@@ -496,9 +496,12 @@
       ((endp temp) temp2)
     (setf temp2 (append temp2 (list (cons (replace-plus (format "%s" (car (car temp)))) (cdr (car temp))))))))
 
+(defun get-tactic-id (tac)
+  (cdr (assoc (remove-dots tac) tactic_id)))
+
 (defun get-numbers2 (cmd tactic ngs ts current-level bot)
   "Function to obtain the information just about the goals."
-  (let ((tacid (cdr (assoc tactic tactic_id))))
+  (let ((tacid (get-tactic-id tactic)))
     (cond
      ((string= tactic "intro")
       (let* ((cmd-intro (string= cmd "intro."))
@@ -544,7 +547,7 @@
       (list tacid 1 0 0 ts ngs))
 
      ((string= "induction 1" (subseq cmd 0 (min 11 (length cmd))))
-      (list (cdr (assoc "induction" tactic_id)) 1 1 1 ts ngs))
+      (list (get-tactic-id "induction") 1 1 1 ts ngs))
 
      ((string= tactic "induction")
       (let* ((object  (subseq cmd (after-space cmd) (first-dot cmd)))
@@ -564,7 +567,7 @@
             (bit3        (if tac-rewrite  0 1))
             (bit4        (if tac-rewrite -4 0))
             (bit6        (if tac-rewrite  tacid
-                                         (cdr (assoc (remove-dots cmd) tactic_id))))
+                                          (get-tactic-id cmd)))
             (bit7        (if tac-rewrite  1 2)
                          ))
         (append-tree 0 0 bit1 0 0 bit2 0 1 bit3)
