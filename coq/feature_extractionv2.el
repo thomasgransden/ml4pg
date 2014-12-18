@@ -195,11 +195,11 @@
 (defun get-obj-intro ()
   "In some cases the intro tactic does not have parameters. This obtains the
    type of the object introduced with the intro tactic in those cases"
-  (let* ((undo   (proof-undo-last-successful-command))
-         (obj    (do-show-intro))
-         (object (subseq obj 0 (search nl obj)))
-         (dod    (proof-assert-next-command-interactive))
-         (foo    (append-hyp (list object))))
+  (proof-undo-last-successful-command)
+  (let* ((obj    (do-show-intro))
+         (object (subseq obj 0 (search nl obj))))
+    (proof-assert-next-command-interactive)
+    (append-hyp (list object))
     (get-type-id object)))
 
 (defun extract-params (seq res)
@@ -402,7 +402,7 @@
          (let* ((type (get-obj-intro)))
            (gn-aux-simpl (gn-intro)
                          (list type -1 ts 1)
-                         (list 1 (get-obj-intro) -1))))
+                         (list 1 type -1))))
 
         ((or (string= tactic "intros")
              (string= (subseq cmd 0 (min 8  (length cmd))) "intros [")
@@ -506,7 +506,7 @@
      ((string= tactic "intro")
       (let* ((cmd-intro (string= cmd "intro."))
              (object    (unless cmd-intro (subseq cmd (after-space cmd)
-                                                      (first-dot cmd))))
+                                                      (first-dot   cmd))))
              (type      (if cmd-intro (get-obj-intro)
                                       (get-type-id object))))
         (gn-aux (list type 0 0 0 0 0 0 1 0)
@@ -514,7 +514,7 @@
                 tactic
                 (unless cmd-intro (list object))
                 nil
-                (list 1 (if cmd-intro (get-obj-intro) type) -1))))
+                (list 1 type -1))))
 
      ((string= tactic "intros")
       (let* ((cmd-intros   (string= cmd "intros."))
