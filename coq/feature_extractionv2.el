@@ -163,15 +163,17 @@
 
 (defun get-type-id (object)
   "A function to obtain the type associated with an object"
-  (get-type-id-aux (do-check-object object)))
+  (get-type-id-aux types_id (do-check-object object)))
 
-(defun get-type-id-aux (a)
-  (let* ((pos_jump  (search nl  a :start2 (+ 2 (first-space  a))))
-         (pos_space (search " " a :start2 (+ 2 (search ": "  a))))
-         (type (cdr (assoc (subseq a (+ 2 (search ": " a))
-                                   (or pos_space pos_jump))
-                           types_id))))
-    (or type -4)))
+(defun get-type-id-aux (types txt)
+  (flet ((txt-pos (begin end)
+                  (search begin txt :start2 (+ 2 (search end txt)))))
+    (lookup-type-id types (subseq txt (+ 2 (search ": " txt))
+                                      (or (txt-pos " " ": ")
+                                          (txt-pos nl  " "))))))
+
+(defun lookup-type-id (types id)
+  (or (cdr (assoc id types)) -4))
 
 (defun goal-str ()
   (do-set-printing)
