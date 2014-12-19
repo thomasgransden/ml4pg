@@ -53,7 +53,7 @@
   `(setf ,name (append ,name (list ,val))))
 
 (defun append-to-goal (x)
-  (setq goal-level-temp (x . goal-level-temp)))
+  (setq goal-level-temp (cons x goal-level-temp)))
 
 (defun append-to-tactic (tactic)
   (unless (assoc tactic tactic_id)
@@ -67,13 +67,13 @@
   (add-info-to-tree (list a b c d e f g h i) current-level))
 
 (defmacro cons-prepend (name val)
-  `(setf ,name (,val . ,name)))
+  `(setf ,name (cons ,val ,name)))
 
 (defmacro concat-to (name lst)
   `(setf ,name (concat ,name ,lst)))
 
 (defun append-to-goal-chain (val)
-  (append-to-goal atgc)
+  (append-to-goal val)
   val)
 
 ;; Pure functions for text manipulation
@@ -175,7 +175,7 @@
 
 (defun goal-str ()
   (do-set-printing)
-  (str-after (do-focus) "============================"))
+  (str-after (do-focus) "============================\n   "))
 
 (defun get-top-symbol ()
   "Obtain the value of a top symbol"
@@ -347,30 +347,17 @@
 (defun remove-nonalpha (str)
   (replace-regexp-in-string "[^a-z]" "" str))
 
-(defmacro gn-aux-simpl (targ ti ga)
-  `(gn-aux ,targ ,ti tactic nil nil ,ga))
-
-(defmacro gn-intro ()
-  '(list type 0 0 0 0 0 0 1 0))
-
-(defmacro gn-aux (targ ti ta hy th ga)
+(defun gn-aux (tree-args tac-info tac hyp thm goal-args ts ngs)
   "Perform the common operations of get-numbers. If hyp or thm are nil, no
    hypothesis/theorem will be appended. To make this clearer, you can create
    your nil values using (not 'some-arbitrary-name), eg.
    (not 'adding-hypothesis) or (not 'adding-theorem)"
-  `((let ((tree-args ,targ)
-          (tac-info  ,ti)
-          (tac       ,ta)
-          (hyp       ,hy)
-          (thm       ,th)
-          (gargs     ,ga)
-          (goal-args ((get-tactic-id tac) .
-                      (concat gargs (list ts ngs)))))
-      (apply 'append-tree tree-args)
-      (add-info-to-tactic tac-info (remove-nonalpha tac))
-      (when hyp (append-hyp hyp))
-      (when thm (append-to-theorems thm))
-      (when gargs (append-to-goal-chain goal-args)))))
+  (apply 'append-tree tree-args)
+  (add-info-to-tactic tac-info (remove-nonalpha tac))
+  (when hyp       (append-hyp hyp))
+  (when thm       (append-to-theorems thm))
+  (when goal-args (append-to-goal-chain (cons (get-tactic-id tac)
+                                              (append goal-args (list ts ngs))))))
 
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
@@ -391,18 +378,23 @@
               (not (string= cmd "intro.")))
            (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
                   (type   (get-type-id object)))
-             (gn-aux (gn-intro)
+             (gn-aux (list type 0 0 0 0 0 0 1 0)
                      (list type -1 ts 1)
                      tactic
                      (list object)
                      nil
-                     (list 1 type -1))))
+                     (list 1 type -1)
+                     ts ngs)))
 
         ((string= tactic "intro")
          (let* ((type (get-obj-intro)))
-           (gn-aux-simpl (gn-intro)
-                         (list type -1 ts 1)
-                         (list 1 type -1))))
+           (gn-aux (list type 0 0 0 0 0 0 1 0)
+                   (list type -1 ts 1)
+                   tactic
+                   nil
+                   nil
+                   (list 1 type -1)
+                   ts ngs)))
 
         ((or (string= tactic "intros")
              (string= (subseq cmd 0 (min 8  (length cmd))) "intros [")
@@ -414,19 +406,31 @@
         ((string= tactic "case")
            (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
                   (type   (get-type-id object)))
-             (gn-aux-simpl (list 0 type 0 0 0 0 0 2 0)
-                           (list type 1 ts 1)
-                           (list 1 type 1))))
+             (gn-aux (list 0 type 0 0 0 0 0 2 0)
+                     (list type 1 ts 1)
+                     tactic
+                     nil
+                     nil
+                     (list 1 type 1)
+                     ts ngs)))
 
         ((string= tactic "simpl")
-           (gn-aux-simpl (list 0 0 0 0 ts 0 0 1 0)
-                         (list 0 0 ts 1)
-                         (list 1 0 0)))
+           (gn-aux (list 0 0 0 0 ts 0 0 1 0)
+                   (list 0 0 ts 1)
+                   tactic
+                   nil
+                   nil
+                   (list 1 0 0)
+                   ts ngs))
 
         ((string= tactic "trivial")
-           (gn-aux-simpl (list 0 0 0 0 0 0 ts 1 1)
-                         (list 0 0 ts 1)
-                         (list 1 0 0)))
+           (gn-aux (list 0 0 0 0 0 0 ts 1 1)
+                   (list 0 0 ts 1)
+                   tactic
+                   nil
+                   nil
+                   (list 1 0 0)
+                   ts ngs))
 
         ((search "induction 1" cmd)
            (list (get-tactic-id "induction") 1 1 1 ts ngs))
@@ -439,14 +443,19 @@
                      (list type arg-ind ts 1)
                      tactic
                      nil
-                     ((concat "IH" object) . 10)
-                     (list 1 type arg-ind))))
+                     (cons (concat "IH" object) 10)
+                     (list 1 type arg-ind)
+                     ts ngs)))
 
         ((string= tactic "rewrite")
-         (let ((xid (extract-theorem-id cmd))))
-           (gn-aux-simpl (list 0 0 0 0 0 xid 0 1 0)
-                         (list -4 xid ts 1)
-                         (list 1 -4 xid)))
+           (let ((xid (extract-theorem-id cmd)))
+             (gn-aux (list 0 0 0 0 0 xid 0 1 0)
+                     (list -4 xid ts 1)
+                     tactic
+                     nil
+                     nil
+                     (list 1 -4 xid)
+                     ts ngs)))
 
         ((string= cmd "simpl; trivial.")
            (gn-aux (list 0 0 ts 0 0 0 0 1 1)
@@ -454,7 +463,8 @@
                    cmd
                    nil
                    nil
-                   (list 2 0 0)))
+                   (list 2 0 0)
+                   ts ngs))
 
         ((string= tactic "red.")
            (append-to-goal-chain (list (get-tactic-id tactic) 0 0 0 ts ngs)))
@@ -514,20 +524,19 @@
                 tactic
                 (unless cmd-intro (list object))
                 nil
-                (list 1 type -1))))
+                (list 1 type -1)
+                ts ngs)))
 
      ((string= tactic "intros")
-      (let* ((cmd-intros   (string= cmd "intros."))
-             (params       (if cmd-intros (get-obj-intros)
-                                          (get-obj-intros2 (subseq cmd (after-space cmd)))))
-             (nparams      (car    params))
-             (types-params (cadr   params))
-             (len          (caddr  params))
-             (gts          (cadddr params))
-             (arg1         (list types-params 0 0 0 0 0 0 1 0))
-             (arg2         (list types-params -1 gts len)))
-        (gn-aux arg1 arg2 "intro" nil nil nil)
-        (append-to-goal-chain (list nparams len types-params -1 gts ngs))))
+      (let* ((cmd-intros   ))
+        (match (if (string= cmd "intros.")
+                   (get-obj-intros)
+                   (get-obj-intros2 (subseq cmd (after-space cmd))))
+          ((list nparams types-params len gts)
+             (let ((arg1         (list types-params 0 0 0 0 0 0 1 0))
+                   (arg2         (list types-params -1 gts len)))
+               (gn-aux arg1 arg2 "intro" nil nil nil ts ngs)
+               (append-to-goal-chain (list nparams len types-params -1 gts ngs)))))))
 
      ((string= tactic "case")
       (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))

@@ -2,6 +2,7 @@
 
 (require 'dash)
 (require 'dash-functional)
+(require 'shadchen)
 
 ;; FIXME: Don't hard-code paths
 (defvar home-dir "/home/chris/Programming/ML4PG/")
