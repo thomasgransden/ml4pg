@@ -397,26 +397,26 @@
 
         ((or (string= cmd "2: eauto.")
              (string= cmd "3: eauto."))
-         (let ((res (list (cdr (append-to-tactic "eauto")) 0 0 0 ts ngs)))
-           (append-to-goal res)
-           (export-tactics)
-           res))
+           (let ((res (list (cdr (append-to-tactic "eauto")) 0 0 0 ts ngs)))
+             (append-to-goal res)
+             (export-tactics)
+             res))
 
         ((string= tactic "intro")
-         (let* ((cmd-intro (string= cmd "intro."))
-                (object    (unless cmd-intro
-                             (subseq cmd (after-space cmd)
-                                         (first-dot cmd))))
-                (type      (if cmd-intro (get-obj-intro)
-                                         (get-type-id object))))
-           (gn-aux (list type 0 0 0 0 0 0 1 0)
-                   (list type -1 ts 1)
-                   tactic
-                   (unless cmd-intro (list object))
-                   nil
-                   (list 1 type -1)
-                   ts
-                   ngs)))
+           (let* ((cmd-intro (string= cmd "intro."))
+                  (object    (unless cmd-intro
+                               (subseq cmd (after-space cmd)
+                                           (first-dot cmd))))
+                  (type      (if cmd-intro (get-obj-intro)
+                                           (get-type-id object))))
+             (gn-aux (list type 0 0 0 0 0 0 1 0)
+                     (list type -1 ts 1)
+                     tactic
+                     (unless cmd-intro (list object))
+                     nil
+                     (list 1 type -1)
+                     ts
+                     ngs)))
 
         ((or (string= tactic "intros")
              (string= (subseq cmd 0 (min 8  (length cmd))) "intros [")
@@ -436,23 +436,18 @@
                      (list 1 type 1)
                      ts ngs)))
 
-        ((string= tactic "simpl")
-           (gn-aux (list 0 0 0 0 ts 0 0 1 0)
+        ((or (string= tactic "simpl")
+             (string= tactic "trivial"))
+           (gn-aux (if (string= tactic "simpl")
+                       (list 0 0 0 0 ts 0 0 1 0)
+                       (list 0 0 0 0 0 0 ts 1 1))
                    (list 0 0 ts 1)
                    tactic
                    nil
                    nil
                    (list 1 0 0)
-                   ts ngs))
-
-        ((string= tactic "trivial")
-           (gn-aux (list 0 0 0 0 0 0 ts 1 1)
-                   (list 0 0 ts 1)
-                   tactic
-                   nil
-                   nil
-                   (list 1 0 0)
-                   ts ngs))
+                   ts
+                   ngs))
 
         ((search "induction 1" cmd)
            (list (get-tactic-id "induction") 1 1 1 ts ngs))
