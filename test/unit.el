@@ -5,7 +5,7 @@
 
 ;; ERT is quite basic, so we build a mini framework on top
 
-(defconst test-iterations 25)
+(defconst test-iterations 10)
 
 ;; TODO: Print args whenever tests fails, since they might be random
 (defmacro test-with (name doc generator tests)
@@ -83,6 +83,10 @@
   "Generate t or nil"
   (equal (random 2) 0))
 
+(defun gen-num ()
+  "Generate positive random numbers"
+  (random 255))
+
 (defun gen-char ()
   "Generate a random ASCII character"
   (format "%c" (random 255)))
@@ -95,6 +99,10 @@
         (concat (gen-char)
                 (gen-string (1- len))))))
 
+(defun gen-nonempty-string ()
+  "Generate a random ASCII string of at least one char"
+  (gen-string (1+ (random 254))))
+
 (defun gen-list (elem-gen &optional op-len)
   "Generate a random list, using the given element-generating function, of the
    given (or random) length"
@@ -103,7 +111,21 @@
         nil
       (cons (funcall elem-gen) (gen-list elem-gen (1- len))))))
 
+(defun gen-pair (first second)
+  (cons (funcall first) (funcall second)))
+
+(defun gen-types-id ()
+  "Generator for types_id values"
+  (gen-list (lambda () (gen-pair 'gen-string 'gen-num))))
+
 ;; Test generators
+
+(test-with gen-num
+           "Number generator"
+           (lone 'gen-num)
+           (lambda (n)
+             (should (numberp n))
+             (should (>= n 0))))
 
 (test-with gen-char
            "Character generator"
@@ -129,65 +151,132 @@
              (should (listp lst))
              (should (equal (length (gen-list 'gen-bool n)) n))))
 
+(test-with gen-pair
+           "Test pair generation"
+           (lambda ())
+           (lambda ()
+             (let ((sb (gen-pair 'gen-string 'gen-bool))
+                   (bs (gen-pair 'gen-bool 'gen-string)))
+               (should (stringp  (car sb)))
+               (should (booleanp (cdr sb)))
+               (should (booleanp (car bs)))
+               (should (stringp  (cdr bs))))))
+
+(test-with gen-types-id
+           "Test types_id value generation"
+           (lone 'gen-types-id)
+           (lambda (alist)
+             (should (listp alist))
+             (dotimes (n (length alist))
+               (let* ((type (car (nth n alist)))
+                      (id   (cdr (assoc type alist))))
+                 (should (equal (assoc type alist)
+                                (cons type id)))))))
+
 ;; Test string helper functions
 
 (test-with between-spaces
            "Test between-spaces, for extracting Coq names"
-           (lambda () (gen-list 'gen-string (+ 3 (random 255))))
+           (lambda () (gen-list 'gen-nonempty-string (+ 3 (random 255))))
            (lambda (&rest in-strs)
              (let* ((str  (mapconcat 'identity in-strs " "))
                     (strs (split-string str " ")))
                (should (equal (between-spaces "foo bar baz") "bar"))
                (should (equal (between-spaces str) (nth 1 strs))))))
 
-(ert-deftest ml4pg-after-space ()
-  "Finding the position of the text after a single space"
-  (should (equal (after-space "foo bar") 4)))
+(test-with after-space
+           "Finding the position of the text after a single space"
+           (lambda () (list (replace-in-string " " "" (gen-nonempty-string))
+                            (gen-nonempty-string)))
+           (lambda (start end)
+             (should (equal (after-space (concat start " " end))
+                            (1+ (length start))))))
 
-(ert-deftest ml4pg-first-dot ()
-  (should (equal (first-dot "abc.") 3)))
+(test-with first-dot
+           "Test looking for '.' in strings"
+           (lambda () (list (replace-in-string "." "" (gen-nonempty-string))
+                            (gen-string)))
+           (lambda (start end)
+             (should (equal (first-dot (concat start "." end))
+                            (length start)))))
 
-(ert-deftest ml4pg-pos-to-dot ()
-  (should (equal (pos-to-dot "abc.def.ghi" 1) "bc")))
+(test-with pos-to-dot
+           "Test chopping up to dots"
+           (lambda () (list (gen-list 'gen-nonempty-string 2)))
+           (lambda (in-strs)
+             (let* ((str  (mapconcat (lambda (c) (if (equal c ?.) ?x c))
+                                     in-strs
+                                     "."))
+                    (strs (split-string str (regexp-quote ".")))
+                    (n    (random (length (car strs)))))
+               (should (equal (pos-to-dot str n)
+                              (subseq (car strs) n))))))
 
-(ert-deftest ml4pg-take-30 ()
-  "Should extract 30 items from a list"
-  (should (equal (take-30 (generate-zeros 40))
-                 (generate-zeros 30))))
+(test-with take-30
+           "Should extract 30 items from a list"
+           (lambda () (list (gen-list 'gen-string (+ 30 (random 255)))))
+           (lambda (l)
+             (should (equal (length (take-30 l)) 30))
+             (dotimes (n 30)
+               (should (equal (nth n (take-30 l))
+                              (nth n l))))))
 
-(ert-deftest ml4pg-find-max-length ()
-  "Finds the length of the longest saved theorem"
-  (should (equal (find-max-length '("foo" "bizzle" "boop")) 6)))
+(test-with find-max-length
+           "Finds the length of the longest saved theorem"
+           (lambda () (list (gen-list 'gen-string) (+ 256 (random 256) )))
+           (lambda (thms n)
+             (let ((thm (gen-string n)))
+               (should (equal (find-max-length (cons thm thms)) n))
+               (should (equal (find-max-length '("foo" "bizzle" "boop")) 6)))))
 
-(ert-deftest ml4pg-lookup-types ()
-  "Looks up types in an assoc list"
-  (should (equal (lookup-type-id '(("foo" . 10) ("bar" . 20))
-                                 "foo")
-                 10)))
+(test-with lookup-type-id
+           "Looks up types in an assoc list"
+           (lambda () (list (gen-types-id)))
+           (lambda (alist)
+             (dotimes (n (length alist))
+               (let* ((type (car (nth n alist)))
+                      (id   (cdr (assoc type alist))))
+                 (should (equal (lookup-type-id alist type)
+                                id))))))
 
-(ert-deftest ml4pg-get-type-id ()
-  "Extracts types from a string and looks them up in an assoc list"
-  (should (equal (get-type-id-aux '(("foo" . 10) ("bar" . 20))
-                                  "baz : foo")
-                 10)))
+(test-with get-type-id
+           "Extracts a type from a string of Coq and looks up its ID"
+           (lambda () (list (replace-regexp-in-string "[:\n ]" "" (gen-nonempty-string))
+                            (replace-regexp-in-string "[:\n ]" "" (gen-nonempty-string))))
+           (lambda (name type)
+             (should (equal (get-type-id-aux (concat name " : " type " "))
+                            type))))
 
 ;; The meaty functions
 
-(ert-deftest ml4pg-append-to ()
-  "Check we can append to variables"
-  (let ((abcdefg '(1 2 3)))
-    (append-to abcdefg 4)
-    (should (equal abcdefg '(1 2 3 4)))))
+(test-with append-to
+           "Check we can append to variables"
+           (lambda () (list (gen-string) (gen-list 'gen-string)))
+           (lambda (s l)
+             (append-to l s)
+             (should (member s l))))
 
-(ert-deftest ml4pg-append-hyp ()
-  "Check we can append to the hypothesis"
-  (let ((hypothesis (list 10)))
-    (append-hyp (list 20))
-    (should (equal hypothesis (list 10 20)))))
+(test-with append-hyp
+           "Check we can append to the hypothesis"
+           (lambda () (list (gen-list 'gen-string) (gen-string)))
+           (lambda (hyp s)
+             (let ((hypothesis hyp))
+               (append-hyp s)
+               (should (equal hypothesis (append hyp s))))))
 
-(ert-deftest ml4pg-first-space ()
-  "Check we can find the first space in a string"
-  (should (equal (first-space "abc def") 3)))
+(test-with first-space
+           "Check we can find the first space in a string"
+           (lambda () (list (replace-in-string " " "x" (gen-nonempty-string))
+                            (gen-nonempty-string)))
+           (lambda (s1 s2)
+             (should (equal (first-space (concat s1 " " s2)) (length s1)))))
 
-(ert-deftest ml4pg-str-between ()
-  (should (equal (str-between "abcdefghijkl" "c" "ijk") "defgh")))
+(test-with str-between
+           "Test extracting strings"
+           (lambda () (let ((c (gen-char)))
+                        (list c
+                              (replace-in-string c "x" (gen-nonempty-string))
+                              (gen-nonempty-string)
+                              (gen-nonempty-string))))
+           (lambda (c s1 s2 s3)
+             (should (equal (str-between (concat s1 c s2 s3) c s3) s2))))

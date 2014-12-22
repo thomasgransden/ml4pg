@@ -78,6 +78,9 @@
 
 ;; Pure functions for text manipulation
 
+(defun replace-in-string (what with in)
+  (replace-regexp-in-string (regexp-quote what) with in))
+
 (defun first-space (txt)
   "Find the position of the first space in a string"
   (search " " txt))
@@ -103,6 +106,96 @@
 
 (defun str-after (str pattern)
   (subseq str (+ (length pattern) (search pattern str))))
+
+(defun goal-str-aux (s)
+  (str-after s "============================\n   "))
+
+(defun get-type-id-aux (txt)
+  (flet ((txt-pos (begin end)
+                  (search begin txt :start2 (+ 2 (search end txt)))))
+    (subseq txt (+ 2 (search ": " txt))
+            (or (txt-pos " " ": ")
+                (txt-pos nl  " ")))))
+
+(defun get-top-symbol-aux (goal)
+  (let* ((fst-symbol (subseq goal 0 (first-space goal))))
+    (get-top-symbol-num fst-symbol goal)))
+
+(defun get-top-symbol-num (fst-symbol goal)
+  (cond ((string= "forall" fst-symbol) 5)
+        ((search  "->"     goal)       7)
+        ((string= "@eq"    fst-symbol) 6)
+        ((string= "and"    fst-symbol) 4)
+        ((string= "iff"    fst-symbol) 8)
+        ((string= "or"     fst-symbol) 3)
+        (0)))
+
+(defun extract-params (seq res)
+  (extract-params-aux nl seq res))
+
+(defun extract-params2 (seq res)
+  (extract-params-aux "." seq res))
+
+(defun extract-params-aux (sep seq res)
+  (let ((pos_space (first-space seq))
+        (pos_jump  (search sep seq)))
+    (if pos_space
+        (extract-params-aux sep
+                            (subseq seq (1+ pos_space))
+                            (cons (subseq seq 0 pos_space) res))
+      (reverse (cons (subseq seq 0 pos_jump) res)))))
+
+(defun get-types-list-aux (f list res)
+  (if (endp list)
+      (* -1 res)
+    (get-types-list-aux (cdr list)
+                        (+ (* -1 (apply f (list (car list)))
+                              (expt 10 (1- (length list))))
+                           res))))
+
+(defun get-number-list (list)
+  "Obtain the number of tactics applied"
+  (if (endp list)
+      0
+    (+ (expt 10 (1- (length list)))
+       (get-number-list (cdr list)))))
+
+(defun get-top-symbols-list-aux (top intro len res)
+  (if (= len 0)
+      res
+    (let ((gs (funcall top))
+          (ps (funcall intro)))
+      (+ (get-top-symbols-list-aux top
+                                   intro
+                                   (1- len)
+                                   (+ (* gs (expt 10 (1- len)))
+                                      res))))))
+
+(defun get-top-symbols-seq-aux (top intro seq res)
+  (if (endp seq)
+      res
+    (let ((gs (funcall top)))
+      (apply intro (car seq))
+      (+ (get-top-symbols-seq-aux (cdr seq)
+                                  (+ (* gs (expt 10 (1- (length seq))))
+                                     res))))))
+
+(defun search-in-hyp (obj hyp)
+  "Obtain the value associated with a theorem"
+  (unless (endp hyp)
+    (if (string= obj (car hyp))
+        t
+      (search-in-hyp obj (cdr hyp)))))
+
+(defun arg-induction-aux (object res)
+  (if (search "Error" res) -1 1))
+
+(defun remove-dots (str)
+  (replace-regexp-in-string (regexp-quote ".") "" str))
+
+(defun remove-nonalpha (str)
+  (replace-regexp-in-string "[^a-z]" "" str))
+
 
 ;; Sending commands to Coq
 
@@ -163,126 +256,65 @@
 
 (defun get-type-id (object)
   "A function to obtain the type associated with an object"
-  (get-type-id-aux types_id (do-check-object object)))
-
-(defun get-type-id-aux (types txt)
-  (flet ((txt-pos (begin end)
-                  (search begin txt :start2 (+ 2 (search end txt)))))
-    (lookup-type-id types (subseq txt (+ 2 (search ": " txt))
-                                      (or (txt-pos " " ": ")
-                                          (txt-pos nl  " "))))))
+  (lookup-type-id types_id (get-type-id-aux (do-check-object object))))
 
 (defun lookup-type-id (types id)
-  (or (cdr (assoc id types)) -4))
+  (cdr (or (assoc id types)
+           (cons nil -4))))
 
 (defun goal-str ()
   (do-set-printing)
-  (str-after (do-focus) "============================\n   "))
+  (goal-str-aux (do-focus)))
 
 (defun get-top-symbol ()
   "Obtain the value of a top symbol"
-  (let* ((goal       (goal-str))
-         (fst-symbol (subseq goal 0 (first-space goal))))
-    (get-top-symbol-aux fst-symbol goal)))
+  (get-top-symbol-aux (goal-str)))
 
-(defun get-top-symbol-aux (fst-symbol goal)
-  (cond ((string= "forall" fst-symbol) 5)
-        ((search  "->"     goal)       7)
-        ((string= "@eq"    fst-symbol) 6)
-        ((string= "and"    fst-symbol) 4)
-        ((string= "iff"    fst-symbol) 8)
-        ((string= "or"     fst-symbol) 3)
-        (0)))
+(defun get-obj-intro-aux (obj)
+  (subseq obj 0 (search nl obj)))
 
 (defun get-obj-intro ()
   "In some cases the intro tactic does not have parameters. This obtains the
    type of the object introduced with the intro tactic in those cases"
   (proof-undo-last-successful-command)
-  (let* ((obj    (do-show-intro))
-         (object (subseq obj 0 (search nl obj))))
+  (let* ((object (get-obj-intro-aux (do-show-intro))))
     (proof-assert-next-command-interactive)
     (append-hyp (list object))
     (get-type-id object)))
 
-(defun extract-params (seq res)
-  (extract-params-aux nl seq res))
-
-(defun extract-params2 (seq res)
-  (extract-params-aux "." seq res))
-
-(defun extract-params-aux (sep seq res)
-  (let ((pos_space (first-space seq))
-        (pos_jump  (search sep seq)))
-    (if pos_space
-        (extract-params-aux sep
-                            (subseq seq (1+ pos_space))
-                            (cons (subseq seq 0 pos_space) res))
-      (reverse (cons (subseq seq 0 pos_jump) res)))))
-
 (defun get-types-list (list res)
   "Given a list of objects, obtain the value associated with their types"
-  (if (endp list)
-      (* -1 res)
-    (get-types-list (cdr list)
-                    (+ (* -1 (get-type-id (car list))
-                          (expt 10 (1- (length list))))
-                       res))))
-
-(defun get-number-list (list)
-  "Obtain the number of tactics applied"
-  (if (endp list)
-      0
-      (+ (expt 10 (1- (length list)))
-         (get-number-list (cdr list)))))
+  (get-types-list-aux 'get-type-id list res))
 
 (defun get-top-symbols-list (len res)
   "Obtain the value associated with top symbol in the case of intros"
-  (if (= len 0)
-      res
-    (let ((gs (get-top-symbol))
-          (ps (do-intro)))
-      (+ (get-top-symbols-list (1- len)
-                               (+ (* gs (expt 10 (1- len)))
-                                  res))))))
+  (get-top-symbols-list-aux 'get-top-symbol 'do-intro len res))
 
 (defun get-top-symbols-seq (seq res)
-  (if (endp seq)
-      res
-      (let ((gs (get-top-symbol)))
-        (do-intro-of (car seq))
-        (+ (get-top-symbols-seq (cdr seq)
-                                (+ (* gs (expt 10 (1- (length seq))))
-                                   res))))))
+  (get-top-symbol-seq-aux 'get-top-symbol 'do-intro-of seq res))
 
 (defun get-obj-intros ()
   "Obtain the values associated with intros both for the case when parameters
    are given and the case intros."
   (let* ((undo   (proof-undo-last-successful-command))
-         (obj    (do-show-intros))
-         (dod    (proof-assert-next-command-interactive))
-         (params (extract-params obj nil))
-         (foo    (append-hyp params))
-         (types  (get-types-list params 0))
-         (num    (get-number-list params))
-         (undo2  (do-undo))
-         (gts    (get-top-symbols-list (length params) 0)))
-    (list num types (length params) gts)))
+         (obj    (do-show-intros)))
+    (proof-assert-next-command-interactive)
+    (let ((params (extract-params obj nil)))
+      (append-hyp params)
+      (do-undo)
+      (list (get-number-list params)
+            (get-types-list params 0)
+            (length params)
+            (get-top-symbols-list (length params) 0)))))
 
 (defun get-obj-intros2 (objects)
-  (let* ((params (extract-params2 objects nil))
-         (foo    (append-hyp params))
-         (types  (get-types-list params 0))
-         (num    (get-number-list params))
-         (undo2  (do-undo))
-         (gts    (get-top-symbols-seq params 0)))
-    (list num types (length params) gts)))
-
-(defun search-in-hyp (obj hyp)
-  "Obtain the value associated with a theorem"
-  (unless (endp hyp)
-    (if (string= obj (car hyp))
-        t
-        (search-in-hyp obj (cdr hyp)))))
+  (let* ((params (extract-params2 objects nil)))
+    (append-hyp params)
+    (do-undo)
+    (list (get-number-list params)
+          (get-types-list params 0)
+          (length params)
+          (get-top-symbols-seq params 0))))
 
 (defun extract-theorem-id (cmd)
   "Look up a theorem's ID. Results are cached, hypotheses have ID 1."
@@ -309,7 +341,7 @@
   (do-undo)
   (let ((res (do-check-object object)))
     (do-induction-on object)
-    (if (search "Error" res) -1 1)))
+    (arg-induction-aux res)))
 
 (defun get-type-id-induction (object arg-ind)
   (let ((check (equal arg-ind 1))
@@ -343,12 +375,6 @@
                ("trivial"      'trivial))))
     (when tac (set tac (append (symbol-value tac) (list info))))))
 
-(defun remove-dots (str)
-  (replace-regexp-in-string (regexp-quote ".") "" str))
-
-(defun remove-nonalpha (str)
-  (replace-regexp-in-string "[^a-z]" "" str))
-
 (defun gn-aux (tree-args tac-info tac hyp thm goal-args ts ngs)
   "Perform the common operations of get-numbers. If hyp or thm are nil, no
    hypothesis/theorem will be appended. To make this clearer, you can create
@@ -376,27 +402,21 @@
            (export-tactics)
            res))
 
-        ((and (string= tactic "intro")
-              (not (string= cmd "intro.")))
-           (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
-                  (type   (get-type-id object)))
-             (gn-aux (list type 0 0 0 0 0 0 1 0)
-                     (list type -1 ts 1)
-                     tactic
-                     (list object)
-                     nil
-                     (list 1 type -1)
-                     ts ngs)))
-
         ((string= tactic "intro")
-         (let* ((type (get-obj-intro)))
+         (let* ((cmd-intro (string= cmd "intro."))
+                (object    (unless cmd-intro
+                             (subseq cmd (after-space cmd)
+                                         (first-dot cmd))))
+                (type      (if cmd-intro (get-obj-intro)
+                                         (get-type-id object))))
            (gn-aux (list type 0 0 0 0 0 0 1 0)
                    (list type -1 ts 1)
                    tactic
-                   nil
+                   (unless cmd-intro (list object))
                    nil
                    (list 1 type -1)
-                   ts ngs)))
+                   ts
+                   ngs)))
 
         ((or (string= tactic "intros")
              (string= (subseq cmd 0 (min 8  (length cmd))) "intros [")
