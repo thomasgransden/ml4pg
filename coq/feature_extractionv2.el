@@ -58,7 +58,7 @@
 (defun append-to-tactic (tactic)
   (unless (assoc tactic tactic_id)
     (append-to tactic_id (cons tactic (1+ (length tactic_id)))))
-  (assoc tactic tactic_id))
+  (cdr (assoc tactic tactic_id)))
 
 (defun append-to-theorems (val)
   (append-to theorems_id val))
@@ -380,8 +380,8 @@
    hypothesis/theorem will be appended. To make this clearer, you can create
    your nil values using (not 'some-arbitrary-name), eg.
    (not 'adding-hypothesis) or (not 'adding-theorem)"
-  (apply 'append-tree tree-args)
-  (add-info-to-tactic tac-info (remove-nonalpha tac))
+  (when tree-args (apply 'append-tree tree-args))
+  (when tac-info  (add-info-to-tactic tac-info (remove-nonalpha tac)))
   (when hyp       (append-hyp hyp))
   (when thm       (append-to-theorems thm))
   (when goal-args (append-to-goal-chain (cons (get-tactic-id tac)
@@ -398,90 +398,96 @@
    the third one is the argument type, the fourth one is if the
    argument is a hypothesis of a theorem, the fifth one is the top-symbol
    and the last one the number of subgoals"
-  (let ((tacarg tactic)
-        (hyparg nil)
-        (thmarg nil))
-    (flet ((gn-aux2 (a b c)
-                    (gn-aux a b tacarg hyparg thmarg c ts ngs)))
-      (cond
-       ((search "- inv H" cmd)
-          (list (get-tactic-id "inv") 1 1 -1 ngs ngs))
+  (let ((tacarg  tactic)
+        treearg tacinfo hyparg thmarg goalarg result)
+    (cond
+     ((search "- inv H" cmd)
+        (setf result (list (get-tactic-id "inv") 1 1 -1 ngs ngs)))
 
-       ((or (string= cmd "2: eauto.")
-            (string= cmd "3: eauto."))
-          (let ((res (list (cdr (append-to-tactic "eauto")) 0 0 0 ts ngs)))
-            (append-to-goal res)
-            (export-tactics)
-            res))
+     ((or (string= cmd "2: eauto.")
+          (string= cmd "3: eauto."))
+        (setf result (list (append-to-tactic "eauto") 0 0 0 ts ngs))
+        (append-to-goal result)
+        (export-tactics))
 
-       ((string= tactic "intro")
-          (let* ((cmd-intro (string= cmd "intro."))
-                 (object    (unless cmd-intro
-                              (subseq cmd (after-space cmd)
-                                      (first-dot cmd))))
-                 (type      (if cmd-intro (get-obj-intro)
-                              (get-type-id object))))
-            (setf hyparg (unless cmd-intro (list object)))
-            (gn-aux2 (list type 0 0 0 0 0 0 1 0)
-                     (list type -1 ts 1)
-                     (list 1 type -1))))
+     ((string= tactic "intro")
+        (let* ((cmd-intro (string= cmd "intro."))
+               (object    (unless cmd-intro
+                            (subseq cmd (after-space cmd)
+                                        (first-dot cmd))))
+               (type      (if cmd-intro (get-obj-intro)
+                                        (get-type-id object))))
+          (setf hyparg  (unless cmd-intro (list object)))
+          (setf treearg (list type 0 0 0 0 0 0 1 0))
+          (setf tacinfo (list type -1))
+          (setf goalarg (list 1 type -1))))
 
-       ((or (string= tactic "intros")
-            (starts-with cmd "intros [")
-            (starts-with cmd "intros;")
-            (starts-with cmd "intros until")
-            (search ";intros" cmd))
-          (list (get-tactic-id "intro") 1 1 -1 ngs ngs))
+     ((or (string= tactic "intros")
+          (starts-with cmd "intros [")
+          (starts-with cmd "intros;")
+          (starts-with cmd "intros until")
+          (search ";intros" cmd))
+        (setf result (list (get-tactic-id "intro") 1 1 -1 ngs ngs)))
 
-       ((string= tactic "case")
-          (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
-                 (type   (get-type-id object)))
-            (gn-aux2 (list 0 type 0 0 0 0 0 2 0)
-                     (list type 1 ts 1)
-                     (list 1 type 1))))
+     ((string= tactic "case")
+        (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
+               (type   (get-type-id object)))
+          (setf treearg (list 0 type 0 0 0 0 0 2 0))
+          (setf tacinfo (list type 1))
+          (setf goalarg (list 1 type 1))))
 
-       ((or (string= tactic "simpl")
-            (string= tactic "trivial"))
-          (gn-aux2 (if (string= tactic "simpl")
-                       (list 0 0 0 0 ts 0 0 1 0)
-                     (list 0 0 0 0 0 0 ts 1 1))
-                   (list 0 0 ts 1)
-                   (list 1 0 0)))
+     ((or (string= tactic "simpl")
+          (string= tactic "trivial"))
+        (setf treearg (append (list 0 0 0 0) (if (string= tactic "simpl")
+                                                 (list ts 0 0  1 0)
+                                                 (list 0  0 ts 1 1))))
+        (setf tacinfo (list 0 0))
+        (setf goalarg (list 1 0 0)))
 
-       ((search "induction 1" cmd)
-          (list (get-tactic-id "induction") 1 1 1 ts ngs))
+     ((search "induction 1" cmd)
+        (setf result (list (get-tactic-id "induction") 1 1 1 ts ngs)))
 
-       ((string= tactic "induction")
-          (let* ((object  (subseq cmd (after-space cmd) (first-dot cmd)))
-                 (arg-ind (arg-induction object))
-                 (type    (get-type-id-induction object arg-ind)))
-            (setf thmarg (cons (concat "IH" object) 10))
-            (gn-aux2 (list 0 0 0 type 0 0 0 2 0)
-                     (list type arg-ind ts 1)
-                     (list 1 type arg-ind))))
+     ((string= tactic "induction")
+        (let* ((object  (subseq cmd (after-space cmd) (first-dot cmd)))
+               (arg-ind (arg-induction object))
+               (type    (get-type-id-induction object arg-ind)))
+          (setf treearg (list 0 0 0 type 0 0 0 2 0))
+          (setf thmarg  (cons (concat "IH" object) 10))
+          (setf tacinfo (list type arg-ind))
+          (setf goalarg (list 1 type arg-ind))))
 
-       ((string= tactic "rewrite")
-          (let ((xid (extract-theorem-id cmd)))
-            (gn-aux2 (list 0 0 0 0 0 xid 0 1 0)
-                     (list -4 xid ts 1)
-                     (list 1 -4 xid))))
+     ((string= tactic "rewrite")
+        (let ((xid (extract-theorem-id cmd)))
+          (setf treearg (list 0 0 0 0 0 xid 0 1 0))
+          (setf tacinfo (list -4 xid))
+          (setf goalarg (list 1 -4 xid))))
 
-       ((string= cmd "simpl; trivial.")
-          (setf tacarg cmd)
-          (gn-aux2 (list 0 0 ts 0 0 0 0 1 1)
-                   (list 0 0 ts 1)
-                   (list 2 0 0)))
+     ((string= cmd "simpl; trivial.")
+        (setf tacarg cmd)
+        (setf treearg (list 0 0 ts 0 0 0 0 1 1))
+        (setf tacinfo (list 0 0))
+        (setf goalarg (list 2 0 0)))
 
-       (t
-          (append-to-goal-chain (list (if (string= tactic "red.")
-                                          (get-tactic-id tactic)
-                                        (cdr (append-to-tactic tactic)))
-                                      0 0 0 ts ngs)))))))
+     (t
+        (setf goalarg
+              (append-to-goal-chain (list (if (string= tactic "red.")
+                                              (get-tactic-id tactic)
+                                              (append-to-tactic tactic))
+                                          0 0 0 ts ngs)))))
+    (or result
+        (gn-aux treearg
+                (append tacinfo (list ts 1))
+                tacarg
+                hyparg
+                thmarg
+                goalarg
+                ts
+                ngs))))
 
 (defun replace-colon (str)
   (let ((colon (search ";" str)))
     (if colon
-    (replace-colon (concatenate 'string (subseq str 0 colon) "+" (subseq str (+ 2 colon))))
+        (replace-colon (concatenate 'string (subseq str 0 colon) "+" (subseq str (+ 2 colon))))
       str)))
 
 (defun replace-plus (str)
