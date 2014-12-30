@@ -19,8 +19,10 @@
 
 (defun ml4pg-load-coq ()
   (mapc (load-els "coq")
-        '("auxiliary_files" "feature_extractionv2" "matlab_interaction"
-          "shortcuts" "menus" "storage" "save_lemmas" "weka" "automaton"))
+        '("auxiliary_files" "feature_extraction_pure"
+          "feature_extraction_commands" "feature_extractionv2"
+          "matlab_interaction" "shortcuts" "menus" "storage" "save_lemmas"
+          "weka" "automaton"))
   (mapc (load-els "ssreflect")
         '("term-tree-definition" "term-tree-theorem" "extraction"
           "table-to-feature-vector" "weka-definitions" "storage-defs" "diagraph"

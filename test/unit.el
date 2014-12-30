@@ -1,6 +1,7 @@
 ;; Unit tests for ML4PG. Uses Emacs Lisp Regression Testing (ERT)
 
 ;; We only focus on plain Coq for now. Feel free to add SSReflect tests!
+(load-file "../ml4pg.el")
 (ml4pg-load-coq)
 
 ;; ERT is quite basic, so we build a mini framework on top
@@ -280,3 +281,6 @@
                               (gen-nonempty-string))))
            (lambda (c s1 s2 s3)
              (should (equal (str-between (concat s1 c s2 s3) c s3) s2))))
+
+;; Run all tests
+(ert "^ml4pg-")

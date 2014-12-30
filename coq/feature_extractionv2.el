@@ -76,162 +76,6 @@
   (append-to-goal val)
   val)
 
-;; Pure functions for text manipulation
-
-(defun replace-in-string (what with in)
-  (replace-regexp-in-string (regexp-quote what) with in))
-
-(defun first-space (txt)
-  "Find the position of the first space in a string"
-  (search " " txt))
-
-(defun after-space (txt)
-  "Find the position of text after the first space"
-  (1+ (first-space txt)))
-
-(defun first-dot (txt)
-  "Find the position of the first dot in a string"
-  (search "." txt))
-
-(defun pos-to-dot (cmd n)
-  "Extract a sub-string from the given position to the first dot"
-  (subseq cmd n (first-dot cmd)))
-
-(defun between-spaces (txt)
-  (let ((space (after-space txt)))
-    (subseq txt space (search " " txt :start2 space))))
-
-(defun rem-jumps (cmd)
-  (remove-jumps (between-spaces cmd)))
-
-(defun str-after (str pattern)
-  (subseq str (+ (length pattern) (search pattern str))))
-
-(defun goal-str-aux (s)
-  (str-after s "============================\n   "))
-
-(defun get-type-id-aux (txt)
-  (flet ((txt-pos (begin end)
-                  (search begin txt :start2 (+ 2 (search end txt)))))
-    (subseq txt (+ 2 (search ": " txt))
-            (or (txt-pos " " ": ")
-                (txt-pos nl  " ")))))
-
-(defun get-top-symbol-aux (goal)
-  (let* ((fst-symbol (subseq goal 0 (first-space goal))))
-    (get-top-symbol-num fst-symbol goal)))
-
-(defun get-top-symbol-num (fst-symbol goal)
-  (cond ((string= "forall" fst-symbol) 5)
-        ((search  "->"     goal)       7)
-        ((string= "@eq"    fst-symbol) 6)
-        ((string= "and"    fst-symbol) 4)
-        ((string= "iff"    fst-symbol) 8)
-        ((string= "or"     fst-symbol) 3)
-        (0)))
-
-(defun extract-params (seq res)
-  (extract-params-aux nl seq res))
-
-(defun extract-params2 (seq res)
-  (extract-params-aux "." seq res))
-
-(defun extract-params-aux (sep seq res)
-  (let ((pos_space (first-space seq))
-        (pos_jump  (search sep seq)))
-    (if pos_space
-        (extract-params-aux sep
-                            (subseq seq (1+ pos_space))
-                            (cons (subseq seq 0 pos_space) res))
-      (reverse (cons (subseq seq 0 pos_jump) res)))))
-
-(defun get-types-list-aux (f list res)
-  (if (endp list)
-      (* -1 res)
-    (get-types-list-aux (cdr list)
-                        (+ (* -1 (apply f (list (car list)))
-                              (expt 10 (1- (length list))))
-                           res))))
-
-(defun get-number-list (list)
-  "Obtain the number of tactics applied"
-  (if (endp list)
-      0
-    (+ (expt 10 (1- (length list)))
-       (get-number-list (cdr list)))))
-
-(defun get-top-symbols-list-aux (top intro len res)
-  (if (= len 0)
-      res
-    (let ((gs (funcall top))
-          (ps (funcall intro)))
-      (+ (get-top-symbols-list-aux top
-                                   intro
-                                   (1- len)
-                                   (+ (* gs (expt 10 (1- len)))
-                                      res))))))
-
-(defun get-top-symbols-seq-aux (top intro seq res)
-  (if (endp seq)
-      res
-    (let ((gs (funcall top)))
-      (apply intro (car seq))
-      (+ (get-top-symbols-seq-aux (cdr seq)
-                                  (+ (* gs (expt 10 (1- (length seq))))
-                                     res))))))
-
-(defun search-in-hyp (obj hyp)
-  "Obtain the value associated with a theorem"
-  (unless (endp hyp)
-    (if (string= obj (car hyp))
-        t
-      (search-in-hyp obj (cdr hyp)))))
-
-(defun arg-induction-aux (object res)
-  (if (search "Error" res) -1 1))
-
-(defun remove-dots (str)
-  (replace-regexp-in-string (regexp-quote ".") "" str))
-
-(defun remove-nonalpha (str)
-  (replace-regexp-in-string "[^a-z]" "" str))
-
-
-;; Sending commands to Coq
-
-(defun do-unset-printing ()
-  (proof-shell-invisible-cmd-get-result (format "Unset Printing All")))
-
-(defun do-check-object (object)
-  (proof-shell-invisible-cmd-get-result (concat "Check " object)))
-
-(defun do-set-printing ()
-  (proof-shell-invisible-cmd-get-result (format "Set Printing All")))
-
-(defun do-focus ()
-  (proof-shell-invisible-cmd-get-result "Focus"))
-
-(defun do-show-intro ()
-  (proof-shell-invisible-cmd-get-result "Show Intro"))
-
-(defun do-intro ()
-  (proof-shell-invisible-cmd-get-result "intro"))
-
-(defun do-intro-of (name)
-  (proof-shell-invisible-cmd-get-result (concat "intro " name)))
-
-(defun do-show-intros ()
-  (proof-shell-invisible-cmd-get-result (format "Show Intros")))
-
-(defun do-undo ()
-  (proof-shell-invisible-cmd-get-result (format "Undo")))
-
-(defun do-induction-on (name)
-  (proof-shell-invisible-cmd-get-result (concat "induction " name)))
-
-(defun do-show-proof ()
-  (proof-shell-invisible-cmd-get-result "Show Proof"))
-
 ;; Extracting features
 
 (defun export-theorem ()
@@ -262,16 +106,9 @@
   (cdr (or (assoc id types)
            (cons nil -4))))
 
-(defun goal-str ()
-  (do-set-printing)
-  (goal-str-aux (do-focus)))
-
 (defun get-top-symbol ()
   "Obtain the value of a top symbol"
-  (get-top-symbol-aux (goal-str)))
-
-(defun get-obj-intro-aux (obj)
-  (subseq obj 0 (search nl obj)))
+  (get-top-symbol-aux (do-goal-str)))
 
 (defun get-obj-intro ()
   "In some cases the intro tactic does not have parameters. This obtains the
@@ -293,36 +130,31 @@
 (defun get-top-symbols-seq (seq res)
   (get-top-symbol-seq-aux 'get-top-symbol 'do-intro-of seq res))
 
-(defun get-obj-intros ()
-  "Obtain the values associated with intros both for the case when parameters
-   are given and the case intros."
-  (let* ((undo   (proof-undo-last-successful-command))
-         (obj    (do-show-intros)))
-    (proof-assert-next-command-interactive)
-    (let ((params (extract-params obj nil)))
-      (append-hyp params)
-      (do-undo)
-      (list (get-number-list params)
-            (get-types-list params 0)
-            (length params)
-            (get-top-symbols-list (length params) 0)))))
-
-(defun get-obj-intros2 (objects)
-  (let* ((params (extract-params2 objects nil)))
+(defun get-obj-intros-aux (objects extractor getter alter)
+  (let ((params (apply extractor (list objects nil))))
     (append-hyp params)
     (do-undo)
     (list (get-number-list params)
           (get-types-list params 0)
           (length params)
-          (get-top-symbols-seq params 0))))
+          (apply getter (list (apply alter params) 0)))))
+
+(defun get-obj-intros ()
+  "Obtain the values associated with intros both for the case when parameters
+   are given and the case intros."
+  (let* ((undo    (proof-undo-last-successful-command))
+         (objects (do-show-intros)))
+    (proof-assert-next-command-interactive)
+    (get-obj-intros-aux objects 'extract-params 'get-top-symbols-list 'length)))
+
+(defun get-obj-intros2 (objects)
+  (get-obj-intros-aux objects 'extract-params2 'get-top-symbols-seq 'id))
 
 (defun extract-theorem-id (cmd)
   "Look up a theorem's ID. Results are cached, hypotheses have ID 1."
-  (let ((s<- (or (search "<-" cmd) 0)))
-    (extract-theorem-id-aux (pos-to-dot cmd (if s<- (+ 3 s<-)
-                                                    (after-space cmd))))))
+  (extract-theorem-id-aux2 (extract-theorem-id-aux cmd)))
 
-(defun extract-theorem-id-aux (arg)
+(defun extract-theorem-id-aux2 (arg)
   (cond
    ((assoc arg theorems_id)
     (cdr (assoc arg theorems_id)))
@@ -387,102 +219,129 @@
   (when goal-args (append-to-goal-chain (cons (get-tactic-id tac)
                                               (append goal-args (list ts ngs))))))
 
-(defun starts-with (str prefix)
-  (string= (subseq str 0
-                       (min (length prefix)
-                            (length str)))
-           prefix))
+(defun gn-branch-intro (cmd)
+  (let* ((cmd-intro (string= cmd "intro."))
+         (object    (unless cmd-intro (get-numbers-get-object cmd)))
+         (type      (if cmd-intro (get-obj-intro)
+                      (get-type-id object))))
+    (list (list type 0 0 0 0 0 0 1 0)
+          (list type -1)
+          t
+          (unless cmd-intro (list object))
+          nil
+          (list 1 type -1))))
+
+(defun gn-branch-case (cmd)
+  (let ((type (get-type-id (get-numbers-get-object cmd))))
+    (list (list 0 type 0 0 0 0 0 2 0)
+          (list type 1)
+          t
+          nil
+          nil
+          (list 1 type 1))))
+
+(defun gn-branch-induction (cmd)
+  (let* ((object  (get-numbers-get-object cmd))
+         (arg-ind (arg-induction object))
+         (type    (get-type-id-induction object arg-ind)))
+    (list (list 0 0 0 type 0 0 0 2 0)
+          (list type arg-ind)
+          t
+          nil
+          (cons (concat "IH" object) 10)
+          (list 1 type arg-ind))))
+
+(defun gn-branch-rewrite (cmd)
+  (let ((xid (extract-theorem-id cmd)))
+    (list (list 0 0 0 0 0 xid 0 1 0)
+          (list -4 xid)
+          t
+          nil
+          nil
+          (list 1 -4 xid))))
+
+(defun get-numbers-get-object (cmd)
+  (subseq cmd (after-space cmd) (first-dot cmd)))
+
+(defun get-numbers-apply (tactic cmd ts ngs)
+  `(lambda (tree-args tac-info tac hyp thm goal-args)
+     (gn-aux tree-args
+             (append tac-info (list ,ts 1))
+             (if tac ,tactic ,cmd)
+             hyp
+             thm
+             goal-args
+             ,ts
+             ,ngs)))
 
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
    the third one is the argument type, the fourth one is if the
    argument is a hypothesis of a theorem, the fifth one is the top-symbol
    and the last one the number of subgoals"
-  (let ((tacarg  tactic)
-        treearg tacinfo hyparg thmarg goalarg result)
+  (let ((process (get-numbers-apply tactic cmd ts ngs)))
     (cond
      ((search "- inv H" cmd)
-        (setf result (list (get-tactic-id "inv") 1 1 -1 ngs ngs)))
+        (list (get-tactic-id "inv") 1 1 -1 ngs ngs))
 
      ((or (string= cmd "2: eauto.")
           (string= cmd "3: eauto."))
-        (setf result (list (append-to-tactic "eauto") 0 0 0 ts ngs))
-        (append-to-goal result)
-        (export-tactics))
+        (let ((result (list (append-to-tactic "eauto") 0 0 0 ts ngs)))
+          (append-to-goal result)
+          (export-tactics)
+          result))
 
      ((string= tactic "intro")
-        (let* ((cmd-intro (string= cmd "intro."))
-               (object    (unless cmd-intro
-                            (subseq cmd (after-space cmd)
-                                        (first-dot cmd))))
-               (type      (if cmd-intro (get-obj-intro)
-                                        (get-type-id object))))
-          (setf hyparg  (unless cmd-intro (list object)))
-          (setf treearg (list type 0 0 0 0 0 0 1 0))
-          (setf tacinfo (list type -1))
-          (setf goalarg (list 1 type -1))))
+        (apply process (gn-branch-intro cmd)))
 
      ((or (string= tactic "intros")
           (starts-with cmd "intros [")
           (starts-with cmd "intros;")
           (starts-with cmd "intros until")
           (search ";intros" cmd))
-        (setf result (list (get-tactic-id "intro") 1 1 -1 ngs ngs)))
+        (list (get-tactic-id "intro") 1 1 -1 ngs ngs))
 
      ((string= tactic "case")
-        (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
-               (type   (get-type-id object)))
-          (setf treearg (list 0 type 0 0 0 0 0 2 0))
-          (setf tacinfo (list type 1))
-          (setf goalarg (list 1 type 1))))
+        (apply process (gn-branch-case cmd)))
 
-     ((or (string= tactic "simpl")
-          (string= tactic "trivial"))
-        (setf treearg (append (list 0 0 0 0) (if (string= tactic "simpl")
-                                                 (list ts 0 0  1 0)
-                                                 (list 0  0 ts 1 1))))
-        (setf tacinfo (list 0 0))
-        (setf goalarg (list 1 0 0)))
+     ((string= tactic "simpl")
+        (apply process (list (append (list 0 0 0 0) (list ts 0 0  1 0))
+                             (list 0 0)
+                             t
+                             nil
+                             nil
+                             (list 1 0 0))))
+
+     ((string= tactic "trivial")
+        (apply process (list (append (list 0 0 0 0) (list 0  0 ts 1 1))
+                             (list 0 0)
+                             t
+                             nil
+                             nil
+                             (list 1 0 0))))
 
      ((search "induction 1" cmd)
-        (setf result (list (get-tactic-id "induction") 1 1 1 ts ngs)))
+        (list (get-tactic-id "induction") 1 1 1 ts ngs))
 
      ((string= tactic "induction")
-        (let* ((object  (subseq cmd (after-space cmd) (first-dot cmd)))
-               (arg-ind (arg-induction object))
-               (type    (get-type-id-induction object arg-ind)))
-          (setf treearg (list 0 0 0 type 0 0 0 2 0))
-          (setf thmarg  (cons (concat "IH" object) 10))
-          (setf tacinfo (list type arg-ind))
-          (setf goalarg (list 1 type arg-ind))))
+        (apply process (gn-branch-induction cmd)))
 
      ((string= tactic "rewrite")
-        (let ((xid (extract-theorem-id cmd)))
-          (setf treearg (list 0 0 0 0 0 xid 0 1 0))
-          (setf tacinfo (list -4 xid))
-          (setf goalarg (list 1 -4 xid))))
+        (apply process (gn-branch-rewrite cmd)))
 
      ((string= cmd "simpl; trivial.")
-        (setf tacarg cmd)
-        (setf treearg (list 0 0 ts 0 0 0 0 1 1))
-        (setf tacinfo (list 0 0))
-        (setf goalarg (list 2 0 0)))
+        (apply process (list (list 0 0 ts 0 0 0 0 1 1)
+                             (list 0 0)
+                             nil
+                             nil
+                             nil
+                             (list 2 0 0))))
 
      (t
-        (setf goalarg
-              (append-to-goal-chain (list (if (string= tactic "red.")
-                                              (get-tactic-id tactic)
-                                              (append-to-tactic tactic))
-                                          0 0 0 ts ngs)))))
-    (or result
-        (gn-aux treearg
-                (append tacinfo (list ts 1))
-                tacarg
-                hyparg
-                thmarg
-                goalarg
-                ts
-                ngs))))
+        (append-to-goal-chain (list (if (string= tactic "red.")
+                                        (get-tactic-id tactic)
+                                        (append-to-tactic tactic))
+                                    0 0 0 ts ngs))))))
 
 (defun replace-colon (str)
   (let ((colon (search ";" str)))
