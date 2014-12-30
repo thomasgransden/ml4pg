@@ -207,7 +207,7 @@
                ("trivial"      'trivial))))
     (when tac (set tac (append (symbol-value tac) (list info))))))
 
-(defun gn-aux (tree-args tac-info tac hyp thm goal-args ts ngs)
+(defun gn-aux (tree-args tac-info goal-args tac ts ngs &optional hyp thm)
   "Perform the common operations of get-numbers. If hyp or thm are nil, no
    hypothesis/theorem will be appended. To make this clearer, you can create
    your nil values using (not 'some-arbitrary-name), eg.
@@ -226,18 +226,14 @@
                       (get-type-id object))))
     (list (list type 0 0 0 0 0 0 1 0)
           (list type -1)
-          t
-          (unless cmd-intro (list object))
+          (list 1 type -1)
           nil
-          (list 1 type -1))))
+          (unless cmd-intro (list object)))))
 
 (defun gn-branch-case (cmd)
   (let ((type (get-type-id (get-numbers-get-object cmd))))
     (list (list 0 type 0 0 0 0 0 2 0)
           (list type 1)
-          t
-          nil
-          nil
           (list 1 type 1))))
 
 (defun gn-branch-induction (cmd)
@@ -246,33 +242,27 @@
          (type    (get-type-id-induction object arg-ind)))
     (list (list 0 0 0 type 0 0 0 2 0)
           (list type arg-ind)
-          t
+          (list 1 type arg-ind)
           nil
-          (cons (concat "IH" object) 10)
-          (list 1 type arg-ind))))
+          nil
+          (cons (concat "IH" object) 10))))
 
 (defun gn-branch-rewrite (cmd)
   (let ((xid (extract-theorem-id cmd)))
     (list (list 0 0 0 0 0 xid 0 1 0)
           (list -4 xid)
-          t
-          nil
-          nil
           (list 1 -4 xid))))
 
 (defun get-numbers-get-object (cmd)
   (subseq cmd (after-space cmd) (first-dot cmd)))
 
 (defun get-numbers-apply (tactic cmd ts ngs)
-  `(lambda (tree-args tac-info tac hyp thm goal-args)
+  `(lambda (tree-args tac-info goal-args &optional tac hyp thm)
      (gn-aux tree-args
              (append tac-info (list ,ts 1))
-             (if tac ,tactic ,cmd)
-             hyp
-             thm
              goal-args
-             ,ts
-             ,ngs)))
+             (if tac ,cmd ,tactic)
+             ,ts ,ngs hyp thm)))
 
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
@@ -307,17 +297,11 @@
      ((string= tactic "simpl")
         (apply process (list (append (list 0 0 0 0) (list ts 0 0  1 0))
                              (list 0 0)
-                             t
-                             nil
-                             nil
                              (list 1 0 0))))
 
      ((string= tactic "trivial")
         (apply process (list (append (list 0 0 0 0) (list 0  0 ts 1 1))
                              (list 0 0)
-                             t
-                             nil
-                             nil
                              (list 1 0 0))))
 
      ((search "induction 1" cmd)
@@ -332,10 +316,8 @@
      ((string= cmd "simpl; trivial.")
         (apply process (list (list 0 0 ts 0 0 0 0 1 1)
                              (list 0 0)
-                             nil
-                             nil
-                             nil
-                             (list 2 0 0))))
+                             (list 2 0 0)
+                             t)))
 
      (t
         (append-to-goal-chain (list (if (string= tactic "red.")
@@ -392,11 +374,10 @@
                                       (get-type-id object))))
         (gn-aux (list type 0 0 0 0 0 0 1 0)
                 (list type -1 ts 1)
-                tactic
-                (unless cmd-intro (list object))
-                nil
                 (list 1 type -1)
-                ts ngs)))
+                tactic
+                ts ngs
+                (unless cmd-intro (list object)))))
 
      ((string= tactic "intros")
       (let* ((cmd-intros   ))
@@ -406,7 +387,7 @@
           ((list nparams types-params len gts)
              (let ((arg1         (list types-params 0 0 0 0 0 0 1 0))
                    (arg2         (list types-params -1 gts len)))
-               (gn-aux arg1 arg2 "intro" nil nil nil ts ngs)
+               (gn-aux arg1 arg2 nil "intro" ts ngs)
                (append-to-goal-chain (list nparams len types-params -1 gts ngs)))))))
 
      ((string= tactic "case")
