@@ -264,6 +264,14 @@
              (if tac ,cmd ,tactic)
              ,ts ,ngs hyp thm)))
 
+(defun is-intro (cmd)
+  (or (starts-with cmd "intros [")
+      (starts-with cmd "intros;")
+      (starts-with cmd "intros until")
+      (search ";intros" cmd)))
+
+(defconst no-tacinfo (list 0 0))
+
 (defun get-numbers (cmd tactic ngs ts current-level bot)
   "The first value is the tactic, the second one is the number of tactics,
    the third one is the argument type, the fourth one is if the
@@ -285,23 +293,20 @@
         (apply process (gn-branch-intro cmd)))
 
      ((or (string= tactic "intros")
-          (starts-with cmd "intros [")
-          (starts-with cmd "intros;")
-          (starts-with cmd "intros until")
-          (search ";intros" cmd))
+          (is-intro cmd))
         (list (get-tactic-id "intro") 1 1 -1 ngs ngs))
 
      ((string= tactic "case")
         (apply process (gn-branch-case cmd)))
 
      ((string= tactic "simpl")
-        (apply process (list (append (list 0 0 0 0) (list ts 0 0  1 0))
-                             (list 0 0)
+        (apply process (list ((list 0 0 0 0 ts 0 0 1 0))
+                             no-tacinfo
                              (list 1 0 0))))
 
      ((string= tactic "trivial")
-        (apply process (list (append (list 0 0 0 0) (list 0  0 ts 1 1))
-                             (list 0 0)
+        (apply process (list (append (list 0 0 0 0 0 0 ts 1 1))
+                             no-tacinfo
                              (list 1 0 0))))
 
      ((search "induction 1" cmd)
@@ -315,7 +320,7 @@
 
      ((string= cmd "simpl; trivial.")
         (apply process (list (list 0 0 ts 0 0 0 0 1 1)
-                             (list 0 0)
+                             no-tacinfo
                              (list 2 0 0)
                              t)))
 
@@ -362,78 +367,101 @@
 (defun get-tactic-id (tac)
   (cdr (assoc (remove-dots tac) tactic_id)))
 
+(defun gn2-intro (cmd)
+  (let* ((cmd-intro (string= cmd "intro."))
+         (object    (unless cmd-intro (get-numbers-get-object cmd)))
+         (type      (if cmd-intro (get-obj-intro)
+                                  (get-type-id object))))
+    (list (list type 0 0 0 0 0 0 1 0)
+          (list type -1)
+          (list 1 type -1)
+          nil
+          (unless cmd-intro (list object)))))
+
+(defun gn2-intros (cmd ts ngs)
+  (let* ((params (if (string= cmd "intros.")
+                     (get-obj-intros)
+                     (get-obj-intros2 (subseq cmd (after-space cmd)))))
+         (nparams      (nth 0 params))
+         (types-params (nth 1 params))
+         (len          (nth 2 params))
+         (gts          (nth 3 params)))
+    (gn-aux (list types-params 0 0 0 0 0 0 1 0)
+            (list types-params -1 gts len)
+            nil
+            "intro"
+            ts
+            ngs)
+    (append-to-goal-chain (list nparams len types-params -1 gts ngs))))
+
+(defun gn2-case (cmd tactic tacid ts ngs)
+  (let* ((object (get-numbers-get-object cmd))
+         (type   (get-type-id object)))
+    (list (list 0 type 0 0 0 0 0 2 0)
+          (list type 1)
+          (list 1 type 1))))
+
+(defun gn2-simpl (ts ngs tactic tacid)
+  (append-tree 0 0 0 0 ts 0 0 1 0)
+  (add-info-to-tactic (list 0 0 ts 1) tactic)
+  (list tacid 1 0 0 ts ngs))
+
+(defun gn2-trivial (ts ngs tactic tacid)
+  (append-tree 0 0 0 0 0 0 ts 1 0)
+  (add-info-to-tactic (list 0 0 ts 1) tactic)
+  (list tacid 1 0 0 ts ngs))
+
+(defun gn2-induction (cmd ts ngs tactic)
+  (let* ((object  (get-numbers-get-object cmd))
+         (arg-ind (arg-induction object))
+         (type    (get-type-id-induction object arg-ind)))
+    (append-tree 0 0 0 type 0 0 0 2 0)
+    (add-info-to-tactic (list type arg-ind ts 1) tactic)
+    (setf theorems_id (append theorems_id (list (cons (concat "IH" object) 10))))
+    (append-to-goal-chain (list tacid 1 type arg-ind ts ngs))))
+
+(defun gn2-rewrite (cmd tactic tacid ts ngs)
+  (let ((bit2 (extract-theorem-id cmd)))
+    (append-tree 0 0 0 0 0 bit2 0 1 0)
+    (add-info-to-tactic (list -4 bit2 ts 1) tactic)
+    (list tacid 1 bit4 bit2 ts ngs)))
+
+(defun gn2-simpltrivial (cmd ts ngs)
+  (append-tree 0 0 ts 0 0 0 0 1 1)
+  (add-info-to-tactic (list 0 0 ts 1) (remove-nonalpha cmd))
+  (list (get-tactic-id cmd) 2 0 0 ts ngs))
+
 (defun get-numbers2 (cmd tactic ngs ts current-level bot)
   "Function to obtain the information just about the goals."
-  (let ((tacid (get-tactic-id tactic)))
+  (let ((tacid (get-tactic-id tactic))
+        (process (get-numbers-apply tactic cmd ts ngs)))
     (cond
      ((string= tactic "intro")
-      (let* ((cmd-intro (string= cmd "intro."))
-             (object    (unless cmd-intro (subseq cmd (after-space cmd)
-                                                      (first-dot   cmd))))
-             (type      (if cmd-intro (get-obj-intro)
-                                      (get-type-id object))))
-        (gn-aux (list type 0 0 0 0 0 0 1 0)
-                (list type -1 ts 1)
-                (list 1 type -1)
-                tactic
-                ts ngs
-                (unless cmd-intro (list object)))))
+        (apply process (gn2-intro cmd)))
 
      ((string= tactic "intros")
-      (let* ((cmd-intros   ))
-        (match (if (string= cmd "intros.")
-                   (get-obj-intros)
-                   (get-obj-intros2 (subseq cmd (after-space cmd))))
-          ((list nparams types-params len gts)
-             (let ((arg1         (list types-params 0 0 0 0 0 0 1 0))
-                   (arg2         (list types-params -1 gts len)))
-               (gn-aux arg1 arg2 nil "intro" ts ngs)
-               (append-to-goal-chain (list nparams len types-params -1 gts ngs)))))))
+        (gn2-intros cmd ts ngs))
 
      ((string= tactic "case")
-      (let* ((object (subseq cmd (after-space cmd) (first-dot cmd)))
-             (type   (get-type-id object)))
-        (append-tree 0 type 0 0 0 0 0 2 0)
-        (add-info-to-tactic (list type 1 ts 1) tactic)
-        (append-to-goal-chain (list tacid 1 type 1 ts ngs))))
+        (apply process (gn2-case cmd)))
 
-     ((or (string= tactic "simpl")
-          (string= tactic "trivial"))
-      (let ((tac-simpl (string= tactic "simpl"))
-            (bit1      (if tac-simpl ts 0))
-            (bit2      (if tac-simpl 0  ts)))
-        (append-tree 0 0 0 0 bit1 0 bit2 1 0)
-        (add-info-to-tactic (list 0 0 ts 1) tactic)
-        (list tacid 1 0 0 ts ngs)))
+     ((string= tactic "simpl")
+        (gn2-simpl ts ngs tactic tacid))
+
+     ((string= tactic "trivial")
+        (gn2-trivial ts ngs tactic tacid))
 
      ((string= "induction 1" (subseq cmd 0 (min 11 (length cmd))))
-      (list (get-tactic-id "induction") 1 1 1 ts ngs))
+        (list (get-tactic-id "induction") 1 1 1 ts ngs))
 
      ((string= tactic "induction")
-      (let* ((object  (subseq cmd (after-space cmd) (first-dot cmd)))
-             (arg-ind (arg-induction object))
-             (type    (get-type-id-induction object arg-ind)))
-        (append-tree 0 0 0 type 0 0 0 2 0)
-        (add-info-to-tactic (list type arg-ind ts 1) tactic)
-        (setf theorems_id (append theorems_id (list (cons (concat "IH" object) 10))))
-        (append-to-goal-chain (list tacid 1 type arg-ind ts ngs))))
+      (gn2-induction cmd ts ngs tactic))
 
-     ((or (string= tactic "rewrite")
-          (string= cmd "simpl; trivial."))
-      (let ((tac-rewrite (string= tactic "rewrite"))
-            (bit1        (if tac-rewrite  0 ts))
-            (bit2        (if tac-rewrite (extract-theorem-id cmd)
-                                          0))
-            (bit3        (if tac-rewrite  0 1))
-            (bit4        (if tac-rewrite -4 0))
-            (bit6        (if tac-rewrite  tacid
-                                          (get-tactic-id cmd)))
-            (bit7        (if tac-rewrite  1 2)
-                         ))
-        (append-tree 0 0 bit1 0 0 bit2 0 1 bit3)
-        (add-info-to-tactic (list bit4 bit2 ts 1)
-                            (if tac-rewrite tactic (remove-nonalpha cmd)))
-        (list bit6 bit7 bit4 bit2 ts ngs))))))
+     ((string= tactic "rewrite")
+        (gn2-rewrite cmd tactic tacid ts ngs))
+
+     ((string= cmd "simpl; trivial.")
+        (gn2-simpltrivial cmd ts ngs)))))
 
 (defun count-seq (item seq)
   (let ((is? (search item seq)))
