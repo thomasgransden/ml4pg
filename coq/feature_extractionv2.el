@@ -261,12 +261,6 @@
              (if tac ,cmd ,tactic)
              ,ts ,ngs hyp thm)))
 
-(defun is-intro (cmd)
-  (or (starts-with cmd "intros [")
-      (starts-with cmd "intros;")
-      (starts-with cmd "intros until")
-      (search ";intros" cmd)))
-
 (defconst no-tacinfo (list 0 0))
 
 (defun get-numbers (cmd tactic ngs ts current-level bot)
@@ -327,18 +321,6 @@
                                         (append-to-tactic tactic))
                                     0 0 0 ts ngs))))))
 
-(defun replace-colon (str)
-  (let ((colon (search ";" str)))
-    (if colon
-        (replace-colon (concatenate 'string (subseq str 0 colon) "+" (subseq str (+ 2 colon))))
-      str)))
-
-(defun replace-plus (str)
-  (let ((colon (search "+" str)))
-    (if colon
-    (replace-plus (concatenate 'string (subseq str 0 colon) "; " (subseq str (1+ colon))))
-      str)))
-
 (defun replace-colon-rec ()
   (do ((temp tactic_id (cdr temp))
        (temp2 nil))
@@ -354,12 +336,6 @@
   (insert-file-contents (concat home-dir "/coq/tactics"))
   (setf tactic_id (convert-tactic_id
            (car (read-from-string (format "%s" (read (current-buffer)))))))))
-
-(defun convert-tactic_id (lst)
-  (do ((temp lst (cdr temp))
-       (temp2 nil))
-      ((endp temp) temp2)
-    (setf temp2 (append temp2 (list (cons (replace-plus (format "%s" (car (car temp)))) (cdr (car temp))))))))
 
 (defun get-tactic-id (tac)
   (cdr (assoc (remove-dots tac) tactic_id)))
@@ -466,89 +442,9 @@
      ((string= cmd "simpl; trivial.")
         (gn2-simpltrivial cmd ts ngs)))))
 
-(defun count-seq (item seq)
-  (let ((is? (search item seq)))
-    (if is?
-    (+ 1 (count-seq item (subseq seq (+ 1 is?))))
-    0)))
-
 (defun get-number-of-goals ()
   (let ((r (do-show-proof)))
     (count-seq "?" r)))
-
-(defun flat (ll)
-  (do ((temp ll (cdr temp))
-       (temp2 nil))
-      ((endp temp) temp2)
-      (setf temp2 (append (car temp) temp2))))
-
-(defun remove-zeros (n)
-  "The following function computes the result of the proof tree level"
-  (do ((temp n (/ temp 10)))
-      ((or (= temp 0) (not (= (mod temp 10) 0))) temp)))
-
-(defun obtain-level (level n)
-  (do ((temp (cdr level)
-             (cdr temp))
-       (temp2 (if (endp level)
-                  (list 0 0 0 0 0 0 0 0 0)
-                (list (* (nth 0 (car level))
-                         (expt 10 (length (cdr level))))
-                      (* (nth 1 (car level))
-                         (expt 10 (length (cdr level))))
-                      (* (nth 2 (car level))
-                         (expt 10 (length (cdr level))))
-                      (* (nth 3 (car level))
-                         (expt 10 (length (cdr level))))
-                      (* (nth 4 (car level))
-                         (expt 10 (length (cdr level))))
-                      (* (nth 5 (car level))
-                         (expt 10 (length (cdr level))))
-                      (* (nth 6 (car level))
-                         (expt 10 (length (cdr level))))
-                      (* (nth 7 (car level))
-                         (expt 10 (length (cdr level))))
-                      (nth 8 (car level))))))
-      ((endp temp)
-       (list (remove-zeros (nth 0 temp2))
-             (remove-zeros (nth 1 temp2))
-             (remove-zeros (nth 2 temp2))
-             (remove-zeros (nth 3 temp2))
-             (remove-zeros (nth 4 temp2))
-             (nth 5 temp2)
-             (remove-zeros (nth 6 temp2))
-             (if (= (nth 7 temp2)
-                    0)
-                 (nth 7 temp2)
-               (+ (* n (expt 10 (length level)))
-                  (remove-zeros (nth 7 temp2))))
-             (nth 8 temp2)))
-    (setf temp2 (list (+ (nth 0 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 0 (car temp))))
-                      (+ (nth 1 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 1 (car temp))))
-                      (+ (nth 2 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 2 (car temp))))
-                      (+ (nth 3 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 3 (car temp))))
-                      (+ (nth 4 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 4 (car temp))))
-                      (+ (nth 5 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 5 (car temp))))
-                      (+ (nth 6 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 6 (car temp))))
-                      (+ (nth 7 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 7 (car temp))))
-                      (+ (nth 8 temp2)
-                         (nth 8 (car temp)))))))
 
 (defun compute-proof-result ()
   (append (obtain-level tdl1 1)
@@ -556,46 +452,6 @@
       (obtain-level tdl3 3)
       (obtain-level tdl4 4)
       (obtain-level tdl5 5)))
-
-(defun digits (n)
-  (if (= (mod n 10) 0)
-      0
-      (1+ (digits (/ n 10)))))
-
-(defun first-digit (n digits)
-  (/ n (expt 10 (1- digits))))
-
-(defun rest-of-digits (n digits)
-  (- n (* (first-digit n digits) (expt 10 (1- digits)))))
-
-(defun obtain-tactic-result (tactic)
-  "Computes the result of the tactic"
-  (do ((temp  (cdr tactic)
-              (cdr temp))
-       (temp2 (if (endp tactic)
-                  (list 0 0 0 0 0)
-                  (list (first-digit (nth 0 (car tactic))
-                                     (digits (nth 0 (car tactic))))
-                        (* (rest-of-digits (nth 0 (car tactic))
-                                           (digits (nth 0 (car tactic))))
-                           (expt 10 (length (cdr tactic))))
-                        (* (nth 1 (car tactic))
-                           (expt 10 (length (cdr tactic))))
-                        (nth 2 (car tactic))
-                        (nth 3 (car tactic))))))
-      ((endp temp)
-       temp2)
-    (setf temp2 (list (nth 0 temp2)
-                      (+ (nth 1 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 0 (car temp))))
-                      (+ (nth 2 temp2)
-                         (* (expt 10 (length (cdr temp)))
-                            (nth 1 (car temp))))
-                      (concat (format "%s" (nth 3 temp2))
-                              (format "%s" (nth 2 (car temp))))
-                      (+ (nth 4 temp2)
-                         (nth 3 (car temp)))))))
 
 (defun compute-tactic-result ()
   (append (obtain-tactic-result intro)
@@ -606,40 +462,6 @@
           (obtain-tactic-result rewrite)
           (obtain-tactic-result trivial)))
 
-(defvar problematic-lemmas )
-
-(defun is-in-search (cmd)
-  (do ((useless-terms '("Structure" "Section" "Add Ring" "Hypothesis"
-                        "Hypotheses" "Include" "Export" "Parameter" "Axiom"
-                        "End" "Notation" "Hint" "Inductive" "Variable"
-                        "Implicit" "Import" "Canonical" "Coercion" "Next"
-                        "Local" "Set" "Instance" "Module" "Ltac" "Let" "Opaque"
-                        "Bind" "Scope" "Require" "Infix" "Record" "Fact" "Print"
-                        "Arguments" "Function")
-                      (cdr useless-terms))
-       (is nil))
-      ((or (endp useless-terms)
-           is)
-       is)
-    (if (search (car useless-terms) cmd)
-        (setf is t))))
-
-(defun is-problematic (cmd)
-  (do ((problematic-lemmas '("exists T; auto."
-                             "assert (Mem.perm m1 b i Max Nonempty)."
-                             "assert (UNCHANGED:" "destruct idg as"
-                             "eapply T.lub_right; eauto."
-                             "eapply T.glb_right; eauto."
-                             "+ subst e'; simpl in *."
-                             "eapply T.glb_left; eauto. ")
-                           (cdr problematic-lemmas))
-       (is nil))
-      ((or (endp problematic-lemmas)
-           is)
-       is)
-    (if (search (car problematic-lemmas) cmd)
-        (setf is t))))
-
 (defun split-feature-vector (name fv)
   (let ((len (1+ (floor (length fv) 30))))
     (do ((i 0 (1+ i)))
@@ -647,16 +469,6 @@
          nil)
       (setf saved-theorems (append saved-theorems
                                    (list (list name (take-30-from fv i))))))))
-
-(defun take-30-from (list pos)
-  (let ((j (* 30 pos)))
-    (do ((i j (1+ i))
-         (temp2 nil (if (nth i list)
-                        (cons (nth i list)
-                              temp2)
-                      (cons 0 temp2))))
-        ((= i (+ j 30))
-         (reverse temp2)))))
 
 (defun export-theorem-aux (result name current-level dot-level i)
   (let* ((semis     (save-excursion
@@ -754,16 +566,6 @@
                                           (get-number-of-goals)
                                           ts current-level 1))))
 
-(defun list-of-commands (str)
-  (do ((temp (subseq str 0 (1- (length str))))
-       (i 0 (1+ i))
-       (temp2 nil)
-       (pos (search ";" str)))
-      ((not pos) (if (= i 0) (list temp) (append temp2 (list temp))))
-    (progn (setf temp2 (append temp2 (list (subseq temp 0 pos))))
-       (setf temp (subseq temp (1+ pos)))
-       (setf pos (search ";" temp)))))
-
 (defun save-file-conventions1 ()
   "Save the files"
   (interactive)
@@ -775,11 +577,6 @@
       (func "_proof_tree.csv"       (extract-features-2 proof-tree-level))
       (func "_tactic.csv"           (extract-features-2 tactic-level))
       (func (format "_summary.txt") extract-names))))
-
-(defun remove-last-col (str)
-  (if (string= (subseq str (1- (length str))) ":")
-      (subseq str 0 (1- (length str)))
-      str))
 
 (defun extract-names ()
   (do ((theorems saved-theorems (cdr theorems))
@@ -798,12 +595,6 @@
       (if (not (string= rjct ""))
           (concat-to names (format "%s %s:%s\n" i nam (remove-last-col rjct)))))))
 
-(defun print-list (list)
-  (do ((lst list (cdr lst))
-       (str ""))
-      ((endp lst) (subseq str 0 (1- (length str))))
-    (concat-to str (format "%s," (car lst)))))
-
 (defun extract-features-1 ()
   (let ((fm (longest-theorem)))
     (do ((theorems saved-theorems (cdr theorems))
@@ -815,30 +606,8 @@
                                                                     (append theorem (generate-zeros (- fm (length theorem))))
                                                                   theorem)))))))))
 
-(defun extract-features-2 (list)
-  (do ((feature-list list (cdr feature-list))
-       (features     ""))
-      ((endp feature-list) features)
-    (concat-to features (format "%s\n" (print-list (car feature-list))))))
-
-(defun generate-zeros (n)
-  (-unfold (lambda (x)
-             (case x
-               (0         nil)
-               (otherwise (cons 0 (1- x)))))
-           n))
-
 (defun longest-theorem ()
   (find-max-length saved-theorems))
-
-(defun find-max-length (lst)
-  (-reduce-from (lambda (x y)
-                  (max x (length y)))
-                0
-                lst))
-
-(defun take-30 (list)
-  (-take 30 list))
 
 (defun extract-info-up-to-here ()
   "Extract the info of a theorem up to a concrete point"
