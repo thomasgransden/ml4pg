@@ -131,3 +131,6 @@
                    (min (length prefix)
                         (length str)))
            prefix))
+
+(defun get-numbers-get-object (cmd)
+  (subseq cmd (after-space cmd) (first-dot cmd)))

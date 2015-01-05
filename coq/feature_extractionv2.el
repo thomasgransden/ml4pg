@@ -223,7 +223,7 @@
   (let* ((cmd-intro (string= cmd "intro."))
          (object    (unless cmd-intro (get-numbers-get-object cmd)))
          (type      (if cmd-intro (get-obj-intro)
-                      (get-type-id object))))
+                                  (get-type-id object))))
     (list (list type 0 0 0 0 0 0 1 0)
           (list type -1)
           (list 1 type -1)
@@ -252,9 +252,6 @@
     (list (list 0 0 0 0 0 xid 0 1 0)
           (list -4 xid)
           (list 1 -4 xid))))
-
-(defun get-numbers-get-object (cmd)
-  (subseq cmd (after-space cmd) (first-dot cmd)))
 
 (defun get-numbers-apply (tactic cmd ts ngs)
   `(lambda (tree-args tac-info goal-args &optional tac hyp thm)
@@ -402,8 +399,12 @@
           (list 1 type 1))))
 
 (defun gn2-simpl (ts ngs tactic tacid)
-  (append-tree 0 0 0 0 ts 0 0 1 0)
-  (add-info-to-tactic (list 0 0 ts 1) tactic)
+  (gn-aux (list 0 0 0 0 ts 0 0 1 0)
+          (list 0 0 ts 1)
+          nil
+          tactic
+          ts
+          ngs)
   (list tacid 1 0 0 ts ngs))
 
 (defun gn2-trivial (ts ngs tactic tacid)
@@ -411,14 +412,16 @@
   (add-info-to-tactic (list 0 0 ts 1) tactic)
   (list tacid 1 0 0 ts ngs))
 
-(defun gn2-induction (cmd ts ngs tactic)
+(defun gn2-induction (cmd)
   (let* ((object  (get-numbers-get-object cmd))
          (arg-ind (arg-induction object))
          (type    (get-type-id-induction object arg-ind)))
-    (append-tree 0 0 0 type 0 0 0 2 0)
-    (add-info-to-tactic (list type arg-ind ts 1) tactic)
-    (setf theorems_id (append theorems_id (list (cons (concat "IH" object) 10))))
-    (append-to-goal-chain (list tacid 1 type arg-ind ts ngs))))
+    (list (list 0 0 0 type 0 0 0 2 0)
+          (list type arg-ind)
+          (list 1 type arg-ind)
+          nil
+          nil
+          (cons (concat "IH" object) 10))))
 
 (defun gn2-rewrite (cmd tactic tacid ts ngs)
   (let ((bit2 (extract-theorem-id cmd)))
@@ -432,7 +435,7 @@
   (list (get-tactic-id cmd) 2 0 0 ts ngs))
 
 (defun get-numbers2 (cmd tactic ngs ts current-level bot)
-  "Function to obtain the information just about the goals."
+  "Obtain the information just about the goals."
   (let ((tacid (get-tactic-id tactic))
         (process (get-numbers-apply tactic cmd ts ngs)))
     (cond
@@ -455,7 +458,7 @@
         (list (get-tactic-id "induction") 1 1 1 ts ngs))
 
      ((string= tactic "induction")
-      (gn2-induction cmd ts ngs tactic))
+        (apply process (gn2-induction cmd)))
 
      ((string= tactic "rewrite")
         (gn2-rewrite cmd tactic tacid ts ngs))

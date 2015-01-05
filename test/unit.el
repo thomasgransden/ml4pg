@@ -274,11 +274,15 @@
 
 (test-with str-between
            "Test extracting strings"
-           (lambda () (let ((c (gen-char)))
-                        (list c
-                              (replace-in-string c "x" (gen-nonempty-string))
-                              (gen-nonempty-string)
-                              (gen-nonempty-string))))
+           (lambda () (let* ((char (gen-char))
+                             (strs (concat (gen-nonempty-string) char
+                                           (gen-nonempty-string) char
+                                           (gen-nonempty-string)))
+                             (bits (split-string strs (regexp-quote char) t)))
+                        (list char
+                              (nth 0 bits)
+                              (nth 1 bits)
+                              (nth 2 bits))))
            (lambda (c s1 s2 s3)
              (should (equal (str-between (concat s1 c s2 s3) c s3) s2))))
 
