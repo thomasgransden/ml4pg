@@ -391,7 +391,7 @@
             ngs)
     (append-to-goal-chain (list nparams len types-params -1 gts ngs))))
 
-(defun gn2-case (cmd tactic tacid ts ngs)
+(defun gn2-case (cmd)
   (let* ((object (get-numbers-get-object cmd))
          (type   (get-type-id object)))
     (list (list 0 type 0 0 0 0 0 2 0)
@@ -424,10 +424,10 @@
           (cons (concat "IH" object) 10))))
 
 (defun gn2-rewrite (cmd tactic tacid ts ngs)
-  (let ((bit2 (extract-theorem-id cmd)))
-    (append-tree 0 0 0 0 0 bit2 0 1 0)
-    (add-info-to-tactic (list -4 bit2 ts 1) tactic)
-    (list tacid 1 bit4 bit2 ts ngs)))
+  (let ((tid (extract-theorem-id cmd)))
+    (append-tree 0 0 0 0 0 tid 0 1 0)
+    (add-info-to-tactic (list -4 tid ts 1) tactic)
+    (list tacid 1 -4 tid ts ngs)))
 
 (defun gn2-simpltrivial (cmd ts ngs)
   (append-tree 0 0 ts 0 0 0 0 1 1)
