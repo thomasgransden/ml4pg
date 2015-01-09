@@ -6,6 +6,9 @@
 
 (defvar mode nil)
 
+;; If ML4PG_BATCH is set, we avoid asking questions
+(defconst ml4pg-interactive (not (getenv "ML4PG_BATCH")))
+
 ;; FIXME: We should use lexical scope. I used quote splicing instead because
 ;;        I don't know if this whole system will fall over with lexical scope...
 (defun load-els (dir)
@@ -33,7 +36,10 @@
 
 (defun select-mode ()
   (interactive)
-  (let ((smode (read-string "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")))
+  (let* ((msg   "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")
+         (smode (if ml4pg-interactive
+                    (read-string msg)
+                    "")))
     (setq mode smode)
     (cond ((string= mode "s") (ml4pg-load-ss))
           ((string= mode "n") nil)
