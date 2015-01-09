@@ -1,7 +1,6 @@
 ;; Package-Requires: ((emacs "24"))
 
-;; FIXME: Can we make this relative?
-(defvar home-dir ***PUT THE PATH TO ML4PG DIRECTORY HERE***)
+(defvar home-dir (or (getenv "ML4PG_HOME") "/put/path/to/ML4PG/here"))
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 (defvar *matlab-program* nil)
 
