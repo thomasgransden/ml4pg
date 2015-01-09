@@ -15,7 +15,9 @@
 (defun do-focus ()
   (let ((result (do-focus-unsafe)))
     (if (search "Error:" result)
-        (error "Problem during focus: %s" result)
+        (progn (message (format "Problem during focus: %s" result))
+               (backtrace)
+               (kill-emacs))
         result)))
 
 (defun do-show-intro ()
