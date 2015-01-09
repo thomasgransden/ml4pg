@@ -1,7 +1,7 @@
 ;; Package-Requires: ((emacs "24"))
 
-;; FIXME: Don't hard-code paths
-(defvar home-dir "/home/chris/Programming/ML4PG/")
+;; FIXME: Can we make this relative?
+(defvar home-dir ***PUT THE PATH TO ML4PG DIRECTORY HERE***)
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 (defvar *matlab-program* nil)
 
