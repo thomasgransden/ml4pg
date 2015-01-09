@@ -1,8 +1,8 @@
 ;; Package-Requires: ((dash "2.10.0") (dash-functional "1.2.0") (emacs "24"))
 
-(require 'dash)
-(require 'dash-functional)
-(require 'shadchen)
+;(require 'dash)
+;(require 'dash-functional)
+;(require 'shadchen)
 
 ;; FIXME: Don't hard-code paths
 (defvar home-dir "/home/chris/Programming/ML4PG/")
