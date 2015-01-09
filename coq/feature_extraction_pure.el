@@ -160,20 +160,25 @@
       (search ";intros" cmd)))
 
 (defun take-30 (list)
-  (-take 30 list))
+  (take-n 30 list))
+
+(defun take-n (n list)
+  (if (= n 0)
+      nil
+      (cons (car list) (take-n (1- n) (cdr list)))))
 
 (defun find-max-length (lst)
-  (-reduce-from (lambda (x y)
-                  (max x (length y)))
-                0
-                lst))
+  (find-max-length-aux lst 0))
+
+(defun find-max-length-aux (lst acc)
+  (if (= nil lst)
+      acc
+      (find-max-length-aux (cdr lst) (max acc (length (car lst))))))
 
 (defun generate-zeros (n)
-  (-unfold (lambda (x)
-             (case x
-               (0         nil)
-               (otherwise (cons 0 (1- x)))))
-           n))
+  (if (= n 0)
+      nil
+      (cons 0 (generate-zeros-aux (1- n)))))
 
 (defun print-list (list)
   (do ((lst list (cdr lst))
