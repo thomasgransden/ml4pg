@@ -9,8 +9,14 @@
 (defun do-set-printing ()
   (proof-shell-invisible-cmd-get-result (format "Set Printing All")))
 
-(defun do-focus ()
+(defun do-focus-unsafe ()
   (proof-shell-invisible-cmd-get-result "Focus"))
+
+(defun do-focus ()
+  (let ((result (do-focus-unsafe)))
+    (if (search "Error:" result)
+        (error "Problem during focus: %s" result)
+        result)))
 
 (defun do-show-intro ()
   (proof-shell-invisible-cmd-get-result "Show Intro"))
