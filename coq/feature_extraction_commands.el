@@ -12,12 +12,15 @@
 (defun do-focus-unsafe ()
   (proof-shell-invisible-cmd-get-result "Focus"))
 
+(defun handle-error (msg)
+  (message msg)
+  (backtrace)
+  (if (not ml4pg-interactive) (kill-emacs)))
+
 (defun do-focus ()
   (let ((result (do-focus-unsafe)))
     (if (search "Error:" result)
-        (progn (message (format "Problem during focus: %s" result))
-               (backtrace)
-               (kill-emacs))
+        (handle-error (format "Problem during focus: %s" result))
         result)))
 
 (defun do-show-intro ()
