@@ -288,4 +288,8 @@
              (should (equal (str-between (concat s1 c s2 s3) c s3) s2))))
 
 ;; Run all tests
-(ert "^ml4pg-")
+(funcall (if ml4pg-interactive 'ert
+                               'ert-run-tests-batch)
+         "^ml4pg-")
+
+( )
