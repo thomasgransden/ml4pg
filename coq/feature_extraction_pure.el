@@ -168,12 +168,14 @@
       (cons (car list) (take-n (1- n) (cdr list)))))
 
 (defun find-max-length (lst)
-  (find-max-length-aux lst 0))
+  (let ((result 0))
+    (dolist (element lst result)
+      (setq result (max (length element) result)))))
 
 (defun find-max-length-aux (lst acc)
-  (if (= nil lst)
-      acc
-      (find-max-length-aux (cdr lst) (max acc (length (car lst))))))
+  (if lst
+      (find-max-length-aux (cdr lst) (max acc (length (car lst))))
+      acc))
 
 (defun generate-zeros (n)
   (if (= n 0)

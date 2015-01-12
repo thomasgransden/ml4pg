@@ -95,11 +95,10 @@
 
 (defun gen-string (&optional op-len)
   "Generate a random ASCII string, of given (or random) length"
-  (let ((len (or op-len (random 255))))
-    (if (<= len 0)
-        ""
-        (concat (gen-char)
-                (gen-string (1- len))))))
+  (let ((len (or op-len (random 255)))
+        (str ""))
+    (dotimes (i len str)
+      (setq str (concat str (gen-char))))))
 
 (defun gen-nonempty-string ()
   "Generate a random ASCII string of at least one char"
@@ -108,10 +107,10 @@
 (defun gen-list (elem-gen &optional op-len)
   "Generate a random list, using the given element-generating function, of the
    given (or random) length"
-  (let ((len (or op-len (random 255))))
-    (if (<= len 0)
-        nil
-      (cons (funcall elem-gen) (gen-list elem-gen (1- len))))))
+  (let ((len (or op-len (random 255)))
+        (lst nil))
+    (dotimes (i len lst)
+      (setq lst (cons (funcall elem-gen) lst)))))
 
 (defun gen-pair (first second)
   (cons (funcall first) (funcall second)))
@@ -119,6 +118,12 @@
 (defun gen-types-id ()
   "Generator for types_id values"
   (gen-list (lambda () (gen-pair 'gen-string 'gen-num))))
+
+(defun gen-filtered (elem-gen filter)
+  "Filters a generator using a predicate"
+  (let ((val (funcall elem-gen)))
+    (while (not (funcall filter val))
+      (setq val (funcall elem-gen)))))
 
 ;; Test generators
 
@@ -175,6 +180,14 @@
                  (should (equal (assoc type alist)
                                 (cons type id)))))))
 
+(test-with gen-filtered
+           "Test generator filters"
+           (lambda ())
+           (lambda ()
+             (let ((test-len (lambda (s) (> 100 (length s)))))
+               (should (funcall test-len
+                                (gen-filtered 'gen-string test-len))))))
+
 ;; Test string helper functions
 
 (test-with between-spaces
@@ -225,11 +238,11 @@
 
 (test-with find-max-length
            "Finds the length of the longest saved theorem"
-           (lambda () (list (gen-list 'gen-string) (+ 256 (random 256) )))
+           (lambda () (list (gen-list 'gen-string) (+ 256 (random 256))))
            (lambda (thms n)
              (let ((thm (gen-string n)))
                (should (equal (find-max-length (cons thm thms)) n))
-               (should (equal (find-max-length '("foo" "bizzle" "boop")) 6)))))
+               (should (equal (find-max-length (list "foo" "bizzle" "boop")) 6)))))
 
 (test-with lookup-type-id
            "Looks up types in an assoc list"
