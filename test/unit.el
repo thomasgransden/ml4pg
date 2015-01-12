@@ -7,6 +7,7 @@
 ;; ERT is quite basic, so we build a mini framework on top
 
 (defconst test-iterations 10)
+(setq max-lisp-eval-depth 10000) ;; Hacky, but works for now
 
 ;; TODO: Print args whenever tests fails, since they might be random
 (defmacro test-with (name doc generator tests)
