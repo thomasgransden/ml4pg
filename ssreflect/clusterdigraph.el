@@ -58,8 +58,6 @@
      (format "<head><title>Dependency Diagram</title></head>\n<body><img src=\"temp.png\" usemap=\"#depend\"/>
 <map id=\"depend\" name=\"depend\">%s</map></body>" (read-lines "temp.map")))))
 
-;(showclustergraph '((1 2 3) ((2 5) (6 7)) 8 9))
-
 (defun flatten (structure)
   (cond ((null structure)
          nil)
@@ -92,23 +90,6 @@
         (cons (car cluster2)
               (replacecluster cluster1 (cdr cluster2)))))))
 
-;M(defun replacecluster (cluster1 cluster2)
- ; (do ((temp cluster2 (cdr temp))
-  ;     (flag nil)
-   ;    (res nil))
-    ;  ((or (endp temp) flag)
-     ;  (if flag
-;      (reverse res)
-;    (append (reverse res) (list cluster1))))
- ;   (cond ((listp (car temp))
-;      (if (issubcluster cluster1 (car temp))
-;       (progn (setf res (cons (replacecluster cluster1 (car temp)) (cdr temp)))
-;          (setf flag t))
-;       (setf res (cons (car temp) res))))
-;     (t
-;      (if (not (member (car temp) cluster1))
-;        (setf res (cons (car temp) res)))))))
-
 (defun subclusters (cluster clusters)
   (do ((temp clusters (cdr temp))
        (flag nil)
@@ -131,16 +112,6 @@
                                     res))
                     (setf flag t))))))
 
-;M(defun subclusters (cluster clusters)
- ; (if (endp clusters)
-  ;    (list cluster)
-   ; (if (issubcluster cluster (car clusters))
-;   (if (equal cluster (car clusters))
-;       clusters
-;     (cons (replacecluster cluster (car clusters))
-;       (cdr clusters)))
- ;     (cons (car clusters) (subclusters cluster (cdr clusters))))))
-
 (defun subclustersseveral (clusters1 clusters2)
   (do ((temp clusters1 (cdr temp))
        (temp2 clusters2))
@@ -149,12 +120,9 @@
     (setf temp2 (subclusters (car temp)
                              temp2))))
 
-;(showclustergraph (subclusters '(1 2) '((3 4 5) (7 8 9) (6 1 2))))
-
 (defun dependencygraph-defs ()
   (interactive)
   (let ((clusters1 nil)
-                                        ;   (clusters2 nil)
         (clusters3 nil))
     (setf granularity-level 3)
     (weka-defs)
@@ -162,10 +130,6 @@
     (setf clusters1 (cdr (form-clusters (extract-clusters-from-file-defs )
                                         (floor (length tables-definitions)
                                                5))))
-                                        ;(setf granularity-level 4)
-                                        ;(weka-defs)
-                                        ;(sleep-for 2)
-                                        ;(setf clusters2 (cdr (form-clusters (extract-clusters-from-file-defs ) (floor (length tables-definitions) 4))))
     (setf granularity-level 5)
     (weka-defs)
     (sleep-for 2)
@@ -217,7 +181,6 @@
 (defun dependencygraph-statements ()
   (interactive)
   (let ((clusters1 nil)
-                                        ;   (clusters2 nil)
         (clusters3 nil))
     (setf granularity-level 3)
     (weka-thms)
@@ -225,20 +188,13 @@
     (setf clusters1 (cdr (form-clusters (extract-clusters-from-file-defs )
                                         (floor (length tables-thms)
                                                5))))
-                                        ;(setf granularity-level 4)
-                                        ;(weka-defs)
-                                        ;(sleep-for 2)
-                                        ;(setf clusters2 (cdr (form-clusters (extract-clusters-from-file-defs ) (floor (length tables-definitions) 4))))
     (setf granularity-level 5)
     (weka-thms)
     (sleep-for 2)
     (setf clusters3 (cdr (form-clusters (extract-clusters-from-file-defs )
                                         (floor (length tables-thms)
                                                2))))
-    (showclustergraph-statements (subclustersseveral  clusters3 clusters1 )
-                                 )
-                                        ; (showclustergraph-statements clusters1 )
-    ))
+    (showclustergraph-statements (subclustersseveral  clusters3 clusters1 ))))
 
 ;;--------------------------------------------------
 ;; Cluster graph proofs
@@ -328,7 +284,6 @@
     (with-temp-file (expand-file-name "temp.csv")
       (insert (extract-features-1))))
   (let ((clusters1 nil)
-                                        ;   (clusters2 nil)
         (clusters3 nil))
     (setf granularity-level 3)
     (weka (floor (size-temp)
@@ -338,10 +293,6 @@
                                                                            5))
                                         (floor (size-temp)
                                                5))))
-                                        ;(setf granularity-level 4)
-                                        ;(weka-defs)
-                                        ;(sleep-for 2)
-                                        ;(setf clusters2 (cdr (form-clusters (extract-clusters-from-file-defs ) (floor (length tables-definitions) 4))))
     (setf granularity-level 5)
     (weka (floor (size-temp)
                  2))
