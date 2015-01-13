@@ -310,8 +310,10 @@
 
 (test-with extract-defs-empty
            "Test extracting definitions from an empty buffer"
-           (ml4pg-load-and-extract-info "" 'dependencygraph-defs)
-           (should t))
+           (lambda ())
+           (lambda ()
+             (ml4pg-load-and-extract-info "" 'dependencygraph-defs)
+             (should t)))
 
 (setq debug-on-error t)
 
