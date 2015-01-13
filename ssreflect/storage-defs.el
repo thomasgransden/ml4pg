@@ -147,17 +147,6 @@
        (setf variablesthm-libraries (append variablesthm-libraries
                     (import-variablesthm (car temp)))))))))
 
-(defun library-belong (n)
-  (do ((temp number-of-defs (cdr temp))
-       (temp2 nil)
-       (lib "")
-       (acc 0))
-      (temp2 lib)
-    (if (< n (+ acc (cadr (car temp))))
-    (progn (setf temp2 t)
-           (setf lib (car (car temp))))
-      (setf acc (+ acc (cadr (car temp)))))))
-
 (defun library-belong-thm (n)
   (do ((temp number-of-thms (cdr temp))
        (temp2 nil)

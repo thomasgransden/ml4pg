@@ -8,37 +8,34 @@
 
 (defvar clustercounter 0)
 
-(defun clusterofone (lst)
+(defun nth-of (n tbl)
+  (car (nth (1- n) tbl)))
+
+(defun clusterofone-node (elem tbl counter)
+  (format "subgraph cluster%s {\n%s\n}\n"
+          counter (clusterofone elem (1+ counter) tbl)))
+
+(defun clusterofone-leaf (elem tbl next)
+  (let ((first  (nth-of elem tbl))
+        (second (library-belong (1- elem))))
+    (if (listp next)
+        (format "%s [URL=\"./%s.html\"];\n"
+                first second)
+        (format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n"
+                first second first first (nth-of next tbl)))))
+
+(defun clusterofone (lst counter tbl)
   (do ((temp lst (cdr temp))
        (res ""))
-      ((endp temp)
-       res)
-    (if (listp (car temp))
-        (progn (setf clustercounter (1+ clustercounter))
-               (setf res (concat res (format "subgraph cluster%s {\n" clustercounter)
-                                 (clusterofone (car temp))
-                                 "\n}\n")))
-      (if (and (cdr temp)
-               (not (listp (cadr temp))))
-          (setf res (concat res
-                            (format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n" (car (nth (1- (car temp))
-                                                                                                   tables-definitions))
-                                    (library-belong (1- (car temp)))
-                                    (car (nth (1- (car temp))
-                                              tables-definitions))
-                                    (car (nth (1- (car temp))
-                                              tables-definitions))
-                                    (car (nth (1- (cadr temp))
-                                              tables-definitions)))))
-        (setf res (concat res
-                          (format "%s [URL=\"./%s.html\"];\n" (car (nth (1- (car temp))
-                                                                        tables-definitions))
-                                  (library-belong (1- (car temp))))))))))
+      ((endp temp) res)
+    (let ((elem (car temp)))
+      (concat-to res (if (listp elem)
+                         (clusterofone-node elem tbl counter)
+                         (clusterofone-leaf elem tbl
+                                            (when (cdr temp) (cadr temp))))))))
 
 (defun clusterofseveral (lol)
-  (setf clustercounter 0)
-  (concat "digraph {\n rankdir=LR;\n" (clusterofone lol)
-          "\n}"))
+  (clusterofseveral-aux (clusterofone lol 1 tables-definitions)))
 
 (defun show-diagram-clusters (text)
   (with-temp-file "temp.gv"
@@ -53,9 +50,7 @@
 
 (defun createwebpage ()
   (with-temp-file "temp.html"
-    (insert
-     (format "<head><title>Dependency Diagram</title></head>\n<body><img src=\"temp.png\" usemap=\"#depend\"/>
-<map id=\"depend\" name=\"depend\">%s</map></body>" (read-lines "temp.map")))))
+    (insert (createwebpage-aux (read-lines "temp.map")))))
 
 (defun issubcluster (cluster1 cluster2)
   (do ((temp cluster1 (cdr temp))

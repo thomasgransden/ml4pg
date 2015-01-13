@@ -50,3 +50,15 @@
   (let ((result 0))
     (dolist (element lst result)
       (setq result (max (length element) result)))))
+
+(defun createwebpage-aux (map)
+  (format "<head>
+             <title>Dependency Diagram</title>
+           </head>
+           <body>
+             <img src='temp.png' usemap='#depend' />
+             <map id='depend' name='depend'>%s</map>
+           </body>" map))
+
+(defun clusterofseveral-aux (txt)
+  (concat "digraph {\n rankdir=LR;\n" txt "\n}"))

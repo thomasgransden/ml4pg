@@ -4,3 +4,13 @@
            (lambda (s l)
              (append-to l s)
              (should (member s l))))
+
+(test-with process-with-cmd
+           "Test external commands with stdin/out handling"
+           (lambda ())
+           (lambda ()
+             (should (equal "b\nd\nf\ni\n"
+                            (process-with-cmd "grep"
+                                              "abcd\nefghijk"
+                                              "-o"
+                                              "[bdfi]")))))

@@ -1079,8 +1079,6 @@
       ((endp temp) temp2)
       (setf temp2 (concat temp2 (format "%s\n" (print-list (car temp)))))))
 
-
-
 (defun generate-zeros (n)
   (do ((i 0 (1+ i))
        (temp nil (cons 0 temp)))
