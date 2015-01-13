@@ -108,7 +108,7 @@
 
 (defun get-top-symbol ()
   "Obtain the value of a top symbol"
-  (get-top-symbol-aux (do-goal-str)))
+  (get-top-symbol-aux (do-goal-str (lambda (x) nil))))
 
 (defun get-obj-intro ()
   "In some cases the intro tactic does not have parameters. This obtains the
@@ -538,20 +538,22 @@
              (ignore-errors (addthm name)))
 
           (t
-             (setf ts (get-top-symbol))
-             (setf ng (get-number-of-goals))
-             (proof-assert-next-command-interactive)
-             (setf ng2 (get-number-of-goals))
-             (let ((arg (look-through-commands cmd result ts current-level)))
-              (cond
-               ((< ng ng2)
-                  (export-theorem-aux arg name (1+ current-level) (1+ current-level) (1+ i)))
+           (let ((try-ts (get-top-symbol)))
+             (when try-ts
+               (setf ts try-ts)
+               (setf ng (get-number-of-goals))
+               (proof-assert-next-command-interactive)
+               (setf ng2 (get-number-of-goals))
+               (let ((arg (look-through-commands cmd result ts current-level)))
+                 (cond
+                  ((< ng ng2)
+                   (export-theorem-aux arg name (1+ current-level) (1+ current-level) (1+ i)))
 
-               ((< ng2 ng)
-                  (export-theorem-aux arg name current-level      dot-level          (1+ i)))
+                  ((< ng2 ng)
+                   (export-theorem-aux arg name current-level      dot-level          (1+ i)))
 
-               (t
-                  (export-theorem-aux arg name (1+ current-level) dot-level          (1+ i)))))))))
+                  (t
+                   (export-theorem-aux arg name (1+ current-level) dot-level          (1+ i)))))))))))
 
 (defun look-through-commands (cmd start-result ts current-level)
   (do ((cmds       (list-of-commands cmd)
@@ -674,6 +676,7 @@
   (interactive)
   (let ((final         (point))
         (current-level 1))
+    ;; FIXME: This assumes we have a theorem to extract!
     (export-theorem)
     (while (< (point) final)
       (export-theorem)))

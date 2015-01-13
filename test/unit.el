@@ -1,8 +1,6 @@
 ;; Unit tests for ML4PG. Uses Emacs Lisp Regression Testing (ERT)
 
 ;; We only focus on plain Coq for now. Feel free to add SSReflect tests!
-(load-file (concat home-dir "/ml4pg.el")) ;; Reload ml4pg.el
-(ml4pg-load-coq)
 
 ;; ERT is quite basic, so we build a mini framework on top
 
@@ -300,9 +298,28 @@
            (lambda (c s1 s2 s3)
              (should (equal (str-between (concat s1 c s2 s3) c s3) s2))))
 
-;; Run all tests
-(funcall (if ml4pg-interactive 'ert
-                               'ert-run-tests-batch)
-         "^ml4pg-")
+(defun ml4pg-load-and-extract-info (str action)
+  (with-temp-buffer
+    (let ((ml4pg-interactive nil))
+      (insert str)
+      (ml4pg-mode)
+      (coq-build-prog-args)
+      (goto-char (point-max))
+      (extract-feature-theorems)
+      (funcall action))))
 
-( )
+(test-with extract-defs-empty
+           "Test extracting definitions from an empty buffer"
+           (ml4pg-load-and-extract-info "" 'dependencygraph-defs)
+           (should t))
+
+(setq debug-on-error t)
+
+;; Load ML4PG if needed. Don't reload, since it unsets edebug instrumentation.
+(unless (boundp 'home-dir)
+  (load (concat (getenv "ML4PG_HOME") "ml4pg.el")))
+(unless (boundp 'saved-theorems)
+  (ml4pg-load-coq))
+
+;; Run tests
+(funcall (if noninteractive 'ert-run-tests-batch 'ert) "^ml4pg-")

@@ -1,13 +1,10 @@
 ;; Package-Requires: ((emacs "24"))
 
-(defvar home-dir (or (getenv "ML4PG_HOME") "/put/path/to/ML4PG/here"))
+(defconst home-dir (or (getenv "ML4PG_HOME") "/put/path/to/ML4PG/here"))
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 (defvar *matlab-program* nil)
 
 (defvar mode nil)
-
-;; If ML4PG_BATCH is set, we avoid asking questions
-(defconst ml4pg-interactive (not (getenv "ML4PG_BATCH")))
 
 ;; FIXME: We should use lexical scope. I used quote splicing instead because
 ;;        I don't know if this whole system will fall over with lexical scope...
@@ -37,9 +34,7 @@
 (defun select-mode ()
   (interactive)
   (let* ((msg   "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")
-         (smode (if ml4pg-interactive
-                    (read-string msg)
-                    "")))
+         (smode (if noninteractive "" (read-string msg))))
     (setq mode smode)
     (cond ((string= mode "s") (ml4pg-load-ss))
           ((string= mode "n") nil)
@@ -47,12 +42,12 @@
 
 (require 'cl)
 
-;; FIXME: Why on Earth are we deleting other windows and navigating to previous
-;;        buffers? It just screws up Emacs; we should stop it.
+(defun ml4pg-mode ()
+  (coq-mode)
+  (when noninteractive
+    (coq-build-prog-args)  ;; PG assumes coqtop will never run non-interactively
+    (setq proof-shell-fiddle-frames nil))  ;; Don't alter non-existent windows
+  (select-mode))
+
 (add-to-list 'auto-mode-alist
-             '("\\.v\\'" . (lambda ()
-                             (progn (coq-mode)
-                                    (select-mode)
-                                    (delete-other-windows)
-                                    (previous-buffer)
-                                    (previous-buffer)))))
+             '("\\.v\\'" . 'ml4pg-mode))

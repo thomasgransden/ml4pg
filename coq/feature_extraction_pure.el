@@ -30,7 +30,7 @@
   (subseq str (+ (length pattern) (search pattern str))))
 
 (defun goal-str-aux (s)
-  (str-after s "============================\n   "))
+  (if s (str-after s "============================\n   ")))
 
 (defun get-type-id-aux (txt)
   (flet ((txt-pos (begin end)
@@ -40,8 +40,9 @@
                 (txt-pos nl  " ")))))
 
 (defun get-top-symbol-aux (goal)
-  (let* ((fst-symbol (subseq goal 0 (first-space goal))))
-    (get-top-symbol-num fst-symbol goal)))
+  (if goal
+      (let ((fst-symbol (subseq goal 0 (first-space goal))))
+        (get-top-symbol-num fst-symbol goal))))
 
 (defun get-top-symbol-num (fst-symbol goal)
   (cond ((string= "forall" fst-symbol) 5)

@@ -14,13 +14,13 @@
 
 (defun handle-error (msg)
   (message msg)
-  (backtrace)
-  (if (not ml4pg-interactive) (kill-emacs)))
+  (if noninteractive (kill-emacs) (debug)))
 
-(defun do-focus ()
+(defun do-focus (&optional handler)
   (let ((result (do-focus-unsafe)))
     (if (search "Error:" result)
-        (handle-error (format "Problem during focus: %s" result))
+        (if handler (funcall handler result)
+                     (handle-error (format "Problem during focus: %s" result)))
         result)))
 
 (defun do-show-intro ()
@@ -44,6 +44,6 @@
 (defun do-show-proof ()
   (proof-shell-invisible-cmd-get-result "Show Proof"))
 
-(defun do-goal-str ()
+(defun do-goal-str (&optional handler)
   (do-set-printing)
-  (goal-str-aux (do-focus)))
+  (goal-str-aux (do-focus handler)))
