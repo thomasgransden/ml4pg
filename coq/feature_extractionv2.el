@@ -49,9 +49,6 @@
 (defun append-hyp (x)
   (setq hypothesis (append hypothesis x)))
 
-(defmacro append-to (name val)
-  `(setf ,name (append ,name (list ,val))))
-
 (defun append-to-goal (x)
   (setq goal-level-temp (cons x goal-level-temp)))
 
@@ -65,12 +62,6 @@
 
 (defun append-tree (a b c d e f g h i)
   (add-info-to-tree (list a b c d e f g h i) current-level))
-
-(defmacro cons-prepend (name val)
-  `(setf ,name (cons ,val ,name)))
-
-(defmacro concat-to (name lst)
-  `(setf ,name (concat ,name ,lst)))
 
 (defun append-to-goal-chain (val)
   (append-to-goal val)

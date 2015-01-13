@@ -14,7 +14,7 @@
 
 (defun ml4pg-load-coq ()
   (mapc (load-els "generic")
-        '("pure_helpers"))
+        '("pure_helpers" "impure_helpers"))
   (mapc (load-els "coq")
         '("auxiliary_files" "feature_extraction_pure"
           "feature_extraction_commands" "feature_extractionv2"
@@ -27,7 +27,7 @@
 
 (defun ml4pg-load-ss ()
   (mapc (loads-els "generic")
-        '("pure_helpers"))
+        '("pure_helpers" "impure_helpers"))
   (mapc (load-els "ssreflect")
         '("auxiliary_files" "feature_extraction_2" "matlab_interaction"
           "shortcuts" "menus" "storage" "save_lemmas" "weka"

@@ -1,9 +1,3 @@
-(defun str-between (str start end)
-  (subseq str (1+ (search start str)) (search end str)))
-
-(defun str-to (str end)
-  (subseq str 0 end))
-
 ;; FIXME: we're saving to home-dir/*.txt but reading from home-dir/coq/*.txt
 
 (defun save-lemma-aux (string)

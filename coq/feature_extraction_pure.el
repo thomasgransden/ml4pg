@@ -1,33 +1,7 @@
 ;; Pure functions taken from feature_extractionv2.el
 
-(defun replace-in-string (what with in)
-  (replace-regexp-in-string (regexp-quote what) with in))
-
-(defun first-space (txt)
-  "Find the position of the first space in a string"
-  (search " " txt))
-
-(defun after-space (txt)
-  "Find the position of text after the first space"
-  (1+ (first-space txt)))
-
-(defun first-dot (txt)
-  "Find the position of the first dot in a string"
-  (search "." txt))
-
-(defun pos-to-dot (cmd n)
-  "Extract a sub-string from the given position to the first dot"
-  (subseq cmd n (first-dot cmd)))
-
-(defun between-spaces (txt)
-  (let ((space (after-space txt)))
-    (subseq txt space (search " " txt :start2 space))))
-
 (defun rem-jumps (cmd)
   (remove-jumps (between-spaces cmd)))
-
-(defun str-after (str pattern)
-  (subseq str (+ (length pattern) (search pattern str))))
 
 (defun goal-str-aux (s)
   (if s (str-after s "============================\n   ")))
@@ -159,24 +133,6 @@
       (starts-with cmd "intros;")
       (starts-with cmd "intros until")
       (search ";intros" cmd)))
-
-(defun take-30 (list)
-  (take-n 30 list))
-
-(defun take-n (n list)
-  (if (= n 0)
-      nil
-      (cons (car list) (take-n (1- n) (cdr list)))))
-
-(defun find-max-length (lst)
-  (let ((result 0))
-    (dolist (element lst result)
-      (setq result (max (length element) result)))))
-
-(defun find-max-length-aux (lst acc)
-  (if lst
-      (find-max-length-aux (cdr lst) (max acc (length (car lst))))
-      acc))
 
 (defun generate-zeros (n)
   (if (= n 0)
