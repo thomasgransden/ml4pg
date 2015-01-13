@@ -123,6 +123,16 @@
                (should (equal (remove-if-empty-aux ids thms)
                               '((4) nil (7 1) (2) nil nil nil))))))
 
+(test-with flatten
+           "Turn values into 1D lists"
+           (lambda ())
+           (lambda ()
+             (should (equal (flatten nil) nil))
+             (should (equal (flatten 10) '(10)))
+             (should (equal (flatten '(1 2 3)) '(1 2 3)))
+             (should (equal (flatten '((1 2) (((3) 4 (5 (6 7))) 8) 9))
+                            '(1 2 3 4 5 6 7 8 9)))))
+
 (test-with extract-defs-empty
            "Test extracting definitions from an empty buffer"
            (lambda ())

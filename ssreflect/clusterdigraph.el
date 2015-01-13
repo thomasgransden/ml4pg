@@ -57,13 +57,6 @@
      (format "<head><title>Dependency Diagram</title></head>\n<body><img src=\"temp.png\" usemap=\"#depend\"/>
 <map id=\"depend\" name=\"depend\">%s</map></body>" (read-lines "temp.map")))))
 
-(defun flatten (structure)
-  (cond ((null structure)
-         nil)
-        ((atom structure)
-         (list structure))
-        (t (mapcan #'flatten structure))))
-
 (defun issubcluster (cluster1 cluster2)
   (do ((temp cluster1 (cdr temp))
        (res nil))

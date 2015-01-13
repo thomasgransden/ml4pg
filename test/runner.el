@@ -8,7 +8,7 @@
 
 ;; Load tests
 (mapcar (lambda (f) (load (concat home-dir "test/" f ".el")))
-        '("generators" "generator-tests" "helpers" "helper-tests" "unit"))
+        '("generators" "generator-tests" "harness" "harness-tests" "unit"))
 
 ;; Run tests
 (funcall (if noninteractive 'ert-run-tests-batch 'ert) "^ml4pg-")
