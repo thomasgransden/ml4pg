@@ -29,25 +29,24 @@
                                     (car (nth (1- (car temp))
                                               tables-definitions))
                                     (car (nth (1- (cadr temp))
-                                              tables-definitions))
-                                    )))
+                                              tables-definitions)))))
         (setf res (concat res
                           (format "%s [URL=\"./%s.html\"];\n" (car (nth (1- (car temp))
                                                                         tables-definitions))
                                   (library-belong (1- (car temp))))))))))
 
 (defun clusterofseveral (lol)
-  (progn (setf clustercounter 0)
-         (concat "digraph {\n rankdir=LR;\n" (clusterofone lol)
-                 "\n}")))
+  (setf clustercounter 0)
+  (concat "digraph {\n rankdir=LR;\n" (clusterofone lol)
+          "\n}"))
 
 (defun show-diagram-clusters (text)
   (with-temp-file "temp.gv"
     (insert text))
-  (progn (shell-command "dot -Tcmap temp.gv -o temp.map")
-         (shell-command "dot -Tpng temp.gv -o temp.png")
-         (createwebpage)
-         (shell-command "xdg-open temp.html")))
+  (shell-command "dot -Tcmap temp.gv -o temp.map")
+  (shell-command "dot -Tpng temp.gv -o temp.png")
+  (createwebpage)
+  (shell-command "xdg-open temp.html"))
 
 (defun showclustergraph (lol)
   (show-diagram-clusters (clusterofseveral lol)))
@@ -106,11 +105,13 @@
            (setf res (cons (car temp)
                            res)))
           ((equal cluster (car temp))
-           (progn (setf res (reverse clusters))
-                  (setf flag1 t)))
-          (t (progn (setf res (cons (replacecluster cluster (car temp))
-                                    res))
-                    (setf flag t))))))
+           (setf res (reverse clusters))
+           (setf flag1 t))
+
+          (t
+           (setf res (cons (replacecluster cluster (car temp))
+                           res))
+           (setf flag t)))))
 
 (defun subclustersseveral (clusters1 clusters2)
   (do ((temp clusters1 (cdr temp))
@@ -171,9 +172,9 @@
                                   (library-belong-thm (1- (car temp))))))))))
 
 (defun clusterofseveral-statements (lol)
-  (progn (setf clustercounter 0)
-         (concat "digraph {\n rankdir=LR;\n" (clusterofone-statements lol)
-                 "\n}")))
+  (setf clustercounter 0)
+  (concat "digraph {\n rankdir=LR;\n" (clusterofone-statements lol)
+          "\n}"))
 
 (defun showclustergraph-statements (lol)
   (show-diagram-clusters (clusterofseveral-statements lol)))
@@ -214,57 +215,57 @@
                (not (listp (cadr temp))))
           (let ((thm nil)
                 (thm2 nil))
-            (progn (if (<= (car temp)
-                           (length saved-theorems))
-                       (setf thm (car (nth (1- (car temp))
-                                           saved-theorems)))
-                     (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt")
-                                                   " | sed -n '"
-                                                   (format "%s" (- (car temp)
-                                                                   (length saved-theorems)))
-                                                   "p'"))
-                            (with-current-buffer "*Shell Command Output*"
-                              (beginning-of-buffer)
-                              (read (current-buffer))
-                              (setf thm (format "%s"  (read (current-buffer)))))))
-                   (if (<= (car temp)
-                           (length saved-theorems))
-                       (setf thm2 (car (nth (1- (cadr temp))
-                                            saved-theorems)))
-                     (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt")
-                                                   " | sed -n '"
-                                                   (format "%s" (- (cadr temp)
-                                                                   (length saved-theorems)))
-                                                   "p'"))
-                            (with-current-buffer "*Shell Command Output*"
-                              (beginning-of-buffer)
-                              (read (current-buffer))
-                              (setf thm2 (format "%s"  (read (current-buffer)))))))
-                   (setf res (concat res
-                                     (format "%s; %s -> %s[style=invis]\n"
-                                             thm
-                                             thm
-                                             thm2)))))
+            (if (<= (car temp)
+                    (length saved-theorems))
+                (setf thm (car (nth (1- (car temp))
+                                    saved-theorems)))
+              (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt")
+                                            " | sed -n '"
+                                            (format "%s" (- (car temp)
+                                                            (length saved-theorems)))
+                                            "p'"))
+                     (with-current-buffer "*Shell Command Output*"
+                       (beginning-of-buffer)
+                       (read (current-buffer))
+                       (setf thm (format "%s"  (read (current-buffer)))))))
+            (if (<= (car temp)
+                    (length saved-theorems))
+                (setf thm2 (car (nth (1- (cadr temp))
+                                     saved-theorems)))
+              (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt")
+                                            " | sed -n '"
+                                            (format "%s" (- (cadr temp)
+                                                            (length saved-theorems)))
+                                            "p'"))
+                     (with-current-buffer "*Shell Command Output*"
+                       (beginning-of-buffer)
+                       (read (current-buffer))
+                       (setf thm2 (format "%s"  (read (current-buffer)))))))
+            (setf res (concat res
+                              (format "%s; %s -> %s[style=invis]\n"
+                                      thm
+                                      thm
+                                      thm2))))
         (let ((thm nil))
-          (progn (if (<= (car temp)
-                         (length saved-theorems))
-                     (setf thm (car (nth (1- (car temp))
-                                         saved-theorems)))
-                   (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt")
-                                                 " | sed -n '"
-                                                 (format "%s" (- (car temp)
-                                                                 (length saved-theorems)))
-                                                 "p'"))
-                          (with-current-buffer "*Shell Command Output*"
-                            (beginning-of-buffer)
-                            (read (current-buffer))
-                            (setf thm (format "%s"  (read (current-buffer)))))))
-                 (setf res (concat res (format "%s;\n" thm)))))))))
+          (if (<= (car temp)
+                  (length saved-theorems))
+              (setf thm (car (nth (1- (car temp))
+                                  saved-theorems)))
+            (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt")
+                                          " | sed -n '"
+                                          (format "%s" (- (car temp)
+                                                          (length saved-theorems)))
+                                          "p'"))
+                   (with-current-buffer "*Shell Command Output*"
+                     (beginning-of-buffer)
+                     (read (current-buffer))
+                     (setf thm (format "%s"  (read (current-buffer)))))))
+          (setf res (concat res (format "%s;\n" thm))))))))
 
 (defun clusterofseveral-proof (lol)
-  (progn (setf clustercounter 0)
-         (concat "digraph {\n rankdir=LR;\n" (clusterofone-proof lol)
-                 "\n}")))
+  (setf clustercounter 0)
+  (concat "digraph {\n rankdir=LR;\n" (clusterofone-proof lol)
+          "\n}"))
 
 (defun showclustergraph-proof (lol)
   (show-diagram-clusters (clusterofseveral-proof lol)))
