@@ -29,6 +29,8 @@
   (ert-run-test (ert-get-test 'ml4pg-macro-test)))
 
 (defun ml4pg-load-and-extract-info (str action)
+  "Insert 'str' into a temporary buffer, load ML4PG in that buffer then run
+   'action'"
   (with-temp-buffer
     (let ((ml4pg-interactive nil))
       (insert str)

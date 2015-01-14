@@ -74,4 +74,4 @@
   (let ((name (name-from-buf)))
     (write-lisp-to-file (concat home-dir "/" dir1 "/" name) val1)
     (write-lisp-to-file (concat home-dir "/" dir2 "/" name) val2)
-    t)))
+    t))

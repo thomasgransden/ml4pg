@@ -6,9 +6,9 @@
 
   ;; Define an example test then check it exists
   (test-with macro-test
-             "Testing the test-with macro"
-             (lambda () '(t))
-             (lambda (x) (should x)))
+    "Testing the test-with macro"
+    (lambda () '(t))
+    (lambda (x) (should x)))
 
   (should (ert-test-boundp 'ml4pg-macro-test))
 
@@ -19,9 +19,9 @@
 (ert-deftest ml4pg-test-with-passes-tests ()
   "Make sure tests defined by our macro can pass"
   (test-with macro-test
-             "Testing the test-with macro"
-             (lambda () '(t))
-             (lambda (x) (should x)))
+    "Testing the test-with macro"
+    (lambda () '(t))
+    (lambda (x) (should x)))
 
   (should (ert-test-passed-p (ml4pg-run-test)))
 
@@ -30,13 +30,13 @@
 (ert-deftest ml4pg-test-with-fails-tests ()
   "Make sure tests defined by our macro can fail"
   (test-with macro-test
-             "Testing a failing test"
-             (lambda () '(nil))
-             (lambda (x) (should x)))
+    "Testing a failing test"
+    (lambda () '(nil))
+    (lambda (x) (should x)))
 
-  (let ((ert-debug-on-error nil)
-        (debug-on-error     nil))
-    (should (ert-test-failed-p (ml4pg-run-test))))
+  (should (ert-test-failed-p (let ((ert-debug-on-error nil)
+                                   (debug-on-error     nil))
+                               (ml4pg-run-test))))
 
   (ert-delete-test 'ml4pg-macro-test))
 
@@ -44,10 +44,10 @@
   "Make sure tests defined by our macro are run multiple times, with different
    generated arguments each time."
   (test-with macro-test
-             "Testing iteration"
-             (lambda () (list iteration))
-             (lambda (gen-it)
-               (ml4pg-test-accumulate (cons gen-it iteration))))
+    "Testing iteration"
+    (lambda () (list iteration))
+    (lambda (gen-it)
+      (ml4pg-test-accumulate (cons gen-it iteration))))
 
   (let ((ml4pg-test-accumulator nil))
     (ml4pg-run-test)

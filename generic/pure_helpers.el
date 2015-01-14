@@ -33,7 +33,11 @@
   (1+ (first-space txt)))
 
 (defun str-between (str start end)
-  (subseq str (1+ (search start str)) (search end str)))
+  (let* ((bits (split-string str (regexp-quote start)))
+         (suff (if (cdr bits)
+                   (apply 'concat (cdr bits))
+                 "")))
+    (car (split-string suff (regexp-quote end)))))
 
 (defun str-to (str end)
   (subseq str 0 end))
