@@ -1,20 +1,5 @@
 (require 'cl)
 
-(defun name-from-buf ()
-  (let ((buf (buffer-name)))
-    (if (search "." buf)
-        (subseq buf 0 (search "." buf))
-      buf)))
-
-(defun export-up-to-here-aux (dir1 vals1 dir2 vals2)
-  (let ((name (name-from-buf)))
-    (with-temp-file (concat home-dir "/" dir1 "/" name)
-      (insert (format "%s" vals1)))
-
-    (with-temp-file (concat home-dir "/" dir2 "/" name)
-      (insert (format "%s" vals2)))
-    t))
-
 (defun export-library-aux (action)
   (interactive)
   (beginning-of-buffer)
@@ -77,11 +62,6 @@
                  (progn (setq i (1+ i))
                         (setq libs-statements (append libs-statements (list r))))))))))
 
-(defun import-thing (type name)
-  (with-temp-buffer
-    (insert-file-contents (concat home-dir "/" type "/" name))
-    (car (read-from-string (format "%s" (read (current-buffer)))))))
-
 (defun import-definitions (name)
   (import-thing "definitions" name))
 
@@ -104,34 +84,23 @@
 
 (defun add-several-libraries-defs ()
   (interactive)
-  (setf definitions-libraries (reverse listofdefinitions))
-  (append-to number-of-defs (list "current" (length listofdefinitions)))
-  (available-defs-libraries)
-  (setf variables-libraries (reverse listofvariables))
-  (do ((temp libs-defs (cdr temp)))
-      ((endp temp) nil)
-    (let* ((elem (car temp))
-           (defs (import-definitions elem)))
-      (append-to number-of-defs (list elem (length defs)))
-
-      (setf definitions-libraries (append definitions-libraries defs))
-      (setf variables-libraries (append variables-libraries (import-variables elem))))))
+  (add-several-libraries-aux 'definitions-libraries (reverse listofdefinitions)
+                             'number-of-defs
+                             'available-defs-libraries
+                             'variables-libraries   (reverse listofvariables)
+                             libs-defs
+                             'import-definitions
+                             'import-variables))
 
 (defun add-several-libraries-thms ()
   (interactive)
-  (setf statements-libraries listofstatements)
-  (setf number-of-thms (append number-of-thms (list (list "current" (length listofstatements)))))
-  (available-thm-libraries)
-  (setf variablesthms-libraries listofthmvariables)
-  (do ((temp libs-statements (cdr temp)))
-      ((endp temp)
-       nil)
-    (progn (setf number-of-thms (append number-of-thms (list (list (car temp)
-                                                                   (length (import-statements (car temp)))))))
-           (setf statements-libraries (append statements-libraries
-                                              (import-statements (car temp))))
-           (setf variablesthm-libraries (append variablesthm-libraries
-                                                (import-variablesthm (car temp)))))))
+  (add-several-libraries-aux 'statements-libraries           listofstatements
+                             'number-of-thms
+                             'available-thm-libraries
+                             'variablesthm-libraries         listofthmvariables
+                             libs-statements
+                             'import-statements
+                             'import-variablesthm))
 
 (defun library-belong-thm (n)
   (do ((temp number-of-thms (cdr temp))
