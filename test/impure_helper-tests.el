@@ -18,11 +18,14 @@
 (test-with name-from-buf
   "Test getting a filename from a buffer"
   (lambda ()
-    (let ((nodot (lambda (x) (not (search "." x)))))
-      (list (gen-filtered 'gen-nonempty-string nodot)
-            (gen-filtered 'gen-nonempty-string nodot))))
-  (lambda (prefix suffix)
+    (let* ((nodot  (lambda (x) (not (search "." x))))
+           (prefix (gen-filtered 'gen-nonempty-string nodot)))
+      (list prefix
+            (concat prefix "." (gen-filtered 'gen-nonempty-string nodot)))))
+  (lambda (prefix full)
     (with-temp-buffer
-      (let ((name (rename-buffer (concat prefix "." suffix) t)))
+      (let ((name (rename-buffer full t)))
         (should (equal (name-from-buf)
-                       (car (split-string name "."))))))))
+                       (if (search "." name)
+                           (car (split-string name "."))
+                           name)))))))

@@ -1,6 +1,6 @@
-(defmacro lone (f)
+(defun list-of (&rest gens)
   `(lambda ()
-     (list (funcall ,f))))
+     (mapcar 'funcall ',gens)))
 
 (defun gen-bool ()
   "Generate t or nil"
@@ -44,4 +44,13 @@
   "Filters a generator using a predicate"
   (let ((val (funcall elem-gen)))
     (while (not (funcall filter val))
-      (setq val (funcall elem-gen)))))
+      (setq val (funcall elem-gen)))
+    val))
+
+(defun gen-any (&rest gens)
+  "Generate using any one of the arguments, randomly"
+  (funcall (nth (random (length gens)) gens)))
+
+(defun gen-string-without (str)
+  "Generate a string which doesn't contain STR"
+  (gen-filtered 'gen-nonempty-string `(lambda (x) (not (search ,str x)))))

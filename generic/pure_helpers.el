@@ -33,11 +33,12 @@
   (1+ (first-space txt)))
 
 (defun str-between (str start end)
-  (let* ((bits (split-string str (regexp-quote start)))
-         (suff (if (cdr bits)
-                   (apply 'concat (cdr bits))
-                 "")))
-    (car (split-string suff (regexp-quote end)))))
+  (let* ((start-pos (length (str-up-to str start)))
+         (suffix    (subseq str (+ (length start) start-pos))))
+    (str-up-to suffix end)))
+
+(defun str-up-to (str bit)
+  (car (string-split str bit)))
 
 (defun str-to (str end)
   (subseq str 0 end))
@@ -66,3 +67,14 @@
 
 (defun clusterofseveral-aux (txt)
   (concat "digraph {\n rankdir=LR;\n" txt "\n}"))
+
+(defun join-strings (strs sep)
+  "Concatenate STRS together, separated by SEP"
+  (mapconcat 'identity strs sep))
+
+(defun any-to-string (any)
+  (format "%S" any))
+
+(defun string-split (str sep)
+  (let ((case-fold-search nil))
+    (split-string str (regexp-quote sep))))

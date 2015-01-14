@@ -56,3 +56,21 @@
       (should (member (cons i i) ml4pg-test-accumulator))))
 
   (ert-delete-test 'ml4pg-macro-test))
+
+(test-with simplify-numbers
+   "Make sure numbers get smaller"
+   (lambda ()
+     (let ((n (gen-num)))
+       (list n (ml4pg-simplify-data n))))
+   (lambda (n alts)
+     (dolist (alt alts nil)
+       (should (simpler alt n)))))
+
+(test-with simplify-lists
+  "Lists get simpler"
+  (lambda ()
+    (let ((lst (gen-list 'gen-num)))
+      (list lst (ml4pg-simplify-data lst))))
+  (lambda (lst alts)
+    (dolist (alt alts nil)
+      (should (simpler alt lst)))))

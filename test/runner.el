@@ -1,26 +1,26 @@
-(defun ml4pg-run-tests ()
-  (interactive)
-  (let ((debug-on-error t)
-        (load-test     (lambda (f) (load (concat home-dir "test/" f)))))
+(defun ml4pg-reload ()
+  (load (concat (if (boundp 'home-dir)
+                    home-dir
+                  (getenv "ML4PG_HOME"))
+                "ml4pg.el"))
+  (ml4pg-load-coq))
 
-    ;; Load ML4PG
-    (load (concat (if (boundp 'home-dir)
-                      home-dir
-                    (getenv "ML4PG_HOME"))
-                  "ml4pg.el"))
-
-    ;; Load Coq-specific code
-    (ml4pg-load-coq)
-
-    ;; Load test harness
+(defun ml4pg-load-tests ()
+  (let ((load-test     (lambda (f) (load (concat home-dir "test/" f)))))
     (mapcar load-test '("harness.el" "generators.el"))
-
-    ;; Load tests (files ending in -tests.el)
     (mapcar load-test (directory-files (concat home-dir "test/")
                                        nil
-                                       ".*-tests\.el"))
+                                       ".*-tests\.el"))))
 
-    ;; Run ML4PG tests
+(defun ml4pg-run-tests ()
+  (interactive)
+  (let ((debug-on-error t))
     (funcall (if noninteractive 'ert-run-tests-batch 'ert) "^ml4pg-")))
 
-(ml4pg-run-tests)
+(defun ml4pg-reload-and-test ()
+  (interactive)
+  (ml4pg-reload)
+  (ml4pg-load-tests)
+  (ml4pg-run-tests))
+
+(ml4pg-reload-and-test)
