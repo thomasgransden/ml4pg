@@ -5,22 +5,23 @@
 ;; Test string helper functions
 
 (test-with lookup-type-id
-           "Looks up types in an assoc list"
-           (lambda () (list (gen-types-id)))
-           (lambda (alist)
-             (dotimes (n (length alist))
-               (let* ((type (car (nth n alist)))
-                      (id   (cdr (assoc type alist))))
-                 (should (equal (lookup-type-id alist type)
+  "Looks up types in an assoc list"
+  (list-of (gen-types-id))
+  (lambda (alist)
+    (dotimes (n (length alist))
+      (let* ((type (car (nth n alist)))
+             (id   (cdr (assoc type alist))))
+        (should (equal (lookup-type-id alist type)
                                 id))))))
 
 (test-with get-type-id
-           "Extracts a type from a string of Coq and looks up its ID"
-           (lambda () (list (replace-regexp-in-string "[:\n ]" "" (gen-nonempty-string))
-                            (replace-regexp-in-string "[:\n ]" "" (gen-nonempty-string))))
-           (lambda (name type)
-             (should (equal (get-type-id-aux (concat name " : " type " "))
-                            type))))
+  "Extracts a type from a string of Coq and looks up its ID"
+  (lambda () (mapcar (apply-partially 'replace-regexp-in-string "[:\n ]" "")
+                     (funcall (list-of (gen-nonempty-string)
+                                       (gen-nonempty-string)))))
+  (lambda (name type)
+    (should (equal (get-type-id-aux (concat name " : " type " "))
+                   type))))
 
 ;; The meaty functions
 

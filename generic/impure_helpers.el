@@ -50,15 +50,7 @@
                            (funcall import-variables elem))))))
 
 (defun library-belong (n)
-  (do ((temp number-of-defs (cdr temp))
-       (temp2 nil)
-       (lib "")
-       (acc 0))
-      (temp2 lib)
-    (if (< n (+ acc (cadr (car temp))))
-        (progn (setf temp2 t)
-               (setf lib (car (car temp))))
-      (setf acc (+ acc (cadr (car temp)))))))
+  (library-belong-aux (n number-of-defs)))
 
 (defun name-from-buf ()
   (let ((buf (buffer-name)))
@@ -75,3 +67,6 @@
     (write-lisp-to-file (concat home-dir "/" dir1 "/" name) val1)
     (write-lisp-to-file (concat home-dir "/" dir2 "/" name) val2)
     t))
+
+(defun random-elem (list)
+  (when list (nth (random (length list)) list)))

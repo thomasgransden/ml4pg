@@ -60,14 +60,6 @@
 
   (ert-delete-test 'ml4pg-macro-test))
 
-(test-with can-run-test
-  "Can run tests with arguments"
-  (lambda ()
-    (list (list (gen-any 'gen-bool 'gen-num 'gen-string))))
-  (lambda (args)
-    (should      (ml4pg-test-with 'identity                         args))
-    (should (not (ml4pg-test-with (lambda (x) (ert-fail "Testing")) args)))))
-
 (defvar ml4pg-check-complexity 0
   "Do not use. Only for testing purposes")
 

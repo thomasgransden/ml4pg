@@ -57,14 +57,14 @@
     (dolist (element lst result)
       (setq result (max (length element) result)))))
 
-(defun createwebpage-aux (map)
+(defun createwebpage (map b64)
   (format "<head>
              <title>Dependency Diagram</title>
            </head>
            <body>
-             <img src='temp.png' usemap='#depend' />
+             <img src='data:image/png;base64,%s' usemap='#depend' />
              <map id='depend' name='depend'>%s</map>
-           </body>" map))
+           </body>" b64 map))
 
 (defun clusterofseveral-aux (txt)
   (concat "digraph {\n rankdir=LR;\n" txt "\n}"))
@@ -79,3 +79,62 @@
 (defun string-split (str sep)
   (let ((case-fold-search nil))
     (split-string str (regexp-quote sep))))
+
+(defun nth-of (n tbl)
+  (car (nth (1- n) tbl)))
+
+(defun library-belong-aux (n list)
+  (do ((defs list (cdr defs))
+       (stop nil)
+       (lib "")
+       (acc 0))
+      (stop lib)
+    (if (< n (+ acc (cadr (car defs))))
+        (progn (setf stop t)
+               (setf lib (car (car defs))))
+      (setf acc (+ acc (cadr (car defs)))))))
+
+(defun clusterofone-node (elem tbl defs counter)
+  (format "subgraph cluster%s {\n%s\n}\n"
+          counter (clusterofone elem (1+ counter) tbl defs)))
+
+(defun clusterofone-leaf (elem tbl defs next)
+  (let ((first  (nth-of elem tbl))
+        (second (library-belong-aux (1- elem) defs)))
+    (if (listp next)
+        (format "%s [URL=\"./%s.html\"];\n"
+                first second)
+      (format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n"
+              first second first first (nth-of next tbl)))))
+
+(defun clusterofone (lst counter tbl defs)
+  (do ((temp lst (cdr temp))
+       (res ""))
+      ((endp temp) res)
+    (let ((elem (car temp)))
+      (concat-to res (if (listp elem)
+                         (clusterofone-node elem tbl defs counter)
+                       (clusterofone-leaf elem tbl defs
+                                          (when (cdr temp) (cadr temp))))))))
+
+(defun replace-nth (list index elem)
+  "Return a copy of LIST, with element INDEX replaced with ELEM"
+  (let ((new nil))
+    (dotimes (n (length list) (reverse new))
+      (setq new (cons (if (= n index)
+                          elem
+                        (nth n list))
+                      new)))))
+
+(defun issubcluster (cluster1 cluster2)
+  (let (missing)
+    (dolist (elem cluster1 (not missing))
+      (setq missing (or missing
+                        (not (member elem cluster2)))))))
+
+(defun compose (&rest funcs)
+  (unless funcs (error "Nothing to compose"))
+  `(lambda (&rest args)
+     (let ((result args))
+       (dolist (func (reverse ',funcs) (car result))
+         (setq result (list (apply func result)))))))

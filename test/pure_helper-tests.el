@@ -1,6 +1,6 @@
 (test-with flatten
   "Turn values into 1D lists"
-  (lambda ())
+  nil
   (lambda ()
     (should (equal (flatten nil) nil))
     (should (equal (flatten 10) '(10)))
@@ -10,7 +10,7 @@
 
 (test-with between-spaces
   "Test between-spaces, for extracting Coq names"
-  (lambda () (gen-list 'gen-nonempty-string (+ 3 (random 255))))
+  (gen-list (gen-nonempty-string) (lambda () (+ 3 (funcall (gen-num)))))
   (lambda (&rest in-strs)
     (let* ((str  (mapconcat 'identity in-strs " "))
            (strs (string-split str " ")))
@@ -19,8 +19,8 @@
 
 (test-with first-dot
   "Test looking for '.' in strings"
-  (lambda () (list (replace-in-string "." "" (gen-nonempty-string))
-                   (gen-string)))
+  (list-of (gen-string-without ".")
+           (gen-string))
   (lambda (start end)
     (should (equal (first-dot (concat start "." end))
                    (length start)))))
@@ -28,30 +28,28 @@
 (test-with pos-to-dot
   "Test chopping up to dots"
   (lambda ()
-    (let ((prefix (gen-nonempty-string))
-          (middle (gen-string-without "."))
-          (suffix (gen-nonempty-string)))
+    (let ((prefix (funcall (gen-nonempty-string)))
+          (middle (funcall (gen-string-without ".")))
+          (suffix (funcall (gen-nonempty-string))))
       (list (concat prefix middle "." suffix) middle (length prefix))))
   (lambda (str middle n)
     (should (equal (pos-to-dot str n) middle))))
 
 (test-with first-space
   "Check we can find the first space in a string"
-  (lambda () (list (replace-in-string " " "x" (gen-nonempty-string))
-                   (gen-nonempty-string)))
+  (list-of (gen-string-without " ")
+           (gen-nonempty-string))
   (lambda (s1 s2)
     (should (equal (first-space (concat s1 " " s2)) (length s1)))))
 
 (test-with str-between
   "Test extracting strings"
   (lambda ()
-    (let* ((start  (gen-any 'gen-nonempty-string 'gen-char))
-           (end    (gen-any 'gen-nonempty-string 'gen-char))
-           (prefix (gen-filtered 'gen-nonempty-string
-                                 (lambda (x) (not (search start x)))))
-           (middle (gen-filtered 'gen-nonempty-string
-                                 (lambda (x) (not (search end   x)))))
-           (suffix (gen-nonempty-string)))
+    (let* ((start  (funcall (gen-nonempty-string)))
+           (end    (funcall (gen-nonempty-string)))
+           (prefix (funcall (gen-string-without start)))
+           (middle (funcall (gen-string-without end)))
+           (suffix (funcall (gen-nonempty-string))))
       (list start end middle (concat prefix start middle end suffix))))
   (lambda (start end desired str)
     (should (equal (str-between str start end) desired))))
@@ -59,23 +57,17 @@
 (test-with str-up-to
   "Test extracting prefixes of strings"
   (lambda ()
-    (let* ((end    (gen-any 'gen-nonempty-string 'gen-char))
-           (prefix (gen-filtered 'gen-nonempty-string
-                                 (lambda (x) (not (search end x))))))
-      (list (concat prefix end (gen-string)) end prefix)))
+    (let* ((end    (funcall (gen-nonempty-string)))
+           (prefix (funcall (gen-string-without end))))
+      (list (concat prefix end (funcall (gen-string))) end prefix)))
   (lambda (str end prefix)
     (should (equal (str-up-to str end) prefix))))
 
 ;; These tests are pretty similar, so they share a generator
 (let ((generator (lambda ()
-                   (let* ((sep      (gen-any 'gen-nonempty-string
-                                             'gen-char))
-                          (not-sep `(lambda (x) (not (search ,sep x))))
-                          (bits     (gen-any  (lambda () nil)
-                                             `(lambda ()
-                                                (gen-list `(lambda ()
-                                                             (gen-filtered 'gen-string
-                                                                           not-sep)))))))
+                   (let* ((sep      (funcall (gen-any (gen-nonempty-string)
+                                                      (gen-char))))
+                          (bits     (gen-list (gen-string-without sep))))
                      (list (join-strings bits sep) sep (or bits '("")))))))
   `(test-with split-string
      "Test we're using Emacs's built-in string splitting correctly"
@@ -92,15 +84,14 @@
 
 (test-with after-space
   "Finding the position of the text after a single space"
-  (lambda () (list (replace-in-string " " "" (gen-nonempty-string))
-                   (gen-nonempty-string)))
+  (list-of (gen-string-without " ") (gen-nonempty-string))
   (lambda (start end)
     (should (equal (after-space (concat start " " end))
                    (1+ (length start))))))
 
 (test-with take-30
   "Should extract 30 items from a list"
-  (lambda () (list (gen-list 'gen-string (+ 30 (random 255)))))
+  (list-of (gen-list (gen-string) (lambda () (+ 30 (funcall (gen-num))))))
   (lambda (l)
     (should (equal (length (take-30 l)) 30))
     (dotimes (n 30)
@@ -110,9 +101,9 @@
 (test-with find-max-length
   "Finds the length of the longest saved theorem"
   (lambda ()
-    (let ((n (+ ml4pg-test-complexity (gen-num))))
-      (list (gen-list 'gen-string)
-            (gen-string n)
+    (let ((n (+ ml4pg-test-complexity (funcall (gen-num)))))
+      (list (funcall (gen-list (gen-string)))
+            (funcall (gen-string n))
             n)))
   (lambda (thms thm n)
     (should (equal (length thm) n))
@@ -121,10 +112,10 @@
 (test-with replace-nth
   "Test substituting elements in lists"
   (lambda ()
-    (let* ((prefix  (gen-list 'gen-num))
-           (suffix  (gen-list 'gen-num))
-           (pre     (gen-num))
-           (post    (gen-num)))
+    (let* ((prefix  (funcall (gen-list (gen-num))))
+           (suffix  (funcall (gen-list (gen-num))))
+           (pre     (funcall (gen-num)))
+           (post    (funcall (gen-num))))
       (list (append prefix (list pre) suffix)
             (length prefix)
             post

@@ -22,21 +22,20 @@
      'test' is the test function. If 'generator' is nil it should accept no
      arguments; otherwise it should accept one argument for each element in the
      return value of 'generator'"
-  (let* ((namesym   (intern (concat "ml4pg-" (symbol-name name))))
-         (generator (eval rawgen)))
-    (if generator
-        `(ert-deftest ,namesym ()
-           `doc
-           (setq ml4pg-test-complexity  1)
-           (setq ml4pg-check-complexity 0)
-           (dotimes (iteration test-iterations)
-             (let ((args (funcall ,generator)))
-               (ml4pg-record-args args)
-               (apply ,test args)
-               (setq ml4pg-test-complexity (* 2 ml4pg-test-complexity)))))
-        `(ert-deftest ,namesym ()
-           `doc
-           (funcall ,test)))))
+  (let* ((namestr   (symbol-name name))
+         (namesym   (intern (concat "ml4pg-" namestr)))
+         (generator (eval rawgen))
+         (recgen    (when generator (compose 'ml4pg-record-args generator))))
+    `(ert-deftest ,namesym ()
+       `doc
+       (setq ml4pg-test-complexity  1)
+       (setq ml4pg-check-complexity 0)
+       (ml4pg-run-a-test ,namestr
+                         (compose 'ml4pg-increase-complexity ,test)
+                         ,recgen))))
+
+(defun ml4pg-increase-complexity (&rest args)
+  (setq ml4pg-test-complexity (* 2 ml4pg-test-complexity)))
 
 (defun ml4pg-record-args (args)
   "Show a test's arguments in the *Messages* buffer, without echoing."
@@ -45,24 +44,15 @@
     (goto-char (point-max))
     (let ((buffer-read-only nil))
       (insert (format "Arguments:\n%s\n"
-                      (join-strings (mapcar 'any-to-string args) "\n"))))))
+                      (join-strings (mapcar 'any-to-string args) "\n")))))
+  args)
 
-(defun ml4pg-test-with (tw-test &optional tw-args)
-  (let ((ert-debug-on-error  nil)
-        (body               (lambda () (apply tw-test tw-args))))
-    (ert-test-passed-p (ert-run-test (make-ert-test :body body)))))
-
-(defun replace-nth (list index elem)
-  "Return a copy of LIST, with element INDEX replaced with ELEM"
-  (let ((new nil))
-    (dotimes (n (length list) (reverse new))
-      (setq new (cons (if (= n index)
-                          elem
-                          (nth n list))
-                      new)))))
-
-(defun random-elem (list)
-  (when list (nth (random (length list)) list)))
+(defun ml4pg-run-a-test (name test &optional generator)
+  "Runs a TEST with the given NAME on the (optional) ARGS.
+   This provides a handy way to instrument all tests."
+  (dotimes (iteration (if generator test-iterations 1))
+    (let ((args (when generator (funcall generator))))
+      (apply test args))))
 
 (defun ml4pg-run-test ()
   "DO NOT USE: This is for testing our test macro. Don't use in your own code"

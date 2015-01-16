@@ -1,48 +1,55 @@
 (test-with gen-num
   "Number generator"
-  (list-of 'gen-num)
+  (list-of (gen-num))
   (lambda (n)
     (should (numberp n))
     (should (>= n 0))))
 
 (test-with gen-char
   "Character generator"
-  (list-of 'gen-char)
+  (list-of (gen-char))
   (lambda (c)
     (should (equal 1 (length c)))
     (should (stringp c))))
 
 (test-with gen-string
   "String generator"
-  (lambda () (list (gen-string) (random 255)))
-  (lambda (s n)
-    (should (stringp s))
-    (should (equal (format "%s" s) s))
-    (should (equal (length (gen-string n)) n))))
+  (lambda ()
+    (let ((n (funcall (gen-num))))
+      (funcall (list-of (gen-string)
+                        (gen-string n)
+                        (gen-const  n)))))
+  (lambda (s1 s2 n)
+    (should (stringp s1))
+    (should (stringp s2))
+    (should (equal (format "%s" s1) s1))
+    (should (equal (length s2) n))))
 
 (test-with gen-list
   "List generator"
   (lambda ()
-    (list (gen-list (lambda () nil))
-          (random 255)))
-  (lambda (lst n)
-    (should (listp lst))
-    (should (equal (length (gen-list 'gen-bool n)) n))))
+    (let ((n (funcall (gen-num))))
+      (funcall (list-of (gen-list (gen-const nil))
+                        (gen-const n)
+                        (gen-list (gen-bool) n)))))
+  (lambda (lst1 n lst2)
+    (should (listp lst1))
+    (should (listp lst2))
+    (should (equal (length lst2) n))))
 
 (test-with gen-pair
   "Test pair generation"
-  (lambda ())
-  (lambda ()
-    (let ((sb (gen-pair 'gen-string 'gen-bool))
-          (bs (gen-pair 'gen-bool 'gen-string)))
-      (should (stringp  (car sb)))
-      (should (booleanp (cdr sb)))
-      (should (booleanp (car bs)))
-      (should (stringp  (cdr bs))))))
+  (list-of (gen-pair (gen-string) (gen-bool))
+           (gen-pair (gen-bool)   (gen-string)))
+  (lambda (sb bs)
+    (should (stringp  (car sb)))
+    (should (booleanp (cdr sb)))
+    (should (booleanp (car bs)))
+    (should (stringp  (cdr bs)))))
 
 (test-with gen-types-id
   "Test types_id value generation"
-  (list-of 'gen-types-id)
+  (list-of (gen-types-id))
   (lambda (alist)
     (should (listp alist))
     (dotimes (n (length alist))
@@ -54,40 +61,32 @@
 (test-with gen-filtered
   "Test generator filters"
   (lambda ()
-    (let ((sep (gen-char)))
-      (list `(lambda (x) (not (search ,sep x))))))
-  (lambda (filter)
-    (should (funcall filter
-                     (gen-filtered 'gen-string filter)))))
+    (let* ((sep     (funcall (gen-char)))
+           (filter `(lambda (x) (not (search ,sep x)))))
+      (list filter
+            (funcall (gen-filtered (gen-string) filter)))))
+  (lambda (filter output)
+    (should (funcall filter output))))
 
 (test-with gen-list-of-simple
   "Test the way list-of works"
   nil
   (lambda ()
-    (should (functionp (list-of 'gen-bool)))))
+    (should (functionp (list-of (gen-bool))))))
 
 (test-with gen-list-of-callable
    "Test we can call list-of generators"
-   nil
    (lambda ()
-     (let ((f (list-of (lambda () t))))
-       (should (equal (funcall f) (list t))))))
-
-(test-with gen-list-of-symbolic
-  "Test we can generate lists with symbolic function names"
-  nil
-  (lambda ()
-    (let* ((f   (list-of 'gen-bool))
-           (val (funcall f)))
-      (should (or (equal val (list nil))
-                  (equal val (list t)))))))
+     (list (funcall (gen-string))))
+   (lambda (x)
+     (let ((f (list-of (gen-const x))))
+       (should (equal (funcall f) (list x))))))
 
 (test-with gen-list-of-multiple
   "Test generating lists"
-  nil
-  (lambda ()
-    (let ((generated (funcall (list-of 'gen-bool 'gen-string 'gen-num))))
-      (should (equal (length generated) 3))
-      (should (booleanp (nth 0 generated)))
-      (should (stringp  (nth 1 generated)))
-      (should (numberp  (nth 2 generated))))))
+  (list-of (gen-bool) (gen-string) (gen-num))
+  (lambda (&rest generated)
+    (should (equal (length generated) 3))
+    (should (booleanp (nth 0 generated)))
+    (should (stringp  (nth 1 generated)))
+    (should (numberp  (nth 2 generated)))))

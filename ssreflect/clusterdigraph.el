@@ -8,59 +8,32 @@
 
 (defvar clustercounter 0)
 
-(defun nth-of (n tbl)
-  (car (nth (1- n) tbl)))
-
-(defun clusterofone-node (elem tbl counter)
-  (format "subgraph cluster%s {\n%s\n}\n"
-          counter (clusterofone elem (1+ counter) tbl)))
-
-(defun clusterofone-leaf (elem tbl next)
-  (let ((first  (nth-of elem tbl))
-        (second (library-belong (1- elem))))
-    (if (listp next)
-        (format "%s [URL=\"./%s.html\"];\n"
-                first second)
-        (format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n"
-                first second first first (nth-of next tbl)))))
-
-(defun clusterofone (lst counter tbl)
-  (do ((temp lst (cdr temp))
-       (res ""))
-      ((endp temp) res)
-    (let ((elem (car temp)))
-      (concat-to res (if (listp elem)
-                         (clusterofone-node elem tbl counter)
-                         (clusterofone-leaf elem tbl
-                                            (when (cdr temp) (cadr temp))))))))
-
 (defun clusterofseveral (lol)
-  (clusterofseveral-aux (clusterofone lol 1 tables-definitions)))
+  (clusterofseveral-pure lol tables-definitions number-of-defs))
+
+(defun clusterofseveral-pure (lol tbl defs)
+  (clusterofseveral-aux (clusterofone lol 1 tbl defs)))
+
+(defun show-diagram-clusters-aux (text)
+  "Turns the given dot code into a PNG with an image map, and return a HTML
+   page containing this image"
+  (let* ((map (process-with-cmd "dot" text "-Tcmap"))
+         (png (process-with-cmd "dot" text "-Tpng"))
+         (b64 (process-with-cmd "base64" png)))
+    (createwebpage map b64)))
 
 (defun show-diagram-clusters (text)
-  (with-temp-file "temp.gv"
-    (insert text))
-  (shell-command "dot -Tcmap temp.gv -o temp.map")
-  (shell-command "dot -Tpng temp.gv -o temp.png")
-  (createwebpage)
-  (shell-command "xdg-open temp.html"))
+  "Render the given dot code into a HTML file and open it"
+  (let ((path (make-temp-file "ml4pg-clusters" nil ".html")))
+    (with-temp-file path
+        (insert (show-diagram-clusters-aux text)))
+    (shell-command (concat "xdg-open " path))))
 
 (defun showclustergraph (lol)
-  (show-diagram-clusters (clusterofseveral lol)))
+  (showclustergraph-pure lol tables-definitions number-of-defs))
 
-(defun createwebpage ()
-  (with-temp-file "temp.html"
-    (insert (createwebpage-aux (read-lines "temp.map")))))
-
-(defun issubcluster (cluster1 cluster2)
-  (do ((temp cluster1 (cdr temp))
-       (res nil))
-      ((or (endp temp)
-           res)
-       (not res))
-    (if (not (member (car temp)
-                     cluster2))
-        (setf res t))))
+(defun showclustergraph-pure (lol tbl defs)
+  (show-diagram-clusters (clusterofseveral-pure lol tbl defs)))
 
 (defun replacecluster (cluster1 cluster2)
   (if (endp cluster2)
