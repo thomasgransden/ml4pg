@@ -40,6 +40,8 @@
 
   (ert-delete-test 'ml4pg-macro-test))
 
+(defvar ml4pg-test-accumulator nil)
+
 (ert-deftest ml4pg-test-with-runs-multiple ()
   "Make sure tests defined by our macro are run multiple times, with different
    generated arguments each time."
@@ -47,30 +49,33 @@
     "Testing iteration"
     (lambda () (list iteration))
     (lambda (gen-it)
-      (ml4pg-test-accumulate (cons gen-it iteration))))
+      (setq ml4pg-test-accumulator (cons (cons gen-it iteration)
+                                         ml4pg-test-accumulator))))
 
-  (let ((ml4pg-test-accumulator nil))
-    (ml4pg-run-test)
-    (should (equal (length ml4pg-test-accumulator) test-iterations))
-    (dotimes (i test-iterations)
-      (should (member (cons i i) ml4pg-test-accumulator))))
+  (setq ml4pg-test-accumulator nil)
+  (ml4pg-run-test)
+  (should (equal (length ml4pg-test-accumulator) test-iterations))
+  (dotimes (i test-iterations)
+    (should (member (cons i i) ml4pg-test-accumulator)))
 
   (ert-delete-test 'ml4pg-macro-test))
 
-(test-with simplify-numbers
-   "Make sure numbers get smaller"
-   (lambda ()
-     (let ((n (gen-num)))
-       (list n (ml4pg-simplify-data n))))
-   (lambda (n alts)
-     (dolist (alt alts nil)
-       (should (simpler alt n)))))
-
-(test-with simplify-lists
-  "Lists get simpler"
+(test-with can-run-test
+  "Can run tests with arguments"
   (lambda ()
-    (let ((lst (gen-list 'gen-num)))
-      (list lst (ml4pg-simplify-data lst))))
-  (lambda (lst alts)
-    (dolist (alt alts nil)
-      (should (simpler alt lst)))))
+    (list (list (gen-any 'gen-bool 'gen-num 'gen-string))))
+  (lambda (args)
+    (should      (ml4pg-test-with 'identity                         args))
+    (should (not (ml4pg-test-with (lambda (x) (ert-fail "Testing")) args)))))
+
+(defvar ml4pg-check-complexity 0
+  "Do not use. Only for testing purposes")
+
+(test-with complexity-increases
+  "Make sure test data gets more complex"
+  (lambda ()
+    (let ((result (list ml4pg-check-complexity ml4pg-test-complexity)))
+      (setq ml4pg-check-complexity ml4pg-test-complexity)
+      result))
+  (lambda (old new)
+    (should (< old new))))

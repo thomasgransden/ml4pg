@@ -8,7 +8,7 @@
 
 (defun gen-num ()
   "Generate positive random numbers"
-  (random 255))
+  (random ml4pg-test-complexity))
 
 (defun gen-char ()
   "Generate a random ASCII character"
@@ -16,19 +16,19 @@
 
 (defun gen-string (&optional op-len)
   "Generate a random ASCII string, of given (or random) length"
-  (let ((len (or op-len (random 255)))
+  (let ((len (or op-len (random ml4pg-test-complexity)))
         (str ""))
     (dotimes (i len str)
       (setq str (concat str (gen-char))))))
 
 (defun gen-nonempty-string ()
   "Generate a random ASCII string of at least one char"
-  (gen-string (1+ (random 254))))
+  (gen-string (1+ (random ml4pg-test-complexity))))
 
 (defun gen-list (elem-gen &optional op-len)
   "Generate a random list, using the given element-generating function, of the
    given (or random) length"
-  (let ((len (or op-len (random 255)))
+  (let ((len (or op-len (random ml4pg-test-complexity)))
         (lst nil))
     (dotimes (i len lst)
       (setq lst (cons (funcall elem-gen) lst)))))

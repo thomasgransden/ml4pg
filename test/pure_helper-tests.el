@@ -29,9 +29,9 @@
   "Test chopping up to dots"
   (lambda ()
     (let ((prefix (gen-nonempty-string))
-           (middle (gen-string-without "."))
-           (suffix (gen-nonempty-string)))
-      (list (concat prefix middle suffix) middle (length prefix))))
+          (middle (gen-string-without "."))
+          (suffix (gen-nonempty-string)))
+      (list (concat prefix middle "." suffix) middle (length prefix))))
   (lambda (str middle n)
     (should (equal (pos-to-dot str n) middle))))
 
@@ -109,8 +109,26 @@
 
 (test-with find-max-length
   "Finds the length of the longest saved theorem"
-  (lambda () (list (gen-list 'gen-string) (+ 256 (random 256))))
-  (lambda (thms n)
-    (let ((thm (gen-string n)))
-      (should (equal (find-max-length (cons thm thms)) n))
-      (should (equal (find-max-length (list "foo" "bizzle" "boop")) 6)))))
+  (lambda ()
+    (let ((n (+ ml4pg-test-complexity (gen-num))))
+      (list (gen-list 'gen-string)
+            (gen-string n)
+            n)))
+  (lambda (thms thm n)
+    (should (equal (length thm) n))
+    (should (equal (find-max-length (cons thm thms)) n))))
+
+(test-with replace-nth
+  "Test substituting elements in lists"
+  (lambda ()
+    (let* ((prefix  (gen-list 'gen-num))
+           (suffix  (gen-list 'gen-num))
+           (pre     (gen-num))
+           (post    (gen-num)))
+      (list (append prefix (list pre) suffix)
+            (length prefix)
+            post
+            (append prefix (list post) suffix))))
+  (lambda (before n elem after)
+    (should (equal (replace-nth before n elem)
+                   after))))

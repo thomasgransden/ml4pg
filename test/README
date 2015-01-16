@@ -85,8 +85,8 @@ This is a slight simplification, but we can see the main elements:
    more opportunities to find edge-cases.
  - 'generator-function' is called with no arguments, once per iteration. It
    returns 'args'.
- - We display 'args', in case it helps us to reproduce a problem later. (In fact
-   we write it straight to *Messages*, to avoid echoing it to the user)
+ - We display 'args', in case it helps us to reproduce a problem later (in fact
+   we write it straight to *Messages*, to avoid echoing it to the user).
  - We run 'test-function', supplying its arguments from 'args'
 
 Generators
@@ -107,6 +107,10 @@ the same code over and over. For example:
  - (list-of gen1 gen2 ...) returns a generator which will generate a list of
    values, with the first element generated with 'gen1', the second with 'gen2',
    and so on.
+
+Generators can use the global variable 'ml4pg-test-complexity' to adjust their
+output. This is set to 1 before each test and doubles after each iteration. For
+example, 'gen-string' and 'gen-list' use it to cap the length of their output.
 
 Examples
 --------

@@ -27,5 +27,5 @@
       (let ((name (rename-buffer full t)))
         (should (equal (name-from-buf)
                        (if (search "." name)
-                           (car (split-string name "."))
+                           (car (string-split name "."))
                            name)))))))

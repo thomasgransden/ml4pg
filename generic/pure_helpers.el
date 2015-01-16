@@ -19,7 +19,8 @@
 
 (defun pos-to-dot (cmd n)
   "Extract a sub-string from the given position to the first dot"
-  (subseq cmd n (first-dot cmd)))
+  (let ((suffix (subseq cmd n)))
+    (subseq suffix 0 (first-dot suffix))))
 
 (defun replace-in-string (what with in)
   (replace-regexp-in-string (regexp-quote what) with in))
