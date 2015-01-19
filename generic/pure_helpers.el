@@ -127,3 +127,9 @@
   "Returns nil if X is not a number or a list of (list of...) numbers"
   (or (numberp x)
       (and (listp x) (all (mapcar 'tree-of-numbers x)))))
+
+(defun remove-alone (list)
+  (let (result)
+    (dolist (elem list result)
+      (unless (= (length elem) 1)
+        (setf result (append result (list elem)))))))

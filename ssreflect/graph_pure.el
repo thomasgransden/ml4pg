@@ -87,3 +87,11 @@
   (let ((result clusters2))
     (dolist (elem clusters1 result)
       (setf result (subclusters elem result)))))
+
+(defun clusters-of-n (list n)
+  (do ((temp list (cdr temp))
+       (i 1 (1+ i))
+       (temp2 nil))
+      ((endp temp) temp2)
+    (if (equal (car temp) n)
+        (setf temp2 (append temp2 (list i))))))

@@ -74,3 +74,103 @@
 
 (defun random-elem (list)
   (when list (nth (random (length list)) list)))
+
+;; These may be pure; they've been consolidated from a bunch of duplicates
+
+(defun form-clusters (list n)
+  (do ((i 0 (1+ i))
+       (temp nil))
+      ((= i n)
+       temp)
+    (setf temp (append temp (list (clusters-of-n list i))))))
+
+(defun extract-clusters-from-file (clusters)
+  (let* ((temp (0_n clusters))
+         (lines (read-lines (expand-file-name "out_bis.arff"))))
+    (lines-to-clusters lines)))
+
+(defun extract-clusters-from-file-defs ()
+  (let* ((lines (read-lines1 (expand-file-name "out_bis.arff"))))
+    (lines-to-clusters lines)))
+
+(defun last-part-of-lists (list)
+  (do ((temp list (cdr temp))
+       (temp2 nil))
+      ((endp temp)
+       temp2)
+    (setf temp2 (append temp2 (list (cadar temp))))))
+
+(defun convert-all-definitions-to-weka-format-several ()
+  (add-several-libraries-defs)
+  (transform-definitions)
+  (convert-recursive-several-libraries-defs)
+  (do ((temp (last-part-of-lists defs-vectors)
+             (cdr temp))
+       (temp2 ""))
+      ((endp temp)
+       temp2)
+    (setf temp2 (concat temp2 (format "%s\n"  (print-list  (car temp)))))))
+
+(defun why-are-similar ()
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name "res.txt"))
+    (setf foo nil)
+    (while (not foo)
+      (setf foo (string= "attributes:" (format "%s" (read (current-buffer))))))
+    (extract-selected-attributes (format "%s" (read (current-buffer))) nil)))
+
+(defun why-are-similar-defs ()
+  (sleep-for 2)
+  (let* ((file (read-lines (expand-file-name "whysimilar.txt")))
+         (attributes (subseq file (+ 21 (search "Selected attributes:" file)))))
+    (extract-selected-attributes (subseq attributes 0 (1- (search ":" attributes)))
+                                 nil)))
+
+(defun extract-selected-attributes (temp res)
+  (let ((comma (search "," temp)))
+    (if comma
+        (extract-selected-attributes (subseq temp (+ 1 comma))
+                                     (append res (list (car (read-from-string (subseq temp 0 comma))))))
+      (append res (list (car (read-from-string temp)))))))
+
+(defun explain-why-are-similar ()
+  (let ((sim (why-are-similar)))
+    (insert (format "The similarities of these lemmas are given by the following parameters:\n"))
+    (do ((temp sim (cdr temp)))
+        ((endp temp)
+         (insert (format "------------------------------------------------------------------------------------------------\n")))
+      (insert (format " - %s\n" (attribute-to-value (car temp)))))))
+
+(defun attribute-to-value (n)
+  (let* ((tdl (cond ((< n 8)  1)
+                    ((< n 15) 2)
+                    ((< n 22) 3)
+                    ((< n 29) 4)
+                    ((< n 36) 5)
+                    ((< n 43) 6)
+                    (t 7)))
+         (arity (- (- n (* 7 (- tdl 1))) 1)))
+    (if (= arity 0)
+        (format "The variables of the term-tree at depth level %s" tdl)
+      (format "The function(s) of arity %s of the term-tree at depth level %s"  (1- arity) tdl))))
+
+(defun 0_n (n)
+  (do ((i 0 (1+ i))
+       (temp nil))
+      ((= i n) temp)
+    (setf temp (append temp (list (list i nil))))))
+
+(defun read-lines1 (file)
+  "Return a list of lines in FILE."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (split-string
+     (buffer-string)
+     "\n" t)))
+
+(defun lines-to-clusters (lines)
+  (do ((temp lines (cdr temp))
+       (temp2 nil))
+      ((endp temp) temp2)
+    (setf temp2 (append temp2 (list (string-to-number (subseq (car temp) (+ 7 (search "cluster" (car temp) :from-end t)))))))
+    ))
