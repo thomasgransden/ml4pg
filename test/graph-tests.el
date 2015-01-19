@@ -36,8 +36,11 @@
            (elem   (funcall (gen-filtered (gen-string)
                                          `(lambda (x) (not (member x ',c2))))))
            (index  (if c1 (random (length c1)) 0)))
-      (list (if c1 (replace-nth c1 (random (length c1)) elem)
-                   ())
-            (append pre (list mid) post) c2 is-sub)))
+      (list (if is-sub
+                c1
+                (if c1 (replace-nth c1 index elem)
+                       (list elem)))
+            c2
+            is-sub)))
   (lambda (c1 c2 is-sub)
     (should (equal (issubcluster c1 c2) is-sub))))
