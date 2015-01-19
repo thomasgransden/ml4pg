@@ -46,11 +46,14 @@
 
 (require 'cl)
 
-(defun ml4pg-mode ()
+(defun ml4pg-mode-aux ()
   (coq-mode)
   (when noninteractive
     (coq-build-prog-args)  ;; PG assumes coqtop will never run non-interactively
-    (setq proof-shell-fiddle-frames nil))  ;; Don't alter non-existent windows
+    (setq proof-shell-fiddle-frames nil)))  ;; Don't alter non-existent windows
+
+(defun ml4pg-mode ()
+  (ml4pg-mode-aux)
   (select-mode))
 
 (add-to-list 'auto-mode-alist

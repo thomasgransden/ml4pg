@@ -26,25 +26,24 @@
 ;; The meaty functions
 
 (test-with append-hyp
-           "Check we can append to the hypothesis"
-           (lambda () (list (gen-list 'gen-string) (gen-string)))
-           (lambda (hyp s)
-             (let ((hypothesis hyp))
-               (append-hyp s)
-               (should (equal hypothesis (append hyp s))))))
+  "Check we can append to the hypothesis"
+  (list-of (gen-list (gen-string)) (gen-string))
+  (lambda (hyp s)
+    (let ((hypothesis hyp))
+      (append-hyp s)
+      (should (equal hypothesis (append hyp s))))))
 
 (test-with remove-if-empty
-           "Test removing empty theorems"
-           (lambda ())
-           (lambda ()
-             (let ((thms '(("a") ("b") ("") ("d") ("") ("") ("g") ("")))
-                   (ids  '((6 3 3) (8) nil (2) (1 7 6 6) nil (4 5 3))))
-               (should (equal (remove-if-empty-aux ids thms)
-                              '((4) nil (7 1) (2) nil nil nil))))))
+  "Test removing empty theorems"
+  nil
+  (lambda ()
+    (let ((thms '(("a") ("b") ("") ("d") ("") ("") ("g") ("")))
+          (ids  '((6 3 3) (8) nil (2) (1 7 6 6) nil (4 5 3))))
+      (should (equal (remove-if-empty-aux ids thms)
+                     '((4) nil (7 1) (2) nil nil nil))))))
 
 (test-with extract-defs-empty
-           "Test extracting definitions from an empty buffer"
-           (lambda ())
-           (lambda ()
-             ;(ml4pg-load-and-extract-info "" 'dependencygraph-defs)
-             (should t)))
+  "Test extracting definitions from an empty buffer"
+  nil
+  (lambda ()
+    (ml4pg-load-and-extract-info "" (lambda () (dependencygraph-defs-aux)))))

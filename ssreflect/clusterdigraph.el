@@ -51,8 +51,8 @@
 
 (defun replace-subclusters (cluster)
   `(lambda (elem)
-     (if (issubcluster ,cluster elem)
-         (replacecluster ,cluster elem)
+     (if (issubcluster ',cluster elem)
+         (replacecluster ',cluster elem)
          elem)))
 
 (defun subclusters (cluster clusters)
@@ -72,16 +72,12 @@
       (setf result (subclusters elem result)))))
 
 (defun dependencygraph-defs-aux ()
-  (let ((granularity-level 5))
-    (subclustersseveral (dependencygraph-defs-get-cluster 2 5)
-                        (dependencygraph-defs-get-cluster 5 3))))
-
-(defun weka-defs-wait (granularity-level)
-  (weka-defs)
-  (sleep-for 2))
+  (subclustersseveral (dependencygraph-defs-get-cluster 2 5)
+                      (dependencygraph-defs-get-cluster 5 3)))
 
 (defun dependencygraph-defs-get-cluster (divisor granularity-level)
-  (weka-defs-wait granularity-level)
+  (weka-defs)
+  (sleep-for 2)
   (cdr (form-clusters (extract-clusters-from-file-defs )
                       (floor (length tables-definitions)
                              divisor))))
@@ -132,21 +128,18 @@
 
 (defun dependencygraph-statements ()
   (interactive)
-  (let ((clusters1 nil)
-        (clusters3 nil))
-    (setf granularity-level 3)
-    (weka-thms)
-    (sleep-for 2)
-    (setf clusters1 (cdr (form-clusters (extract-clusters-from-file-defs )
-                                        (floor (length tables-thms)
-                                               5))))
-    (setf granularity-level 5)
-    (weka-thms)
-    (sleep-for 2)
-    (setf clusters3 (cdr (form-clusters (extract-clusters-from-file-defs )
-                                        (floor (length tables-thms)
-                                               2))))
-    (showclustergraph-statements (subclustersseveral  clusters3 clusters1 ))))
+  (showclustergraph-statements (dependencygraph-statements-aux)))
+
+(defun dependencygraph-statements-aux ()
+  (subclustersseveral (dependencygraph-statements-cluster 5 2)
+                      (dependencygraph-statements-cluster 3 5)))
+
+(defun dependencygraph-statements-cluster (granularity-level divisor)
+  (weka-thms)
+  (sleep-for 2)
+  (cdr (form-clusters (extract-clusters-from-file-defs )
+                      (floor (length tables-thms)
+                             divisor))))
 
 ;;--------------------------------------------------
 ;; Cluster graph proofs

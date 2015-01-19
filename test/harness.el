@@ -59,12 +59,12 @@
   (ert-run-test (ert-get-test 'ml4pg-macro-test)))
 
 (defun ml4pg-load-and-extract-info (str action)
-  "Insert 'str' into a temporary buffer, load ML4PG in that buffer then run
-   'action'"
+  "Insert STR into a temporary buffer, load ML4PG in that buffer then run
+   ACTION"
   (with-temp-buffer
-    (let ((ml4pg-interactive nil))
+    (let ((noninteractive t))
       (insert str)
-      (ml4pg-mode)
+      (ml4pg-mode-aux)
       (coq-build-prog-args)
       (goto-char (point-max))
       (extract-feature-theorems)
