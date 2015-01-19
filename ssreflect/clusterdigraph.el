@@ -30,10 +30,9 @@
     (shell-command (concat "xdg-open " path))))
 
 (defun showclustergraph (lol)
-  (showclustergraph-pure lol tables-definitions number-of-defs))
-
-(defun showclustergraph-pure (lol tbl defs)
-  (show-diagram-clusters (clusterofseveral-pure lol tbl defs)))
+  (show-diagram-clusters (clusterofseveral-pure lol
+                                                tables-definitions
+                                                number-of-defs)))
 
 (defun replacecluster (cluster1 cluster2)
   (if (endp cluster2)

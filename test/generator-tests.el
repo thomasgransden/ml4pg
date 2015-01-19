@@ -76,8 +76,7 @@
 
 (test-with gen-list-of-callable
    "Test we can call list-of generators"
-   (lambda ()
-     (list (funcall (gen-string))))
+   (list-of (gen-string))
    (lambda (x)
      (let ((f (list-of (gen-const x))))
        (should (equal (funcall f) (list x))))))
