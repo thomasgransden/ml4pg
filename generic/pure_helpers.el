@@ -138,3 +138,28 @@
      (let ((result args))
        (dolist (func (reverse ',funcs) (car result))
          (setq result (list (apply func result)))))))
+
+(defun f-and (&rest args)
+  "Boolean AND, implemented as a proper function"
+  (let ((result t))
+    (dolist (elem args result)
+      (setf result (and result elem)))))
+
+(defun f-or (&rest args)
+  "Boolean OR, implemented as a proper function"
+  (let ((result nil))
+    (dolist (elem args result)
+      (setf result (or result elem)))))
+
+(defun any (lst)
+  "Non-nil iff any element of LST is non-nil"
+  (apply 'f-or lst))
+
+(defun all (lst)
+  "Nil iff any element of LST is nil"
+  (apply 'f-and lst))
+
+(defun any-which (lst f &rest args)
+  "Apply F to all elements of LST and see if any returned non-nil.
+   Optionally, additional ARGS will be passed to F as initial args."
+  (any (mapcar (apply 'apply-partially (cons f args)) lst)))

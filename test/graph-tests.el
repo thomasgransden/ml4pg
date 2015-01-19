@@ -44,3 +44,50 @@
             is-sub)))
   (lambda (c1 c2 is-sub)
     (should (equal (issubcluster c1 c2) is-sub))))
+
+(test-with subclusters-in
+  "Test that subclusters doesn't append a cluster that's already present"
+  (compose (lambda (args) (list (cons (cadr args) (car args))
+                                (cadr args)))
+           (list-of (gen-list (gen-list (gen-string))) (gen-list (gen-string))))
+  (lambda (lst elem)
+    (should (member elem lst))
+    (should (equal lst (subclusters elem lst)))))
+
+(test-with subclusters-not-in
+  "Test that subclusters appends a cluster when not already present"
+  (gen-filtered (list-of (gen-list (gen-list (gen-string)))
+                         (gen-list (gen-string)))
+                (lambda (args)
+                  (not (or (member    (cadr args)               (car  args))
+                           (any-which (car  args) 'issubcluster (cadr args))))))
+  (lambda (lst elem)
+    (should (not (member elem lst)))
+    (should (member elem (subclusters elem lst)))))
+
+(test-with subclusters-sub
+  "Test that subclusters replaces a cluster with a subcluster"
+  (gen-filtered (compose (lambda (args)
+                           (list (cons (append (nth 1 args) (nth 2 args))
+                                       (nth 0 args))
+                                 (nth 1 args)))
+                         (list-of (gen-list (gen-list (gen-string)))
+                                  (gen-list (gen-string)
+                                            (compose '1+ (gen-num))
+                                            )
+                                  (gen-list (gen-string)
+                                            (compose '1+ (gen-num))
+                                            )))
+                (lambda (args) (and (not (member (cadr args) (car args)))
+                                    (any-which (car  args)
+                                               'issubcluster
+                                               (cadr args)))))
+  (lambda (lst elem)
+    (let (
+          ;(sc (subclusters elem lst))
+          )
+                                        ;(should (not (member elem lst)))
+                                        ;(should (not (equal lst sc)))
+                                        ;(should (equal (length lst) (length sc)))
+                                        ;(should (not (member elem sc)))
+      )))

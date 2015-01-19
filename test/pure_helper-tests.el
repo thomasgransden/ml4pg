@@ -123,3 +123,13 @@
   (lambda (before n elem after)
     (should (equal (replace-nth before n elem)
                    after))))
+
+(test-with any-which-none
+  "Check if any element of a list passes a test"
+  (compose (lambda (args) (list (funcall (list-of (car args)))
+                                (cadr args)))
+           (gen-elem (list (list (gen-string) 'stringp)
+                           (list (gen-bool)   'booleanp)
+                           (list (gen-num)    'numberp))))
+  (lambda (lst f)
+    (should (not (any-which lst (compose 'not f))))))
