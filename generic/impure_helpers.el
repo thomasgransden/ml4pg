@@ -7,19 +7,23 @@
 (defmacro concat-to (name lst)
   `(setf ,name (concat ,name ,lst)))
 
-(defun process-with-cmd (cmd stdin &rest args)
-  "Run command 'cmd', with string 'stdin' as its stdin. Additional arguments for
-   'cmd' can be supplied after 'stdin'. Returns the stdout as a string."
+(defun process-with-cmd (cmd stdin &optional handler &rest args)
+  "Run command CMD, with string STDIN as its stdin. ARGS can contain additional
+   arguments for CMD. Returns the stdout as a string. If the exist code is
+   nonzero, it will be passed to HANDLER. If HANDLER is nil, an error occurs."
   (with-temp-buffer
     (insert stdin)
-    (apply 'call-process-region (append (list (point-min)
-                                              (point-max)
-                                              cmd
-                                              t
-                                              t
-                                              nil)
-                                        args))
-    (buffer-string)))
+    (let ((code (apply 'call-process-region (append (list (point-min)
+                                                          (point-max)
+                                                          cmd
+                                                          t
+                                                          t
+                                                          nil)
+                                                    args))))
+      (if (equal 0 code)
+          (buffer-string)
+          (if handler (funcall handler code)
+                      (error "Command %s failed with code %s" cmd code))))))
 
 (defun import-thing (type name)
   (with-temp-buffer

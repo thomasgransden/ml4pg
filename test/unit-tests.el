@@ -1,8 +1,6 @@
-;; Unit tests for ML4PG
-
-;; We only focus on plain Coq for now. Feel free to add SSReflect tests!
-
-;; Test string helper functions
+;; Unit tests for ML4PG, mainly exercising high-level, complex functions.
+;; As much as possible, these functions should be broken down into simple,
+;; pure functions, with separate tests.
 
 (test-with lookup-type-id
   "Looks up types in an assoc list"
@@ -23,8 +21,6 @@
     (should (equal (get-type-id-aux (concat name " : " type " "))
                    type))))
 
-;; The meaty functions
-
 (test-with append-hyp
   "Check we can append to the hypothesis"
   (list-of (gen-list (gen-string)) (gen-string))
@@ -44,6 +40,10 @@
 
 (test-with extract-defs-empty
   "Test extracting definitions from an empty buffer"
-  nil
   (lambda ()
-    (ml4pg-load-and-extract-info "" (lambda () (dependencygraph-defs-aux)))))
+    (list (ml4pg-load-and-extract-info "" 'dependencygraph-defs-aux)))
+  (lambda (result)
+    (should (tree-of-numbers result))
+    (process-with-cmd "dot" (clusterofseveral-pure result
+                                                   tables-definitions
+                                                   number-of-defs))))

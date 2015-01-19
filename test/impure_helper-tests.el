@@ -12,6 +12,7 @@
      (should (equal "b\nd\nf\ni\n"
                     (process-with-cmd "grep"
                                       "abcd\nefghijk"
+                                      nil
                                       "-o"
                                       "[bdfi]")))))
 

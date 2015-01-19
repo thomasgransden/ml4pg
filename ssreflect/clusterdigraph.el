@@ -11,17 +11,6 @@
 (defun clusterofseveral (lol)
   (clusterofseveral-pure lol tables-definitions number-of-defs))
 
-(defun clusterofseveral-pure (lol tbl defs)
-  (clusterofseveral-aux (clusterofone lol 1 tbl defs)))
-
-(defun show-diagram-clusters-aux (text)
-  "Turns the given dot code into a PNG with an image map, and return a HTML
-   page containing this image"
-  (let* ((map (process-with-cmd "dot" text "-Tcmap"))
-         (png (process-with-cmd "dot" text "-Tpng"))
-         (b64 (process-with-cmd "base64" png)))
-    (createwebpage map b64)))
-
 (defun show-diagram-clusters (text)
   "Render the given dot code into a HTML file and open it"
   (let ((path (make-temp-file "ml4pg-clusters" nil ".html")))
@@ -33,43 +22,6 @@
   (show-diagram-clusters (clusterofseveral-pure lol
                                                 tables-definitions
                                                 number-of-defs)))
-
-(defun replacecluster (cluster1 cluster2)
-  (if (endp cluster2)
-      (list cluster1)
-    (if (listp (car cluster2))
-        (if (issubcluster cluster1 (car cluster2))
-            (cons (replacecluster cluster1 (car cluster2))
-                  (cdr cluster2))
-          (cons (car cluster2)
-                (replacecluster cluster1 (cdr cluster2))))
-      (if (member (car cluster2)
-                  cluster1)
-          (replacecluster cluster1 (cdr cluster2))
-        (cons (car cluster2)
-              (replacecluster cluster1 (cdr cluster2)))))))
-
-(defun replace-subclusters (cluster)
-  `(lambda (elem)
-     (if (issubcluster ',cluster elem)
-         (replacecluster ',cluster elem)
-         elem)))
-
-(defun subclusters (cluster clusters)
-  "Return a copy of CLUSTERS which contains CLUSTER as an element"
-  (cond ((member cluster clusters)
-         clusters)
-
-        ((any-which clusters 'issubcluster cluster)
-         (mapcar (replace-subclusters cluster) clusters))
-
-        (t
-         (append clusters (list cluster)))))
-
-(defun subclustersseveral (clusters1 clusters2)
-  (let ((result clusters2))
-    (dolist (elem clusters1 result)
-      (setf result (subclusters elem result)))))
 
 (defun dependencygraph-defs-aux ()
   (subclustersseveral (dependencygraph-defs-get-cluster 2 5)

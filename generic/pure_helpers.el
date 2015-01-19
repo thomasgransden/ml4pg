@@ -57,18 +57,6 @@
     (dolist (element lst result)
       (setq result (max (length element) result)))))
 
-(defun createwebpage (map b64)
-  (format "<head>
-             <title>Dependency Diagram</title>
-           </head>
-           <body>
-             <img src='data:image/png;base64,%s' usemap='#depend' />
-             <map id='depend' name='depend'>%s</map>
-           </body>" b64 map))
-
-(defun clusterofseveral-aux (txt)
-  (concat "digraph {\n rankdir=LR;\n" txt "\n}"))
-
 (defun join-strings (strs sep)
   "Concatenate STRS together, separated by SEP"
   (mapconcat 'identity strs sep))
@@ -94,29 +82,6 @@
                (setf lib (car (car defs))))
       (setf acc (+ acc (cadr (car defs)))))))
 
-(defun clusterofone-node (elem tbl defs counter)
-  (format "subgraph cluster%s {\n%s\n}\n"
-          counter (clusterofone elem (1+ counter) tbl defs)))
-
-(defun clusterofone-leaf (elem tbl defs next)
-  (let ((first  (nth-of elem tbl))
-        (second (library-belong-aux (1- elem) defs)))
-    (if (listp next)
-        (format "%s [URL=\"./%s.html\"];\n"
-                first second)
-      (format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n"
-              first second first first (nth-of next tbl)))))
-
-(defun clusterofone (lst counter tbl defs)
-  (do ((temp lst (cdr temp))
-       (res ""))
-      ((endp temp) res)
-    (let ((elem (car temp)))
-      (concat-to res (if (listp elem)
-                         (clusterofone-node elem tbl defs counter)
-                       (clusterofone-leaf elem tbl defs
-                                          (when (cdr temp) (cadr temp))))))))
-
 (defun replace-nth (list index elem)
   "Return a copy of LIST, with element INDEX replaced with ELEM"
   (let ((new nil))
@@ -125,12 +90,6 @@
                           elem
                         (nth n list))
                       new)))))
-
-(defun issubcluster (cluster1 cluster2)
-  (let (missing)
-    (dolist (elem cluster1 (not missing))
-      (setq missing (or missing
-                        (not (member elem cluster2)))))))
 
 (defun compose (&rest funcs)
   (unless funcs (error "Nothing to compose"))
@@ -163,3 +122,8 @@
   "Apply F to all elements of LST and see if any returned non-nil.
    Optionally, additional ARGS will be passed to F as initial args."
   (any (mapcar (apply 'apply-partially (cons f args)) lst)))
+
+(defun tree-of-numbers (x)
+  "Returns nil if X is not a number or a list of (list of...) numbers"
+  (or (numberp x)
+      (and (listp x) (all (mapcar 'tree-of-numbers x)))))

@@ -23,7 +23,7 @@
   (mapc (load-els "ssreflect")
         '("term-tree-definition" "term-tree-theorem" "extraction"
           "table-to-feature-vector" "weka-definitions" "storage-defs" "diagraph"
-          "clusterdigraph" "trees")))
+          "clusterdigraph" "graph_pure" "trees")))
 
 (defun ml4pg-load-ss ()
   (mapc (loads-els "generic")
@@ -33,7 +33,7 @@
           "shortcuts" "menus" "storage" "save_lemmas" "weka"
           "term-tree-definition" "term-tree-theorem" "extraction"
           "table-to-feature-vector" "weka-definitions" "storage-defs"
-          "automaton" "diagraph" "clusterdigraph" "trees")))
+          "automaton" "diagraph" "clusterdigraph" "graph_pure" "trees")))
 
 (defun select-mode ()
   (interactive)
