@@ -50,12 +50,11 @@
 
 (test-with extract-defs-theorem
   "Try extracting definitions given a single theorem."
-  nil
-  ;; (compose (lambda (str)
-  ;;            (message "THM:\n%s" str)
-  ;;            (list str
-  ;;                  (ml4pg-load-and-extract-info str 'dependencygraph-defs-aux)))
-  ;;          (gen-coq-correct-theorem))
+  (compose (lambda (str)
+             (message "THM:\n%s" str)
+             (list str
+                   (ml4pg-load-and-extract-info str 'dependencygraph-defs-aux)))
+           (gen-coq-correct-theorem))
   (lambda (str result)
     (message "STR:\n%s\nRESULT:\n%s\n" str result)))
 
