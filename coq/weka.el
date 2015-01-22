@@ -20,13 +20,6 @@
              " weka.attributeSelection.CfsSubsetEval -M -s \"weka.attributeSelection.BestFirst -D 1 -N 5\" -i "
              (expand-file-name "temp3.arff") " > " (expand-file-name "res.txt"))) ))
 
-(defun 0_n (n)
-  (do ((i 0 (1+ i))
-       (temp nil))
-      ((= i n) temp)
-      (setf temp (append temp (list (list i nil))))))
-
-
 (defun read-lines (file)
   "Return a list of lines in FILE."
   (with-temp-buffer
@@ -34,11 +27,3 @@
     (split-string
      (buffer-string) "\n" t)
     ))
-
-
-(defun lines-to-clusters (lines)
-  (do ((temp lines (cdr temp))
-       (temp2 nil))
-      ((endp temp) temp2)
-      (setf temp2 (append temp2 (list (string-to-number (subseq (car temp) (+ 7 (search "cluster" (car temp) :from-end t)))))))
-      ))

@@ -20,9 +20,3 @@
     (insert-file-contents file)
     (split-string
      (buffer-string) "\n" t)))
-
-(defun lines-to-clusters (lines)
-  (do ((temp lines (cdr temp))
-       (temp2 nil))
-      ((endp temp) temp2)
-      (setf temp2 (append temp2 (list (string-to-number (subseq (car temp) (+ 7 (search "cluster" (car temp) :from-end t)))))))))

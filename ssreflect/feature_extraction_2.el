@@ -1043,25 +1043,11 @@
 
 
 
-
-
-(defun print-list (list)
-  (do ((temp list (cdr temp))
-       (temp2 ""))
-      ((endp temp) (subseq temp2 0 (1- (length temp2))))
-    (cond ((equal (car temp) 1.0e+INF) (setf temp2 (concat temp2 (format "%s," 100)) ))
-      ((equal (car temp) -1.0e+INF) (setf temp2 (concat temp2 (format "%s," -100)) ))
-      (t (setf temp2 (concat temp2 (format "%s," (car temp))) )))))
-
-
 (defun last-part-of-lists (list)
   (do ((temp list (cdr temp))
        (temp2 nil))
       ((endp temp) temp2)
       (setf temp2 (append temp2 (list (cadar temp))))))
-
-
-
 
 (defun extract-features-1 ()
   (let ((fm (longest-theorem)))

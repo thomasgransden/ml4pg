@@ -37,14 +37,21 @@
 (defun ml4pg-increase-complexity (&rest args)
   (setq ml4pg-test-complexity (* 2 ml4pg-test-complexity)))
 
-(defun ml4pg-record-args (args)
-  "Show a test's arguments in the *Messages* buffer, without echoing."
+(defun write-to-messages (f)
+  "Run F in the context of a writable *Messages* buffer"
   (save-excursion
     (set-buffer "*Messages*")
     (goto-char (point-max))
     (let ((buffer-read-only nil))
+      (funcall f))))
+
+(defun ml4pg-record-args (args)
+  "Show a test's arguments (ARGS) in the *Messages* buffer, without echoing.
+   Returns the ARGS."
+  (write-to-messages
+   `(lambda ()
       (insert (format "Arguments:\n%s\n"
-                      (join-strings (mapcar 'any-to-string args) "\n")))))
+                      (join-strings (mapcar 'any-to-string ',args) "\n")))))
   args)
 
 (defun ml4pg-run-a-test (name test &optional generator)

@@ -10,11 +10,11 @@
 ;;        I don't know if this whole system will fall over with lexical scope...
 (defun load-els (dir)
   `(lambda (f)
-     (load-file (concat home-dir ,dir "/" f ".el"))))
+     (load-file (concat home-dir ,dir "/" f (if (search ".el" f) "" ".el")))))
 
 (defun ml4pg-load-coq ()
   (mapc (load-els "generic")
-        '("pure_helpers" "impure_helpers"))
+        (directory-files (concat home-dir "generic/") nil ".*\.el"))
   (mapc (load-els "coq")
         '("auxiliary_files" "feature_extraction_pure"
           "feature_extraction_commands" "feature_extractionv2"
@@ -50,7 +50,8 @@
   (coq-mode)
   (when noninteractive
     (coq-build-prog-args)  ;; PG assumes coqtop will never run non-interactively
-    (setq proof-shell-fiddle-frames nil)))  ;; Don't alter non-existent windows
+    (setq proof-shell-fiddle-frames nil)  ;; Don't alter non-existent windows
+    (setq proof-three-window-enable nil)))
 
 (defun ml4pg-mode ()
   (ml4pg-mode-aux)

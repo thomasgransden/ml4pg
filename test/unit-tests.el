@@ -47,3 +47,59 @@
     (process-with-cmd "dot" (clusterofseveral-pure result
                                                    tables-definitions
                                                    number-of-defs))))
+
+(test-with extract-defs-theorem
+  "Try extracting definitions given a single theorem."
+  nil
+  ;; (compose (lambda (str)
+  ;;            (message "THM:\n%s" str)
+  ;;            (list str
+  ;;                  (ml4pg-load-and-extract-info str 'dependencygraph-defs-aux)))
+  ;;          (gen-coq-correct-theorem))
+  (lambda (str result)
+    (message "STR:\n%s\nRESULT:\n%s\n" str result)))
+
+(test-with dependencygraph-statements-empty
+  "statements"
+           nil
+           (lambda ()
+             (list (ml4pg-load-and-extract-info ""
+                                                'dependencygraph-statements-aux))))
+
+(test-with dependencygraph-proof-empty
+  "proofs"
+  nil
+  (lambda ()
+    (list (ml4pg-load-and-extract-info "" 'dependencygraph-proof))))
+
+(test-with showtreegraphthm-empty
+  "tree"
+  nil
+  (lambda ()
+    (list (ml4pg-load-and-extract-info ""
+                                       (lambda () (showtreegraphthm-aux ""))))))
+
+(test-with show-cluster-bis-empty
+  "clusters"
+  nil
+  (lambda () 'show-clusters-bis))
+
+(test-with cluster-definitions-empty
+  "clusterdefs"
+  nil
+  (lambda () (list (ml4pg-load-and-extract-info "" 'cluster-definitions))))
+
+(test-with show-clusters-of-theorem-empty
+  "clustertheorems"
+  nil
+  (lambda () (list (ml4pg-load-and-extract-info "" 'show-clusters-of-theorem))))
+
+(test-with save-numbers-empty
+  "savenumbers"
+  nil
+  (lambda () (list (ml4pg-load-and-extract-info "" 'save-numbers))))
+
+(test-with exported-libraries-empty
+  "clusterlibs"
+  nil
+  (lambda () (list (ml4pg-load-and-extract-info "" 'exported-libraries))))

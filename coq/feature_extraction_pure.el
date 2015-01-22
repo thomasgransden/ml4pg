@@ -140,10 +140,13 @@
       (cons 0 (generate-zeros-aux (1- n)))))
 
 (defun print-list (list)
-  (do ((lst list (cdr lst))
-       (str ""))
-      ((endp lst) (subseq str 0 (1- (length str))))
-    (concat-to str (format "%s," (car lst)))))
+  (let ((str ""))
+    (dolist (elem list (if (string= str "")
+                           ""
+                           (subseq str 0 (1- (length str)))))
+      (concat-to str (format "%s," (cond ((equal elem  1.0e+INF)  100)
+                                         ((equal elem -1.0e+INF) -100)
+                                         (t                      elem)))))))
 
 (defun extract-features-2 (list)
   (do ((feature-list list (cdr feature-list))

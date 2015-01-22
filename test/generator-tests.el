@@ -89,3 +89,9 @@
     (should (booleanp (nth 0 generated)))
     (should (stringp  (nth 1 generated)))
     (should (numberp  (nth 2 generated)))))
+
+(test-with gen-coq-correct-theorem-aux
+  "Test we can generate theorems with valid proofs"
+  (list-of (gen-coq-correct-theorem-aux))
+  (lambda (str)
+    (should (coqp str))))
