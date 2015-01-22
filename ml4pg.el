@@ -6,8 +6,6 @@
 
 (defvar mode nil)
 
-;; FIXME: We should use lexical scope. I used quote splicing instead because
-;;        I don't know if this whole system will fall over with lexical scope...
 (defun load-els (dir)
   `(lambda (f)
      (load-file (concat home-dir ,dir "/" f (if (search ".el" f) "" ".el")))))

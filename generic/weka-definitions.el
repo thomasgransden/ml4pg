@@ -7,66 +7,46 @@
   (switch-to-display)
   (weka-defs)
   (sleep-for 2)
-  (print-clusters-weka-defs (cond  ((eq 2 granularity-level)
-                                    (floor (length tables-definitions) 7))
-                                   ((eq 3 granularity-level)
-                                    (floor (length tables-definitions) 5))
-                                   ((eq 4 granularity-level)
-                                    (floor (length tables-definitions) 4))
-                                   ((eq 5 granularity-level)
-                                    (floor (length tables-definitions) 2))
-                                   (t (floor (length tables-definitions) 8)))))
+  (print-clusters-weka-defs (weka-defs-n granularity-level tables-definitions)))
+
+(defun weka-alg (a)
+  (cond ((string= "k" a) "SimpleKMeans")
+        ((string= "e" a) "EM")
+        ((string= "f" a) "FarthestFirst")))
+
+(defun append-headers (data)
+  (concat (read-file (concat home-dir "aux_files/headersdefs.txt")) data))
 
 (defun weka-thms ()
-  (let ((alg (cond ((string= "k" algorithm) "SimpleKMeans")
-                   ((string= "e" algorithm) "EM")
-                   ((string= "f" algorithm) "FarthestFirst")))
-        (n 0))
-    (shell-command (concat "rm " (expand-file-name "temp.csv")))
-    (with-temp-file (expand-file-name "temp.csv")
-      (insert (convert-all-thms-to-weka-format-several)))
-    (setf n (cond  ((eq 2 granularity-level) (floor (length tables-thms) 7))
-                   ((eq 3 granularity-level) (floor (length tables-thms) 5))
-                   ((eq 4 granularity-level) (floor (length tables-thms) 4))
-                   ((eq 5 granularity-level) (floor (length tables-thms) 2))
-                   (t (floor (length tables-thms) 8))))
+  (weka-defs-aux-aux algorithm
+                     'convert-all-thms-to-weka-format-several
+                     tables-thms))
 
-    (shell-command  (concat "sleep 1; cat " home-dir "aux_files/headersdefs.txt "
-                            (expand-file-name "temp.csv")
-                            " > "
-                            (expand-file-name "temp3.arff")))
-    (shell-command (concat "sleep 1; java -classpath "
-                           *weka-dir*
-                           " weka.filters.unsupervised.attribute.AddCluster -W \"weka.clusterers." alg " -N " (format "%s" n)
-                           " -S 42\" -I last -i "
-                           (expand-file-name "temp3.arff")
-                           " -o " (expand-file-name "out.arff")))
-    (shell-command (concat "tail -n +56 "
-                           (expand-file-name "out.arff")
-                           " > " (expand-file-name "out_bis.arff")))
-
-    (if whysimilar
-        (shell-command (concat "java -classpath "
-                               *weka-dir*
-                               " weka.attributeSelection.InfoGainAttributeEval -s \"weka.attributeSelection.Ranker -T 0 -N 5\" -i "
-                               (expand-file-name "out.arff")
-                               " > " (expand-file-name "whysimilar.txt"))))))
+(defun why-similar (data)
+  (process-with-cmd "java" data nil
+                    "-classpath" *weka-dir*
+                    "weka.attributeSelection.InfoGainAttributeEval"
+                    "-s" "weka.attributeSelection.Ranker -T 0 -N 5"))
 
 (defun weka (n)
-  (let ((alg (cond ((string= "k" algorithm) "SimpleKMeans")
-                   ((string= "e" algorithm) "EM")
-                   ((string= "f" algorithm) "FarthestFirst"))))
-    (shell-command  (concat "sleep 1; cat " home-dir "aux_files/headers.txt " (expand-file-name "temp.csv") " > " (expand-file-name "temp3.arff")))
-    (shell-command (concat "java -classpath "
-                           *weka-dir*
-                           " weka.filters.unsupervised.attribute.AddCluster -W \"weka.clusterers." alg " -N " (format "%s" n) " -S 42\" -I last -i "
-                           (expand-file-name "temp3.arff") " -o " (expand-file-name "out.arff")))
-    (shell-command (concat "tail -n +37 "
-                           (expand-file-name "out.arff") " > " (expand-file-name "out_bis.arff")))
-    (shell-command (concat "java -classpath "
-                           *weka-dir*
-                           " weka.attributeSelection.CfsSubsetEval -M -s \"weka.attributeSelection.BestFirst -D 1 -N 5\" -i "
-                           (expand-file-name "temp3.arff") " > " (expand-file-name "res.txt")))))
+  (let* ((alg     (weka-alg algorithm))
+         (headers (read-file (concat home-dir "aux_files/headers.txt")))
+         (temp    (read-file (expand-file-name "temp.csv")))
+         (temp3   (concat headers temp))
+         (out     (process-with-cmd "java" temp3 nil
+                                    "-classpath" *weka-dir*
+                                    "weka.filters.unsupervised.attribute.AddCluster"
+                                    " -W" (concat "weka.clusterers." alg
+                                                  " -N " (format "%s" n)
+                                                  " -S 42")
+                                    "-I" "last"))
+         (out_bis (process-with-cmd "tail" out nil
+                                    "-n" "+37"))
+         (res     (process-with-cmd "java" temp3 nil
+                                    "-classpath" *weka-dir*
+                                    "weka.attributeSelection.CfsSubsetEval"
+                                    "-M"
+                                    "-s" "weka.attributeSelection.BestFirst -D 1 -N 5")))))
 
 (defun read-lines (file)
   "Return a list of lines in FILE."

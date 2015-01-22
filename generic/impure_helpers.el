@@ -183,44 +183,36 @@
                                                           elem
                                                           :from-end t)))))))))
 
+(defun weka-defs-cmd (data alg n)
+  (process-with-cmd "java" data nil
+                    "-classpath" *weka-dir*
+                    "weka.filters.unsupervised.attribute.AddCluster"
+                    "-W" (concat "weka.clusterers." alg
+                                 " -N " (format "%s" n)
+                                 " -S 42")
+                    "-I" "last"))
+
 (defun weka-defs-aux (algorithm)
-  (let ((alg (cond ((string= "k" algorithm) "SimpleKMeans")
-                   ((string= "e" algorithm) "EM")
-                   ((string= "f" algorithm) "FarthestFirst")))
-        (n   0))
+  (weka-defs-aux-aux algorithm
+                     'convert-all-definitions-to-weka-format-several
+                     tables-definitions))
 
-    (with-temp-file (expand-file-name "temp.csv")
-      (insert (convert-all-definitions-to-weka-format-several)))
-    (setf n (weka-defs-n n granularity-level tables-definitions))
-
-    (sit-for 1)
-
-    (let* ((headers (read-file (concat home-dir  "aux_files/headersdefs.txt")))
-           (temp    (read-file (expand-file-name "temp.csv")))
-           (temp3   (concat headers temp))
-           (out     (process-with-cmd "java" temp3 nil
-                                      "-classpath" *weka-dir*
-                                      "weka.filters.unsupervised.attribute.AddCluster"
-                                      "-W" (concat "weka.clusterers." alg
-                                                   " -N " (format "%s" n)
-                                                   " -S 42")
-                                      "-I" "last"))
-           (out_bis (process-with-cmd "tail" out nil
-                                      "-n" "+56")))
-      (if whysimilar
-          (shell-command (concat "java -classpath "
-                                 *weka-dir*
-                                 " weka.attributeSelection.InfoGainAttributeEval "
-                                 "-s \"weka.attributeSelection.Ranker -T 0 -N 5\" < "
-                                 (expand-file-name "out.arff")
-                                 " > "
-                                 (expand-file-name "whysimilar.txt")))))))
+(defun weka-defs-aux-aux (algorithm convert tbl)
+  (let* ((alg     (weka-alg algorithm))
+         (n       0)
+         (temp3   (append-headers (funcall convert)))
+         (n       (weka-defs-n granularity-level tbl))
+         (out     (weka-defs-cmd temp3 alg n))
+         (out_bis (process-with-cmd "tail" out nil
+                                    "-n" "+56")))
+    (if whysimilar
+        (let ((whysimilar (why-similar out)))))))
 
 (defun weka-defs ()
   (shell-command (concat "rm " (expand-file-name "temp.csv")))
   (weka-defs-aux algorithm))
 
-(defun weka-defs-n (n gl td)
+(defun weka-defs-n (gl td)
   (let ((d (case gl
              (2 7)
              (3 5)
