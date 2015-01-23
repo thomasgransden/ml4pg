@@ -71,23 +71,24 @@
 
 (defun export-theorem ()
   (interactive)
-  (progn (setf tdl1         nil
-               tdl2         nil
-               tdl3         nil
-               tdl4         nil
-               tdl5         nil
-               intro        nil
-               case         nil
-               simpltrivial nil
-               induction    nil
-               simpl        nil
-               rewrite      nil
-               trivial      nil
-               hypothesis   nil
-               goal-level   nil)
-         (init-lemmas)
-         (export-theorem-aux nil "" 1 1 0)
-         (do-unset-printing)))
+  (setf tdl1         nil
+        tdl2         nil
+        tdl3         nil
+        tdl4         nil
+        tdl5         nil
+        intro        nil
+        case         nil
+        simpltrivial nil
+        induction    nil
+        simpl        nil
+        rewrite      nil
+        trivial      nil
+        hypothesis   nil
+        goal-level   nil)
+  (init-lemmas)
+  (let ((result (export-theorem-aux nil "" 1 1 0)))
+    (do-unset-printing)
+    result))
 
 (defun get-type-id (object)
   "A function to obtain the type associated with an object"
@@ -97,9 +98,9 @@
   (cdr (or (assoc id types)
            (cons nil -4))))
 
-(defun get-top-symbol ()
+(defun get-top-symbol (&optional handler)
   "Obtain the value of a top symbol"
-  (get-top-symbol-aux (do-goal-str (lambda (x) nil))))
+  (get-top-symbol-aux (do-goal-str handler)))
 
 (defun get-obj-intro ()
   "In some cases the intro tactic does not have parameters. This obtains the
@@ -529,22 +530,23 @@
              (ignore-errors (addthm name)))
 
           (t
-           (let ((try-ts (get-top-symbol)))
+           (let ((try-ts (get-top-symbol (lambda (x) nil))))
              (when try-ts
                (setf ts try-ts)
                (setf ng (get-number-of-goals))
                (proof-assert-next-command-interactive)
                (setf ng2 (get-number-of-goals))
-               (let ((arg (look-through-commands cmd result ts current-level)))
+               (let ((arg (look-through-commands cmd result ts current-level))
+                     (j   (1+ i)))
                  (cond
                   ((< ng ng2)
-                   (export-theorem-aux arg name (1+ current-level) (1+ current-level) (1+ i)))
+                   (export-theorem-aux arg name (1+ current-level) (1+ current-level) j))
 
                   ((< ng2 ng)
-                   (export-theorem-aux arg name current-level      dot-level          (1+ i)))
+                   (export-theorem-aux arg name current-level      dot-level          j))
 
                   (t
-                   (export-theorem-aux arg name (1+ current-level) dot-level          (1+ i)))))))))))
+                   (export-theorem-aux arg name (1+ current-level) dot-level          j))))))))))
 
 (defun look-through-commands (cmd start-result ts current-level)
   (do ((cmds       (list-of-commands cmd)
@@ -666,11 +668,15 @@
   "Extract the information from all the theorems up to a point"
   (interactive)
   (let ((final         (point))
-        (current-level 1))
-    ;; FIXME: This assumes we have a theorem to extract!
-    (export-theorem)
-    (while (< (point) final)
-      (export-theorem)))
+        (current-level 1)
+        (pre           (proof-queue-or-locked-end))
+        (export-theorem)
+        (post          (proof-queue-or-locked-end)))
+    (while (and (>  post   pre)
+                (< (point) final))
+      (export-theorem)
+      (setq pre  post)
+      (setq post (proof-queue-or-locked-end))))
   (setf saved-theorems (remove-nil-cases)))
 
 (defun remove-nil-cases ()

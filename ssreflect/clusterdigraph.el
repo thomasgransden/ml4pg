@@ -167,6 +167,9 @@
   (show-diagram-clusters (clusterofseveral-proof lol)))
 
 (defun dependencygraph-proof ()
+  (showclustergraph-proof (dependencygraph-proof-aux)))
+
+(defun dependencygraph-proof-aux ()
   (interactive)
   (if libs-menus
       (progn (with-temp-file (expand-file-name "temp.csv")
@@ -198,8 +201,8 @@
                                                                            2))
                                         (floor (size-temp)
                                                2))))
-    (showclustergraph-proof (subclustersseveral (removenil (remove-if-empty clusters3))
-                                                (removenil (remove-if-empty clusters1))))))
+    (subclustersseveral (removenil (remove-if-empty clusters3))
+                        (removenil (remove-if-empty clusters1)))))
 
 (defun remove-if-empty-aux (lol thms)
   (let (result1)
@@ -210,4 +213,4 @@
             (setf result2 (cons elem2 result2))))))))
 
 (defun remove-if-empty (lol)
-  (remove-if-empty lol saved-theorems))
+  (remove-if-empty-aux lol saved-theorems))

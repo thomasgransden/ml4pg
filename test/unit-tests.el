@@ -69,7 +69,7 @@
   "proofs"
   nil
   (lambda ()
-    (list (ml4pg-load-and-extract-info "" 'dependencygraph-proof))))
+    (list (ml4pg-load-and-extract-info "" 'dependencygraph-proof-aux))))
 
 (test-with showtreegraphthm-empty
   "tree"

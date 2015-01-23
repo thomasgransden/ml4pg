@@ -79,7 +79,7 @@
 (defun coq-namep (n)
   (not (or (string= n "")
            (string-match "[^a-zA-Z0-9_]" n)
-           (string-match "[^a-zA-Z_]" (subseq n 0 1)))))
+           (string-match "[^a-zA-Z]" (subseq n 0 1)))))
 
 (defun gen-coq-name ()
   (gen-filtered (gen-nonempty-string) (lambda (x) (coq-namep x))))

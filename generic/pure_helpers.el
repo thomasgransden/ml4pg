@@ -133,3 +133,12 @@
     (dolist (elem list result)
       (unless (= (length elem) 1)
         (setf result (append result (list elem)))))))
+
+(defun remove-whitespaces (string)
+  (do ((temp0 string)
+       (jump (search "  " string))
+       (temp2 ""))
+      ((not jump) (concatenate 'string temp2 temp0))
+    (progn (setf temp2 (concatenate 'string temp2 (subseq temp0 0 jump) " "))
+           (setf temp0 (subseq temp0 (+ 2 jump)))
+           (setf jump (search "  " temp0)))))

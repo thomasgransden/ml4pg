@@ -10,19 +10,10 @@
   (do ((temp0 string)
        (jump (search "\n" string))
        (temp2 ""))
-      ((not jump) (concatenate 'string temp2 temp0)) 
+      ((not jump) (concatenate 'string temp2 temp0))
     (progn (setf temp2 (concatenate 'string temp2 (subseq temp0 0 jump) " "))
        (setf temp0 (subseq temp0 (1+ jump)))
        (setf jump (search "\n" temp0)))))
-
-(defun remove-whitespaces (string)
-  (do ((temp0 string)
-       (jump (search "  " string))
-       (temp2 ""))
-      ((not jump) (concatenate 'string temp2 temp0)) 
-    (progn (setf temp2 (concatenate 'string temp2 (subseq temp0 0 jump) " "))
-       (setf temp0 (subseq temp0 (+ 2 jump)))
-       (setf jump (search "  " temp0)))))
 
 (defun remove-argument (string)
   (subseq string 0 (search "Argument" string)))
@@ -88,7 +79,7 @@
        (setf temp0 (subseq temp0  (+ 1 (search "=> " temp0))))
        (setf ift (search "|" temp0)))))
 
- 
+
 (defun transform-length-1 (list)
   (do ((temp list (cdr temp))
        (temp2 nil))
@@ -97,11 +88,11 @@
     (if (equal (length (car temp)) 1)
         (setf temp2 (append temp2 (list (caar temp))))
       (setf temp2 (append temp2 (list (transform-length-1 (car temp))))))
-      (setf temp2 (append temp2 (list (car temp))))))) 
-     
+      (setf temp2 (append temp2 (list (car temp)))))))
 
 
-(defun replace-quote (term) 
+
+(defun replace-quote (term)
   (do ((temp0 term)
        (ift (search "'" term))
        (temp2 ""))
@@ -112,7 +103,7 @@
 
 
 (defun add-parentheses-match0 (term)
-  (concatenate 'string "(" 
+  (concatenate 'string "("
            (replace-quote (remove-arrow (remove-bar (add-parenthesis-match (remove-end (remove-with term))))))
         ")"))
 
@@ -128,18 +119,18 @@
 (defun string-to-list (str)
   (car (read-from-string str)))
 
-(defun definition-to-list-aux (term) 
+(defun definition-to-list-aux (term)
   (string-to-list (concatenate 'string "(" (subseq term (1+ (search "=" term))) ")")))
 
-(defun definition-to-list-let (term) 
-  (string-to-list (concatenate 'string "(nosimpl " (subseq term (+ 3 (search "in" term))) ")"))) 
+(defun definition-to-list-let (term)
+  (string-to-list (concatenate 'string "(nosimpl " (subseq term (+ 3 (search "in" term))) ")")))
 
 
-(defun  definition-to-list-fix (term) 
+(defun  definition-to-list-fix (term)
   (transform-match (subseq term (+ 2 (search ":=" term)))))
 
 
-(defun  definition-to-list-fun (term) 
+(defun  definition-to-list-fun (term)
   (if (search "match" term)
       (transform-match (subseq term (+ 2 (search "=>" term))))
   (string-to-list (concatenate 'string "("  (subseq term (+ 2 (search "=>" term))) ")"))))
@@ -168,7 +159,7 @@
 (defun variables-fun-fix (term)
   (concatenate 'string (variables-fun (subseq term (+ 3 (search "fun" term)) (search "=>" term))) " "
       (variables-fix (subseq term (+ 3 (search "fix" term))))))
-      
+
 
 
 (defun definition-variables (term)
@@ -189,7 +180,7 @@
 
 
 
-    
+
 
 
 (defvar listofdefinitions nil)
@@ -209,13 +200,13 @@
     (setf listofdefinitions (append listofdefinitions
                     (list (list 'definition (make-symbol name) (car (definition-to-list (car (clean-term term))))))))
     (setf listofvariables (append listofvariables
-                  (list (cadr (definition-to-list (car (clean-term term)))))))      
+                  (list (cadr (definition-to-list (car (clean-term term)))))))
     (if (search "None" iftable)
     nil
       (proof-shell-invisible-cmd-get-result (format "Add Printing If %s."
                           (subseq iftable (+ 1 (search ":" iftable))))))
     (proof-shell-invisible-cmd-get-result (format "Set Printing Notations."))
-    
+
     )
   )
 
@@ -228,10 +219,5 @@
   (do ((temp definitions-libraries (cdr temp))
        (temp2 variables-libraries (cdr temp2)))
       ((endp temp) nil)
-    (setf tables-definitions (append tables-definitions 
+    (setf tables-definitions (append tables-definitions
                      (list (build-table (extract-info (car temp) (car temp2))))))))
-
-
-
-
-

@@ -133,3 +133,11 @@
                            (list (gen-num)    'numberp))))
   (lambda (lst f)
     (should (not (any-which lst (compose 'not f))))))
+
+(test-with remove-whitespaces
+  "Can remove whitespace"
+  (list-of (gen-string-without " ")
+           (gen-string-without " "))
+  (lambda (pre post)
+    (should (equal (concat pre " " post)
+                   (remove-whitespaces (concat pre "  " post))))))

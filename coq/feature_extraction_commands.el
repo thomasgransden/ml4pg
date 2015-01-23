@@ -1,49 +1,56 @@
 ;; Sending commands to Coq
 
 (defun do-unset-printing ()
-  (proof-shell-invisible-cmd-get-result (format "Unset Printing All")))
+  (send-coq-cmd "Unset Printing All"))
 
 (defun do-check-object (object)
-  (proof-shell-invisible-cmd-get-result (concat "Check " object)))
+  (send-coq-cmd (concat "Check " object)))
 
 (defun do-set-printing ()
-  (proof-shell-invisible-cmd-get-result (format "Set Printing All")))
+  (send-coq-cmd "Set Printing All"))
 
 (defun do-focus-unsafe ()
-  (proof-shell-invisible-cmd-get-result "Focus"))
+  (send-coq-cmd "Focus"))
 
 (defun handle-error (msg)
   (message msg)
-  (if noninteractive (kill-emacs) (debug)))
+  (if noninteractive (kill-emacs)
+                     (debug)))
 
 (defun do-focus (&optional handler)
   (let ((result (do-focus-unsafe)))
     (if (search "Error:" result)
         (if handler (funcall handler result)
-                     (handle-error (format "Problem during focus: %s" result)))
+                    (handle-error (format "Problem during focus: %s" result)))
         result)))
 
 (defun do-show-intro ()
-  (proof-shell-invisible-cmd-get-result "Show Intro"))
+  (send-coq-cmd "Show Intro"))
 
 (defun do-intro ()
-  (proof-shell-invisible-cmd-get-result "intro"))
+  (send-coq-cmd "intro"))
 
 (defun do-intro-of (name)
-  (proof-shell-invisible-cmd-get-result (concat "intro " name)))
+  (send-coq-cmd (concat "intro " name)))
 
 (defun do-show-intros ()
-  (proof-shell-invisible-cmd-get-result (format "Show Intros")))
+  (send-coq-cmd "Show Intros"))
 
 (defun do-undo ()
-  (proof-shell-invisible-cmd-get-result (format "Undo")))
+  (send-coq-cmd "Undo"))
 
 (defun do-induction-on (name)
-  (proof-shell-invisible-cmd-get-result (concat "induction " name)))
+  (send-coq-cmd (concat "induction " name)))
 
 (defun do-show-proof ()
-  (proof-shell-invisible-cmd-get-result "Show Proof"))
+  (send-coq-cmd "Show Proof"))
 
 (defun do-goal-str (&optional handler)
   (do-set-printing)
   (goal-str-aux (do-focus handler)))
+
+(defun send-coq-cmd (str)
+  (message "SENDING: %s" str)
+  (let ((result (proof-shell-invisible-cmd-get-result str)))
+    (message "GOT: %s" result)
+    result))
