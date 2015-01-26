@@ -17,7 +17,7 @@
 ;;; Printing clusters
 
 (defun print-clusters-weka-defs (gra)
-  (let* ((clusters (extract-clusters-from-file-defs ))
+  (let* ((clusters (extract-clusters-from-file))
          (res1 (remove-nil (remove-alone (cdr (form-clusters clusters gra))))))
     (with-current-buffer "*display*"
       (erase-buffer)
@@ -39,7 +39,7 @@
                (insert (format "\n")))))))
 
 (defun print-clusters-weka-thms (gra)
-  (let* ((clusters (extract-clusters-from-file-defs ))
+  (let* ((clusters (extract-clusters-from-file))
          (res1 (remove-nil (remove-alone (cdr (form-clusters clusters gra))))))
     (with-current-buffer "*display*"
       (erase-buffer)
@@ -65,7 +65,7 @@
 ;;; Similarities for theorems
 
 (defun print-similarities-weka-defs (res name)
-  (let* ((clusters (extract-clusters-from-file-defs ))
+  (let* ((clusters (extract-clusters-from-file))
          (temp1 (clusters-of-n clusters (nth res clusters))))
     (progn
       (with-current-buffer "*display*"
@@ -97,7 +97,7 @@
 
 
 (defun print-similarities-weka-statement ()
-  (let* ((clusters (extract-clusters-from-file-defs ))
+  (let* ((clusters (extract-clusters-from-file))
          (temp1 (clusters-of-n clusters (nth 0 clusters))))
     (progn
       (with-current-buffer "*display*"

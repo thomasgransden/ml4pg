@@ -28,11 +28,26 @@
                       (dependencygraph-defs-get-cluster 5 3)))
 
 (defun dependencygraph-defs-get-cluster (divisor granularity-level)
-  (weka-defs)
-  (sleep-for 2)
-  (cdr (form-clusters (extract-clusters-from-file-defs )
-                      (floor (length tables-definitions)
-                             divisor))))
+  (dependencygraph-get-cluster-aux granularity-level
+                                   divisor
+                                   'weka-defs
+                                   tables-definitions))
+
+(defun dependencygraph-get-cluster-aux2 (granularity-level divisor func size extractor)
+  (let ((out_bis (funcall func)))
+    (sleep-for 2)
+    (cdr (form-clusters (funcall extractor)
+                        (floor (funcall size)
+                               divisor)))))
+
+(defun dependencygraph-get-cluster-aux (granularity-level divisor func tbl)
+  (dependencygraph-get-cluster-aux2 granularity-level
+                                    divisor
+                                    func
+                                    `(lambda () (length ',tbl))
+                                    'extract-clusters-from-file))
+
+(defun dependencygraph-proof-get-cluster-aux (granularity-))
 
 (defun dependencygraph-defs ()
   (interactive)
@@ -86,12 +101,12 @@
   (subclustersseveral (dependencygraph-statements-cluster 5 2)
                       (dependencygraph-statements-cluster 3 5)))
 
+
 (defun dependencygraph-statements-cluster (granularity-level divisor)
-  (weka-thms)
-  (sleep-for 2)
-  (cdr (form-clusters (extract-clusters-from-file-defs )
-                      (floor (length tables-thms)
-                             divisor))))
+  (dependencygraph-get-cluster-aux granularity-level
+                                   divisor
+                                   'weka-thms
+                                   tables-thms))
 
 ;;--------------------------------------------------
 ;; Cluster graph proofs
@@ -183,24 +198,17 @@
              (add-names))
     (with-temp-file (expand-file-name "temp.csv")
       (insert (extract-features-1))))
-  (let ((clusters1 nil)
-        (clusters3 nil))
-    (setf granularity-level 3)
-    (weka (floor (size-temp)
-                 5))
-    (sleep-for 2)
-    (setf clusters1 (cdr (form-clusters (extract-clusters-from-file (floor (size-temp)
-                                                                           5))
-                                        (floor (size-temp)
-                                               5))))
-    (setf granularity-level 5)
-    (weka (floor (size-temp)
-                 2))
-    (sleep-for 2)
-    (setf clusters3 (cdr (form-clusters (extract-clusters-from-file (floor (size-temp)
-                                                                           2))
-                                        (floor (size-temp)
-                                               2))))
+  (let* ((clusters3 nil)
+         (clusters1 (dependencygraph-get-cluster-aux2 3
+                                                      5
+                                                      (lambda () (weka (floor (size-temp) 5)))
+                                                      'size-temp
+                                                      'extract-clusters-from-file))
+         (clusters3 (dependencygraph-get-cluster-aux2 5
+                                                      2
+                                                      (lambda () (weka (floor (size-temp) 2)))
+                                                      'size-temp
+                                                      'extract-clusters-from-file)))
     (subclustersseveral (removenil (remove-if-empty clusters3))
                         (removenil (remove-if-empty clusters1)))))
 

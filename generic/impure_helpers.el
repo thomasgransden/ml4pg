@@ -89,14 +89,8 @@
        temp)
     (setf temp (append temp (list (clusters-of-n list i))))))
 
-(defun extract-clusters-from-file (clusters)
-  (let* ((temp (0_n clusters))
-         (lines (read-lines (expand-file-name "out_bis.arff"))))
-    (lines-to-clusters lines)))
-
-(defun extract-clusters-from-file-defs ()
-  (let* ((lines (read-lines1 (expand-file-name "out_bis.arff"))))
-    (lines-to-clusters lines)))
+(defun extract-clusters-from-file ()
+  (lines-to-clusters (read-lines (expand-file-name "out_bis.arff"))))
 
 (defun last-part-of-lists (list)
   (do ((temp list (cdr temp))
@@ -160,18 +154,9 @@
       (format "The function(s) of arity %s of the term-tree at depth level %s"  (1- arity) tdl))))
 
 (defun 0_n (n)
-  (do ((i 0 (1+ i))
-       (temp nil))
-      ((= i n) temp)
-    (setf temp (append temp (list (list i nil))))))
-
-(defun read-lines1 (file)
-  "Return a list of lines in FILE."
-  (with-temp-buffer
-    (insert-file-contents file)
-    (split-string
-     (buffer-string)
-     "\n" t)))
+  (let (temp)
+    (dotimes (i n temp)
+      (setf temp (append temp (list (list i nil)))))))
 
 (defun lines-to-clusters (lines)
   (let (result)

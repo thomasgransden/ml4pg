@@ -52,5 +52,4 @@
   "Return a list of lines in FILE."
   (with-temp-buffer
     (insert-file-contents file)
-    (split-string
-     (buffer-string) "\n" t)))
+    (split-string (buffer-string) "\n" t)))
