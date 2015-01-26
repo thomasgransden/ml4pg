@@ -33,10 +33,10 @@
                                    'weka-defs
                                    tables-definitions))
 
-(defun dependencygraph-get-cluster-aux2 (granularity-level divisor func size extractor)
+(defun dependencygraph-get-cluster-aux2 (granularity-level divisor func size)
   (let ((out_bis (funcall func)))
     (sleep-for 2)
-    (cdr (form-clusters (funcall extractor)
+    (cdr (form-clusters (extract-clusters-from-file-aux out_bis)
                         (floor (funcall size)
                                divisor)))))
 
@@ -44,8 +44,7 @@
   (dependencygraph-get-cluster-aux2 granularity-level
                                     divisor
                                     func
-                                    `(lambda () (length ',tbl))
-                                    'extract-clusters-from-file))
+                                    `(lambda () (length ',tbl))))
 
 (defun dependencygraph-proof-get-cluster-aux (granularity-))
 
@@ -202,13 +201,11 @@
          (clusters1 (dependencygraph-get-cluster-aux2 3
                                                       5
                                                       (lambda () (weka (floor (size-temp) 5)))
-                                                      'size-temp
-                                                      'extract-clusters-from-file))
+                                                      'size-temp))
          (clusters3 (dependencygraph-get-cluster-aux2 5
                                                       2
                                                       (lambda () (weka (floor (size-temp) 2)))
-                                                      'size-temp
-                                                      'extract-clusters-from-file)))
+                                                      'size-temp)))
     (subclustersseveral (removenil (remove-if-empty clusters3))
                         (removenil (remove-if-empty clusters1)))))
 

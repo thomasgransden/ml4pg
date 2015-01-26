@@ -46,7 +46,8 @@
                                     "-classpath" *weka-dir*
                                     "weka.attributeSelection.CfsSubsetEval"
                                     "-M"
-                                    "-s" "weka.attributeSelection.BestFirst -D 1 -N 5")))))
+                                    "-s" "weka.attributeSelection.BestFirst -D 1 -N 5")))
+    out_bis))
 
 (defun read-lines (file)
   "Return a list of lines in FILE."

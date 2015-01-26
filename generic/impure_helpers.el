@@ -90,7 +90,10 @@
     (setf temp (append temp (list (clusters-of-n list i))))))
 
 (defun extract-clusters-from-file ()
-  (lines-to-clusters (read-lines (expand-file-name "out_bis.arff"))))
+  (extract-clusters-from-file-aux (read-lines (expand-file-name "out_bis.arff"))))
+
+(defun extract-clusters-from-file-aux (str)
+  (lines-to-clusters str))
 
 (defun last-part-of-lists (list)
   (do ((temp list (cdr temp))
