@@ -89,9 +89,6 @@
        temp)
     (setf temp (append temp (list (clusters-of-n list i))))))
 
-(defun extract-clusters-from-file ()
-  (extract-clusters-from-file-aux (read-lines (expand-file-name "out_bis.arff"))))
-
 (defun extract-clusters-from-file-aux (str)
   (lines-to-clusters (string-split str "\n")))
 
@@ -196,7 +193,6 @@
     (if whysimilar
         (let ((whysimilar (why-similar out)))
           (write-whysimilar whysimilar)))
-    (write-out-bis out_bis)
     out_bis))
 
 (defun write-whysimilar (str)

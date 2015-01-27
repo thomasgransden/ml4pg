@@ -48,16 +48,11 @@
                                     "weka.attributeSelection.CfsSubsetEval"
                                     "-M"
                                     "-s" "weka.attributeSelection.BestFirst -D 1 -N 5")))
-    (write-out-bis out_bis)
     (write-res res)
     out_bis))
 
 (defun write-res (str)
   (with-temp-file (expand-file-name "res.txt")
-    (insert str)))
-
-(defun write-out-bis (str)
-  (with-temp-file (expand-file-name "out_bis.arff")
     (insert str)))
 
 (defun read-lines (file)
