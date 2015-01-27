@@ -390,17 +390,6 @@
   (list 'lambda '(x)
         (list 'generate-automaton l)))
 
-(defun insert-button-automaton2 (l l2)
-  (progn (insert-button "automaton" 'action (insert-button-automaton-macro2 (list 'quote l)
-                                                                            (list 'quote l2))
-                        'face (list 'link)
-                        'follow-link t)))
-
-(defun insert-button-automaton-macro2 (l l2)
-  (list 'lambda '(x)
-        (list 'generate-automaton2 l l2)))
-
-
 (defun remove_last_colon (str)
   (if (string= (subseq str (1- (length str)))
                ":")
@@ -429,8 +418,7 @@
                  (concat "load " (expand-file-name "temp.csv")
                      (format "; %s(temp,%s,%s,'%s'); csvwrite('%s',1)\n" alg gra (1+ (length saved-theorems))
                          (expand-file-name "matlab_res.txt") (expand-file-name "available.txt"))))
-     (print-similarities-matlab)
-          )))
+     (print-similarities-matlab))))
 
 (defun show-clusters-of-theorem ()
   (interactive)
@@ -449,9 +437,10 @@
   (setq my-buffer "")
   (setf buf (current-buffer))
   (setf res (extract-info-up-to-here))
-  (with-temp-file (expand-file-name "temp.csv") (cond ((string= level "g") (insert (extract-features-1-bis res)))
-                                                      ((string= level "t") (insert (extract-features-2-bis tactic-temp tactic-level)))
-                                                      ((string= level "p") (insert (extract-features-2-bis proof-tree-temp proof-tree-level)))))
+  (with-temp-file (expand-file-name "temp.csv")
+    (cond ((string= level "g") (insert (extract-features-1-bis res)))
+          ((string= level "t") (insert (extract-features-2-bis tactic-temp tactic-level)))
+          ((string= level "p") (insert (extract-features-2-bis proof-tree-temp proof-tree-level)))))
   (if libs-menus
       (progn (add-libraries-temp)
              (add-names)))
@@ -494,21 +483,16 @@
           (switch-to-display)
           (require 'comint)
           (comint-send-string (get-buffer-process "*matlab*")
-                      (concat "load " (expand-file-name "temp1.csv") (format "; %s(temp1,%s,%s)\n" alg gra freq))))
-    )))
-
-
-
+                      (concat "load " (expand-file-name "temp1.csv") (format "; %s(temp1,%s,%s)\n" alg gra freq)))))))
 
 (defun size-temp ()
   (shell-command  (concat "wc -l " (expand-file-name "temp.csv")))
   (let ((n nil)
-    (i 0))
-  (with-current-buffer "*Shell Command Output*"
-    (beginning-of-buffer)
-    (setq n (string-to-number (format "%s"  (read (current-buffer))))))
-  n
-  ))
+        (i 0))
+    (with-current-buffer "*Shell Command Output*"
+      (beginning-of-buffer)
+      (setq n (string-to-number (format "%s"  (read (current-buffer))))))
+    n))
 
 
 (defun show-clusters-bis ()
@@ -528,32 +512,27 @@
     (setf signal 4)
     (setf my-buffer "")
     (setf buf (current-buffer))
-    (if libs-menus
-    (progn (with-temp-file (expand-file-name "temp.csv")  (cond ((string= level "g") (insert (extract-features-1)))
-                                     ((string= level "t") (insert (extract-features-2 tactic-level)))
-                                     ((string= level "p") (insert (extract-features-2 proof-tree-level)))))
-           (add-libraries-temp)
-           (add-names))
-      (with-temp-file (expand-file-name "temp.csv") (insert (extract-features-1))))
+    (dependencygraph-proof-writetmp)
     (switch-to-display)
     (cond ((string= ml-system "m")
-       (progn
-         (shell-command  (concat "echo 0 > " (expand-file-name "available.txt")))
-         (require 'comint)
-         (comint-send-string (get-buffer-process "*matlab*")
-                 (concat "load " (expand-file-name "temp.csv") (format "; %s(temp,%s,%s,'%s'); csvwrite('%s',1)\n" alg gra freq
-                                                 (expand-file-name "matlab_res.txt") (expand-file-name "available.txt"))))
-          (print-clusters-matlab)))
-      ((string= ml-system "w")
-       (progn (setq n (size-temp))
-              (setf gra (floor n (case granularity-level
-                                   (2 7)
-                                   (3 5)
-                                   (4 4)
-                                   (5 2)
-                                   (t 8))))
-              (setf signal 5)
-              (print-clusters-weka gra (weka gra)))))))
+           (progn
+             (shell-command  (concat "echo 0 > " (expand-file-name "available.txt")))
+             (require 'comint)
+             (comint-send-string (get-buffer-process "*matlab*")
+                                 (concat "load " (expand-file-name "temp.csv") (format "; %s(temp,%s,%s,'%s'); csvwrite('%s',1)\n" alg gra freq
+                                                                                       (expand-file-name "matlab_res.txt") (expand-file-name "available.txt"))))
+             (print-clusters-matlab)))
+
+          ((string= ml-system "w")
+           (progn (setq n (size-temp))
+                  (setf gra (floor n (case granularity-level
+                                       (2 7)
+                                       (3 5)
+                                       (4 4)
+                                       (5 2)
+                                       (t 8))))
+                  (setf signal 5)
+                  (print-clusters-weka gra (weka gra)))))))
   (proof-shell-invisible-cmd-get-result (format "Unset Printing All")))
 
 (defun add-libraries ()
@@ -564,24 +543,22 @@
         ((string= level "p") (shell-command  (concat "cat " home-dir "libs/ssreflect/" (car temp) "_tree.csv >> " (expand-file-name "temp1.csv")))))))
 
 (defun add-libraries-temp ()
-  (do ((temp libs-menus (cdr temp)))
-      ((endp temp) nil)
-      (cond ((string= level "g") (shell-command  (concat "cat " home-dir "libs/ssreflect/" (car temp) ".csv >> " (expand-file-name "temp.csv"))))
-        ((string= level "t") (shell-command  (concat "cat " home-dir "libs/ssreflect/" (car temp) "_tactics.csv >> " (expand-file-name "temp.csv"))))
-        ((string= level "p") (shell-command  (concat "cat " home-dir "libs/ssreflect/" (car temp) "_tree.csv >> " (expand-file-name "temp.csv")))))))
+  (let ((tmp  (expand-file-name "temp.csv"))
+        (pre  (concat "cat " home-dir "libs/ssreflect/"))
+        (post (cond (((string= level "g") "")
+                     ((string= level "t") "_tactics")
+                     ((string= level "p") "_tree")))))
+    (do ((temp libs-menus (cdr temp)))
+        ((endp temp) nil)
+      (shell-command  (concat pre (car temp) post ".csv >> " tmp)))))
 
 (defun add-names ()
-  (shell-command (concat "rm " (expand-file-name "names_temp.txt")))
-  (shell-command (concat "touch " (expand-file-name "names_temp.txt")))
-  (do ((temp libs-menus (cdr temp)))
-      ((endp temp) nil)
-      (shell-command  (concat "cat " home-dir "libs/ssreflect/" (car temp) "_names >> " (expand-file-name "names_temp.txt")))))
-
-
-
-
-
-
+  (let ((nt (expand-file-name "names_temp.txt")))
+    (shell-command (concat "rm " nt))
+    (shell-command (concat "touch " nt))
+    (do ((temp libs-menus (cdr temp)))
+        ((endp temp) nil)
+      (shell-command  (concat "cat " home-dir "libs/ssreflect/" (car temp) "_names >> " nt)))))
 
 (defvar names-values nil)
 
@@ -637,18 +614,16 @@ nil
     (switch-to-display)
     (require 'comint)
     (cond ((string= "1" granularity-dynamic)
-       (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,3,100)\n")))
-      ((string= "2" granularity-dynamic)
-       (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,5,100)\n")))
-      ((string= "3" granularity-dynamic)
-       (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,10,100)\n")))
-      ((string= "4" granularity-dynamic)
-       (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,15,100)\n")))
-      ((string= "5" granularity-dynamic)
-       (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,20,100)\n")))
-      (t (show-clusters-dynamic)))
-
-  ))
+           (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,3,100)\n")))
+          ((string= "2" granularity-dynamic)
+           (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,5,100)\n")))
+          ((string= "3" granularity-dynamic)
+           (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,10,100)\n")))
+          ((string= "4" granularity-dynamic)
+           (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,15,100)\n")))
+          ((string= "5" granularity-dynamic)
+           (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,20,100)\n")))
+          (t (show-clusters-dynamic)))))
 
 (defun show-clusters-dynamic-b ()
   (interactive)
@@ -659,11 +634,11 @@ nil
       (insert (extract-features-dynamic)))
     (require 'comint)
     (cond ((string= "1" granularity-dynamic)
-       (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,3,100)\n")))
-      ((string= "2" granularity-dynamic)
-       (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,5,100)\n")))
-      ((string= "3" granularity-dynamic)
-       (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,10,100)\n")))
+           (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,3,100)\n")))
+          ((string= "2" granularity-dynamic)
+           (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,5,100)\n")))
+          ((string= "3" granularity-dynamic)
+           (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,10,100)\n")))
       ((string= "4" granularity-dynamic)
        (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,15,100)\n")))
       ((string= "5" granularity-dynamic)

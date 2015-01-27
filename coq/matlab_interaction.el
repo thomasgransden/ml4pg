@@ -372,16 +372,6 @@
                         'face (list 'link)
                         'follow-link t)))
 
-(defun insert-button-automaton2 (l l2)
-  (progn (insert-button "automaton" 'action (insert-button-automaton-macro2 (list 'quote l)
-                                                                            (list 'quote l2))
-                        'face (list 'link)
-                        'follow-link t)))
-
-(defun insert-button-automaton-macro2 (l l2)
-  (list 'lambda '(x)
-        (list 'generate-automaton2 l l2)))
-
 (defun insert-button-automaton-macro (l)
   (list 'lambda '(x)
         (list 'generate-automaton l)))

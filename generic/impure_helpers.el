@@ -132,14 +132,6 @@
                                      (append res (list (car (read-from-string (subseq temp 0 comma))))))
       (append res (list (car (read-from-string temp)))))))
 
-(defun explain-why-are-similar ()
-  (let ((sim (why-are-similar)))
-    (insert (format "The similarities of these lemmas are given by the following parameters:\n"))
-    (do ((temp sim (cdr temp)))
-        ((endp temp)
-         (insert (format "------------------------------------------------------------------------------------------------\n")))
-      (insert (format " - %s\n" (attribute-to-value (car temp)))))))
-
 (defun attribute-to-value (n)
   (let* ((tdl (cond ((< n 8)  1)
                     ((< n 15) 2)
