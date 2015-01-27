@@ -46,9 +46,6 @@
            (insert (format "------------------------------------------------------------------------------------------------------------\n"))
            (if iterative (insert (format "Similarities found using granularity level %s\n" granularity-level-temp))))))
 
-(defun print-similarities-weka (n)
-  (print-similarities-weka-aux n (extract-clusters-from-file)))
-
 (defun print-similarities-weka-str (n str)
   (print-similarities-weka-aux n (extract-clusters-from-file-aux str)))
 

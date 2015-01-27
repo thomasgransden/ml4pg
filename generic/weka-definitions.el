@@ -79,8 +79,8 @@
                                                             (t 8)))
                               out_bis)))
 
-(defun print-similarities-weka-defs (res name)
-  (let* ((clusters (extract-clusters-from-file))
+(defun print-similarities-weka-defs (res name out_bis)
+  (let* ((clusters (extract-clusters-from-file-aux out_bis))
          (temp1 (clusters-of-n clusters (nth res clusters))))
     (progn
       (with-current-buffer "*display*"

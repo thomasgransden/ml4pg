@@ -291,7 +291,7 @@
   (print-clusters-weka-aux gra 'remove-nil str))
 
 (defun print-clusters-weka-aux (gra func1 str)
-  (let* ((clusters (extract-clusters-from-file))
+  (let* ((clusters (extract-clusters-from-file-aux str))
          (res1     (funcall func1 (remove-alone (cdr (form-clusters clusters gra))))))
     (with-current-buffer "*display*"
       (erase-buffer)
