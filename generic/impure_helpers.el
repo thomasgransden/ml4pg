@@ -93,7 +93,7 @@
   (extract-clusters-from-file-aux (read-lines (expand-file-name "out_bis.arff"))))
 
 (defun extract-clusters-from-file-aux (str)
-  (lines-to-clusters str))
+  (lines-to-clusters (string-split str "\n")))
 
 (defun last-part-of-lists (list)
   (do ((temp list (cdr temp))
