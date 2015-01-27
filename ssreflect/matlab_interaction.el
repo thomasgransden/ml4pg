@@ -287,41 +287,37 @@
                           (insert (format "Lemma " ))
                           (insert-button-lemma temp-res)))))))))
 
-(defun print-clusters-weka (gra)
+(defun print-clusters-weka (gra str)
+  (print-clusters-weka-aux gra 'remove-nil str))
+
+(defun print-clusters-weka-aux (gra func1 str)
   (let* ((clusters (extract-clusters-from-file))
-         (res1     (remove-nil (remove-alone (cdr (form-clusters clusters gra))))))
+         (res1     (funcall func1 (remove-alone (cdr (form-clusters clusters gra))))))
     (with-current-buffer "*display*"
       (erase-buffer)
       (insert "We have found the following clusters:\n")
       (insert "-------------------------------------------------------------------------------------\n")
 
-      (do ((temp res1 (cdr temp))
-           (i 1 (1+ i)))
-          ((endp temp)
-           (insert "-------------------------------------------------------------------------------------\n"))
-        (if (not (equal (car temp) '(nil)))
-            (progn
-              (insert (format "Cluster %s: (" i))
-              (insert-button-automaton2 (which-lemmas-in-cluster (car temp)) (car temp))
-              (insert ")\n")
-              (do ((temp2 (car temp) (cdr temp2)))
-                  ((endp temp2) (insert "\n"))
-                (if (< (car temp2) (length saved-theorems))
-                    (progn (insert "Lemma ")
-                           (insert-button-lemma (remove_last_colon
-                                                 (car (nth (car temp2) saved-theorems))))
-                           (insert (format " (%s)\n" (which-patch (car temp2) 1))))
-                  (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
-                                                (format "%s" (- (car temp2) (length saved-theorems)))
-                                                "p'"))
-                         (with-current-buffer "*Shell Command Output*"
-                           (beginning-of-buffer)
-                           (read (current-buffer))
-                           (setf temp-res (format "%s"  (read (current-buffer)))))
-                         (insert "Lemma " )
-                         (if (not (search "home" temp-res) )
-                             (insert-button-lemma temp-res))
-                         (insert "\n")))))))
+      (dotimes (j (length res1) (insert "-------------------------------------------------------------------------------------\n"))
+        (let ((i     (1+ j))
+              (elems (nth j res1)))
+          (unless (equal elems '(nil))
+              (progn
+                (insert (format "Cluster %s: (" i))
+                (ignore-errors (insert-button-automaton2 (which-lemmas-in-cluster elems) elems))
+                (insert ")\n")
+                (dolist (elem elems (insert "\n"))
+                  (ignore-errors
+                    (if (< elem (length saved-theorems))
+                        (progn (insert "Lemma ")
+                               (insert-button-lemma (remove_last_colon
+                                                     (car (nth elem saved-theorems))))
+                               (insert (format " (%s)\n" (which-patch elem 1))))
+                      (progn (print-clusters-weka-namecmd)
+                             (insert "Lemma " )
+                             (unless (search "home" temp-res)
+                                 (insert-button-lemma temp-res))
+                             (insert "\n")))))))))
       (insert "\n======================================================================================\n")
       (insert explain-why-sim)
       (insert "\n======================================================================================\n"))))
@@ -550,25 +546,15 @@
           (print-clusters-matlab)))
       ((string= ml-system "w")
        (progn (setq n (size-temp))
-         (setf gra (cond  ((eq 2 granularity-level) (floor n 7))
-          ((eq 3 granularity-level) (floor n 5))
-          ((eq 4 granularity-level) (floor n 4))
-          ((eq 5 granularity-level) (floor n 2))
-          (t (floor n 8))))
-         (setf signal 5)
-         (weka gra)
-         (sleep-for 1)
-         (print-clusters-weka gra))
-       )
-
-    )))
-  (proof-shell-invisible-cmd-get-result (format "Unset Printing All"))
-)
-
-
-
-
-
+              (setf gra (floor n (case granularity-level
+                                   (2 7)
+                                   (3 5)
+                                   (4 4)
+                                   (5 2)
+                                   (t 8))))
+              (setf signal 5)
+              (print-clusters-weka gra (weka gra)))))))
+  (proof-shell-invisible-cmd-get-result (format "Unset Printing All")))
 
 (defun add-libraries ()
   (do ((temp libs-menus (cdr temp)))

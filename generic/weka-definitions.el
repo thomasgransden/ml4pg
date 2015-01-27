@@ -65,3 +65,97 @@
   (with-temp-buffer
     (insert-file-contents file)
     (split-string (buffer-string) "\n" t)))
+
+(defun cluster-statements ()
+  (interactive)
+  (switch-to-display)
+  (let ((out_bis (weka-thms)))
+    (sleep-for 2)
+    (print-clusters-weka-thms (floor (length tables-thms) (case granularity-level
+                                                            (2 7)
+                                                            (3 5)
+                                                            (4 4)
+                                                            (5 2)
+                                                            (t 8)))
+                              out_bis)))
+
+(defun print-similarities-weka-defs (res name)
+  (let* ((clusters (extract-clusters-from-file))
+         (temp1 (clusters-of-n clusters (nth res clusters))))
+    (progn
+      (with-current-buffer "*display*"
+        (erase-buffer)
+
+        (if (or (not temp1)
+                (equal (length temp1) 1))
+            (insert (format "Sorry no similarities"))
+          (progn
+            (insert (format "Similarities:\n"))
+            (insert (format "------------------------------------------------------------------------------------------------\n"))
+            (if (equal (length temp1) 2)
+                (insert (format "Definition %s is similar to definition:\n" name))
+              (insert (format "Definition %s is similar to definitions:\n" name)))
+            (do ((temp2 temp1 (cdr temp2)))
+                ((endp temp2))
+              (if (not (string= (format "%s" (car (nth (- (car temp2)  1) tables-definitions)))
+                                (format "%s" name)))
+                  (progn
+                    (insert (format "- %s (library %s)\n" (car (nth (- (car temp2)  1) tables-definitions))
+                                    (library-belong (1- (car temp2))))))))
+            (insert (format "------------------------------------------------------------------------------------------------\n"))))))))
+
+(defun show-similarities-defs ()
+  (interactive)
+  (add-several-libraries-defs)
+  (transform-definitions)
+  (let ((res (car (read-from-string (read-string "Introduce the name of the definition: ")))))
+    (if (member-tables-definitions res)
+        (progn  (switch-to-display)
+                (let ((out_bis (weka-defs)))
+                  (sleep-for 2)
+                  (print-similarities-weka-defs (position-tables-definitions res)
+                                                res
+                                                out_bis)))
+      (message "That definition has not been included"))))
+
+(defun show-similarities-last-def ()
+  (interactive)
+  (add-several-libraries-defs)
+  (transform-definitions)
+  (switch-to-display)
+  (let ((out_bis (weka-defs)))
+    (sleep-for 2)
+    (print-similarities-weka-defs 0
+                                  (caar tables-definitions)
+                                  out_bis)))
+
+(defun print-similarities-weka-statement (out_bis)
+  (let* ((clusters (extract-clusters-from-file-aux out_bis))
+         (temp1 (clusters-of-n clusters (nth 0 clusters))))
+    (progn
+      (with-current-buffer "*display*"
+        (erase-buffer)
+
+        (if (or (not temp1) (equal (length temp1) 1))
+            (insert "Sorry no similarities")
+          (progn
+            (insert "Similarities:\n")
+            (insert "------------------------------------------------------------------------------------------------\n")
+            (if (equal (length temp1) 2)
+                (insert "Your current goal is similar to theorem:\n" )
+              (insert "Your current goal is similar to theorems:\n" ))
+            (do ((temp2 (cdr temp1) (cdr temp2)))
+                ((endp temp2))
+              (insert (format "- %s (library %s)\n" (car (nth (- (car temp2) 1) tables-thms))
+                              (library-belong-thm (1- (car temp2))))))
+            (insert "------------------------------------------------------------------------------------------------\n")))))))
+
+(defun show-similarities-statement ()
+  (interactive)
+  (addcurrentgoal)
+  (switch-to-display)
+  (let ((out_bis (weka-thms)))
+    (sleep-for 2)
+    (print-similarities-weka-statement out_bis))
+  (setf listofstatements (cdr listofstatements))
+  (setf listofthmvariables (cdr listofthmvariables)))

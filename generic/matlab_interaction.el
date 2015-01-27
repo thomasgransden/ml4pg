@@ -85,3 +85,14 @@
   (with-current-buffer "*display*"
     (erase-buffer)
     (insert str)))
+
+(defun print-clusters-weka-namecmd (elem)
+  (shell-command (concat "cat "(expand-file-name "names_temp.txt")
+                         " | sed -n '"
+                         (format "%s" (- elem (length saved-theorems)))
+                         "p'"))
+
+  (with-current-buffer "*Shell Command Output*"
+    (beginning-of-buffer)
+    (read (current-buffer))
+    (setf temp-res (format "%s" (read (current-buffer))))))
