@@ -287,30 +287,3 @@
 (defun showtreegraphthm ()
   (interactive)
   (showtreegraphthm-aux (read-string "Introduce the name of a theorem that you have previously defined: ")))
-
-;; Not polished
-
-(defun goal-for-tree ()
-  (interactive)
-  (send-coq-cmd (format "Unset Printing All."))
-  (send-coq-cmd (format "Unset Printing Notations."))
-  (let ((iftable (send-coq-cmd (format "Print Table Printing If.")))
-        (term nil))
-    (unless (search "None" iftable)
-      (send-coq-cmd (format "Remove Printing If %s."
-                            (subseq iftable (+ 1 (search ":" iftable))))))
-
-    (setf term (send-coq-cmd (format "Focus")))
-    (unless (search "None" iftable)
-      (send-coq-cmd (format "Add Printing If %s."
-                            (subseq iftable (+ 1 (search ":" iftable))))))
-    (send-coq-cmd (format "Set Printing Notations."))
-    (send-coq-cmd (format "Set Printing All."))
-    (if (= 1 (length (varsterms term)))
-        (car (varsterms term))
-        (varsterms term))))
-
-
-(defun showtreegoal ()
-  (interactive)
-  (showtreegraphthm (goal-for-tree)))

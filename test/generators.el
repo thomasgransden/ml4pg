@@ -147,11 +147,6 @@
                                  (list "simpl." "reflexivity.")
                                  (list "compute." "auto.")))))
 
-(defun gen-coq-complete-theorem ()
-  (compose (uncurry (lambda (stmt proof)
-                      (concat stmt "\n" proof "\n")))
-           (list-of (gen-coq-theorem-statement) (gen-coq-proof))))
-
 (defun gen-coq-correct-theorem-aux ()
   (compose (uncurry (lambda (stmt proof)
                       (message "STMT\n%S\nPROOF\n%S\n" stmt proof)

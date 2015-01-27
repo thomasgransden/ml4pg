@@ -59,22 +59,3 @@
                                                                               tables-thms))
                                         (library-belong-thm (1- (car temp2)))))))
                (insert (format "\n")))))))
-
-;;; Alltogether
-
-(defun member-tables-definitions (name)
-  (do ((temp tables-definitions (cdr temp))
-       (temp2 nil))
-      ((or temp2 (endp temp))
-       temp2)
-    (setf temp2 (or (equal name (car (car temp)))
-                    (equal (format "%s" name)
-                           (format "%s" (car (car temp))))))))
-
-(defun position-tables-definitions (name)
-  (do ((temp tables-definitions (cdr temp))
-       (temp2 0))
-      ((equal (car (car temp))
-              name)
-       temp2)
-    (setf temp2 (1+ temp2))))

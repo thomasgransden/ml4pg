@@ -99,20 +99,6 @@
                                     (library-belong (1- (car temp2))))))))
             (insert (format "------------------------------------------------------------------------------------------------\n"))))))))
 
-(defun show-similarities-defs ()
-  (interactive)
-  (add-several-libraries-defs)
-  (transform-definitions)
-  (let ((res (car (read-from-string (read-string "Introduce the name of the definition: ")))))
-    (if (member-tables-definitions res)
-        (progn  (switch-to-display)
-                (let ((out_bis (weka-defs)))
-                  (sleep-for 2)
-                  (print-similarities-weka-defs (position-tables-definitions res)
-                                                res
-                                                out_bis)))
-      (message "That definition has not been included"))))
-
 (defun show-similarities-last-def ()
   (interactive)
   (add-several-libraries-defs)

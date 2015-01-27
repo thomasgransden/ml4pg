@@ -122,12 +122,6 @@
         (replace-plus (concatenate 'string (subseq str 0 colon) "; " (subseq str (1+ colon))))
       str)))
 
-(defun convert-tactic_id (lst)
-  (do ((temp lst (cdr temp))
-       (temp2 nil))
-      ((endp temp) temp2)
-    (setf temp2 (append temp2 (list (cons (replace-plus (format "%s" (car (car temp)))) (cdr (car temp))))))))
-
 (defun is-intro (cmd)
   (or (starts-with cmd "intros [")
       (starts-with cmd "intros;")

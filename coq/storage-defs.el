@@ -1,30 +1,9 @@
 (require 'cl)
 
-(defun export-library-aux (action)
-  (interactive)
-  (beginning-of-buffer)
-  (proof-goto-point)
-  (end-of-buffer)
-  (extract-feature-theorems)
-  (funcall action))
-
-(defun export-library-defs ()
-  (interactive)
-  (export-library-aux 'export-up-to-here))
-
-(defun export-library-thms ()
-  (interactive)
-  (export-library-aux 'export-up-to-here-thm))
-
 (defun export-up-to-here ()
   (interactive)
   (export-up-to-here-aux "definitions" listofdefinitions
                          "variables"   listofvariables))
-
-(defun export-up-to-here-thm ()
-  (interactive)
-  (export-up-to-here-aux "theorems"      listofstatements
-                         "variablesthms" listofthmvariables))
 
 (defvar libs-defs nil)
 

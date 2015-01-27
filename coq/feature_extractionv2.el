@@ -323,12 +323,6 @@
   (with-temp-file (concat home-dir "/coq/tactics")
     (insert (format "%s" (replace-colon-rec)))))
 
-(defun load-tactics ()
-  (with-temp-buffer
-  (insert-file-contents (concat home-dir "/coq/tactics"))
-  (setf tactic_id (convert-tactic_id
-           (car (read-from-string (format "%s" (read (current-buffer)))))))))
-
 (defun get-tactic-id (tac)
   (cdr (assoc (remove-dots tac) tactic_id)))
 

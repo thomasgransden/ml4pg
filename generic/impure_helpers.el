@@ -118,32 +118,12 @@
       (setf foo (string= "attributes:" (format "%s" (read (current-buffer))))))
     (extract-selected-attributes (format "%s" (read (current-buffer))) nil)))
 
-(defun why-are-similar-defs ()
-  (sleep-for 2)
-  (let* ((file (read-lines (expand-file-name "whysimilar.txt")))
-         (attributes (subseq file (+ 21 (search "Selected attributes:" file)))))
-    (extract-selected-attributes (subseq attributes 0 (1- (search ":" attributes)))
-                                 nil)))
-
 (defun extract-selected-attributes (temp res)
   (let ((comma (search "," temp)))
     (if comma
         (extract-selected-attributes (subseq temp (+ 1 comma))
                                      (append res (list (car (read-from-string (subseq temp 0 comma))))))
       (append res (list (car (read-from-string temp)))))))
-
-(defun attribute-to-value (n)
-  (let* ((tdl (cond ((< n 8)  1)
-                    ((< n 15) 2)
-                    ((< n 22) 3)
-                    ((< n 29) 4)
-                    ((< n 36) 5)
-                    ((< n 43) 6)
-                    (t 7)))
-         (arity (- (- n (* 7 (- tdl 1))) 1)))
-    (if (= arity 0)
-        (format "The variables of the term-tree at depth level %s" tdl)
-      (format "The function(s) of arity %s of the term-tree at depth level %s"  (1- arity) tdl))))
 
 (defun 0_n (n)
   (let (temp)

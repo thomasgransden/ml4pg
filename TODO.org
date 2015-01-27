@@ -1,5 +1,0 @@
-* Problems
- - Key bindings are global!!!
- - Hard-coded paths!!!
- - Unreadable code formatting
-* Features

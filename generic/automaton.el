@@ -55,69 +55,6 @@ dot -Tpng %strace.gv -o %strace.png;  eog %strace.png &"
     (shell-command (concat d "obtaintrace "
                            d "trace0.txt"))))
 
-(defun 30-to-5x6 (l1)
-  (let ((l (append l (generate-zeros 30))))
-    (list (subseq l 0 6)
-          (subseq l 6 12)
-          (subseq l 12 18)
-          (subseq l 18 24)
-          (subseq l 24 30))))
-
-(defun print-list-patch (l)
-  (let ((r (mapcar (lambda (x) (print-list x)) (30-to-5x6 l))))
-    (do ((temp r (cdr temp))
-         (res ""))
-        ((endp temp) res)
-      (setf res (concat res (car temp) "\n")))))
-
-(defun generate-file-patch (i patch)
-  (let ((res (print-list-patch patch)))
-    (with-temp-file
-        (concat home-dir "automaton/patchtrace" (format "%s" i) ".txt") (insert res))))
-
-(defun generate-automaton-patches (l)
-  (do ((i 0 (1+ i)))
-      ((equal i (length l)) (invoke-patch-automaton l))
-    (generate-file-patch i (nth (1- (nth i l)) saved-theorems-libs)))
-  )
-
-(defun invoke-patch-automaton (l)
-  (with-temp-file
-    (concat home-dir "automaton/obtaintrace")
-      (insert (format
-    "#!/bin/bash
-
-java -jar %spreprocessor.jar patches %s > %strace.txt;
-java -jar %sEFSMTool012014-withdeps.jar -input %strace.txt -strategy noloops -k 1 > %strace1.txt;
-B=$(expr $(wc -l %strace1.txt | cut -d\" \" -f 1) - $(grep -rne digraph %strace1.txt | cut -d: -f 1) + 1);
-tail -$B %strace1.txt > %strace2.txt
-E=$(grep -rne \"}\" %strace2.txt | cut -d: -f 1);
-head -$E %strace2.txt > %strace.gv;
-dot -Tpng %strace.gv -o %strace.png;  eog %strace.png &"
-(concat home-dir "automaton/")
-(do ((i 0 (1+ i))
-     (res ""))
-    ((equal i (length l)) res)
-    (setf res (concat res " " (concat home-dir "automaton/patchtrace" (format "%s" i) ".txt"))))
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/")
-(concat home-dir "automaton/"))))
-(sit-for 1)
-    (shell-command (concat home-dir "automaton/obtaintrace" )))
-
 (defun split-tactics (thm)
   (do ((temp thm)
        (res nil))

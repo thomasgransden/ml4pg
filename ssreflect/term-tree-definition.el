@@ -110,12 +110,6 @@
 (defun transform-match (term)
   (transform-length-1 (car (read-from-string (add-parentheses-match0 term)))))
 
-
-
-
-;(transform-match "match n with | O => m | S _ => match leq (S (S (S O))) n with | true => muln (addn n m) m | false => match m with | O => S O | S _ => S (S O) end end end")
-
-
 (defun string-to-list (str)
   (car (read-from-string str)))
 

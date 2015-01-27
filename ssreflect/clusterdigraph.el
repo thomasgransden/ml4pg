@@ -46,8 +46,6 @@
                                     func
                                     `(lambda () (length ',tbl))))
 
-(defun dependencygraph-proof-get-cluster-aux (granularity-))
-
 (defun dependencygraph-defs ()
   (interactive)
   (showclustergraph (dependencygraph-defs-aux)))

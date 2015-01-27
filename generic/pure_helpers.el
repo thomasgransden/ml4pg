@@ -22,9 +22,6 @@
   (let ((suffix (subseq cmd n)))
     (subseq suffix 0 (first-dot suffix))))
 
-(defun replace-in-string (what with in)
-  (replace-regexp-in-string (regexp-quote what) with in))
-
 (defun first-space (txt)
   "Find the position of the first space in a string"
   (search " " txt))

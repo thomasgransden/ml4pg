@@ -24,8 +24,6 @@ G%s [label=\"%s\"];" n (1+ n) ar n gs0 (1+ n) gs1))))
 G%s [label=\"%s\"]
 G%s [shape=plaintext,label=\"\"];" n (1+ n) ar n gs0 (1+ n) ))))
 
-;;;; (last-arrow  '(c d e) '(1 2) 0)
-
 (defun several-last-arrows (arrows)
   (do ((temp arrows (cdr temp))
        (res ""))
@@ -34,38 +32,24 @@ G%s [shape=plaintext,label=\"\"];" n (1+ n) ar n gs0 (1+ n) ))))
                   (nth 1 (car temp))
                   (nth 2 (car temp))) "\n"))))
 
-
-;;;; (arrow '(a b c) '(c d e) '(1 2) 0)
-
 (defun several-arrows (arrows larrows)
   (do ((temp arrows (cdr temp))
        (res "digraph G {\n graph [rankdir=LR]\n"))
       ((endp temp) (concatenate 'string res (several-last-arrows larrows)))
-    (setf res (concatenate 'string res 
+    (setf res (concatenate 'string res
                (arrow (nth 0 (car temp))
                   (nth 1 (car temp))
                   (nth 2 (car temp))
                   (nth 3 (car temp)))
                "\n"))))
 
-;;; (several-arrows '(((a b c) (c d e) (1 2) 0) ((a b c) (c d e) (3 4) 0) ((c d e) (f g) (5) 1)) '((f g) (5 6) 2))
- 
-
-
 (defun generate-arrow-parts (arrows last-arrows)
   (several-arrows arrows last-arrows))
-  
-
 
 (defun show-diagram (text)
   (with-temp-file "temp.gv"
     (insert text))
   (shell-command "dot -Tpng temp.gv -o temp.png; eog temp.png"))
-
-
-
-;;; (show-diagram '(((a b c) (c d e) (1 2) 0) ((a b c) (c d e) (3 4) 0) ((c d e) (f g) (5) 1))
-;;;               '(()))
 
 (defun removenil (l)
   (do ((temp l (cdr temp))
@@ -88,13 +72,7 @@ G%s [shape=plaintext,label=\"\"];" n (1+ n) ar n gs0 (1+ n) ))))
 
 
 (defun generate-circles (g1 g2 g3 g4)
-  (let ((str ""
-;"G0 [shape=circle];
-;G1 [shape=circle];
-;G2 [shape=circle];
-;G3 [shape=circle];
-;G4 [shape=circle];"
-))
+  (let ((str ""))
     (progn (if (member nil g1)
            (setf str (concat str "\nG1 [peripheries=2];")))
        (if (member nil (removenil-n g2 (count-nil g1)))
@@ -105,12 +83,6 @@ G%s [shape=plaintext,label=\"\"];" n (1+ n) ar n gs0 (1+ n) ))))
            (setf str (concat str "\nG4 [peripheries=2];"))))
     str))
 
-
-
-
-
-
-
 (defun generate-props (props)
   (let ((str ""))
     (progn (if (nth 0 props)
@@ -118,35 +90,22 @@ G%s [shape=plaintext,label=\"\"];" n (1+ n) ar n gs0 (1+ n) ))))
                          (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 0 props)))))))
        (if (nth 1 props)
            (setf str (concat str (format "G0 -> G7 [style=invis];
-G1 -> G7[constraint=false,arrowhead=none];\nG7[shape=rectangle,label=\"%s\"];\n" 
+G1 -> G7[constraint=false,arrowhead=none];\nG7[shape=rectangle,label=\"%s\"];\n"
                          (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 1 props)))))))
        (if (nth 2 props)
            (setf str (concat str (format "G1 -> G8 [style=invis];
-G2 -> G8[constraint=false,arrowhead=none];\nG8[shape=rectangle,label=\"%s\"];\n" 
+G2 -> G8[constraint=false,arrowhead=none];\nG8[shape=rectangle,label=\"%s\"];\n"
                          (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 2 props)))))))
        (if (nth 3 props)
            (setf str (concat str (format "G2 -> G9 [style=invis];
-G3 -> G9[constraint=false,arrowhead=none];\nG9[shape=rectangle,label=\"%s\"];\n" 
+G3 -> G9[constraint=false,arrowhead=none];\nG9[shape=rectangle,label=\"%s\"];\n"
                          (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 3 props)))))))
        (if (nth 4 props)
            (setf str (concat str (format "G3 -> G10 [style=invis];
-G4 -> G10[constraint=false,arrowhead=none];\nG10[shape=rectangle,label=\"%s\"];\n" 
+G4 -> G10[constraint=false,arrowhead=none];\nG10[shape=rectangle,label=\"%s\"];\n"
                          (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 4 props))))))))))
 
-
-;; (setf props '((arg1 arg2) nil (arg3 arg4) nil (arg5)))
-;; (generate-props props)
-         
-
-
-
-
- 
-    
-
 (require 'cl)
-
-;;; (setf patches '(((a 1) (b 2) (c 3) (d 4) (e 5)) ((f 6) (g 7) (h 8) (i 9))))
 
 (defun generate-diagram-from-patches (patches props)
   (let* ((p0 (mapcar (lambda (x) (nth 0 x)) patches))
@@ -173,29 +132,3 @@ G4 -> G10[constraint=false,arrowhead=none];\nG10[shape=rectangle,label=\"%s\"];\
         (generate-circles g1 g2 g3 g4)
         (generate-props props) "}"))
     )
-
-;;; (setf patches2 '(((a 1) (b 2) (c 3) (d 4) (e 5)) ((f 6) (g 7) (h 8) (i 9))))
-;;; (setf props '((arg1 arg2) nil (arg3 arg4) nil (arg5)))
-;;; (show-diagram (generate-diagram-from-patches patches2 props))
-;; (insert (generate-diagram-from-patches patches2 props))      
-
-
-
-;(setf patches 
- ;     '((("powersum1 (step 1)"  "elim")
-;    ("powersum1 (step 2)"   "rewrite")
-;    ("powersum1 (step 3)"   "move")
-;    ("powersum1 (step 4)"   "rewrite")
-;    ("powersum1 (step 5)"   "ring"))
-;   (("powersum2 (step 1)"   "elim")
-;    ("powersum2 (step 2)"   "rewrite")
-;    ("powersum2 (step 3)"   "move")
-;    ("powersum2 (step 4)"   "rewrite")
-;    )))
-
-;
-;(setf props '(nil ("type of tactic argument") nil ("type of tactic argument" "top symbol") ("tactic argument")))
-
-
-;(show-diagram (generate-diagram-from-patches patches props))
-
