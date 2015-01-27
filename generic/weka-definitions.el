@@ -5,9 +5,10 @@
 (defun cluster-definitions ()
   (interactive)
   (switch-to-display)
-  (weka-defs)
-  (sleep-for 2)
-  (print-clusters-weka-defs (weka-defs-n granularity-level tables-definitions)))
+  (let ((out_bis (weka-defs)))
+    (sleep-for 2)
+    (print-clusters-weka-defs (weka-defs-n granularity-level tables-definitions)
+                              out_bis)))
 
 (defun weka-alg (a)
   (cond ((string= "k" a) "SimpleKMeans")
@@ -47,7 +48,17 @@
                                     "weka.attributeSelection.CfsSubsetEval"
                                     "-M"
                                     "-s" "weka.attributeSelection.BestFirst -D 1 -N 5")))
+    (write-out-bis out_bis)
+    (write-res res)
     out_bis))
+
+(defun write-res (str)
+  (with-temp-file (expand-file-name "res.txt")
+    (insert str)))
+
+(defun write-out-bis (str)
+  (with-temp-file (expand-file-name "out_bis.arff")
+    (insert str)))
 
 (defun read-lines (file)
   "Return a list of lines in FILE."

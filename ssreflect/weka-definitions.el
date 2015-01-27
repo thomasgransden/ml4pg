@@ -16,8 +16,8 @@
 
 ;;; Printing clusters
 
-(defun print-clusters-weka-defs (gra)
-  (let* ((clusters (extract-clusters-from-file))
+(defun print-clusters-weka-defs (gra out_bis)
+  (let* ((clusters (extract-clusters-from-file-aux out_bis))
          (res1 (remove-nil (remove-alone (cdr (form-clusters clusters gra))))))
     (with-current-buffer "*display*"
       (erase-buffer)

@@ -194,7 +194,14 @@
          (out_bis (process-with-cmd "tail" out nil
                                     "-n" "+56")))
     (if whysimilar
-        (let ((whysimilar (why-similar out)))))))
+        (let ((whysimilar (why-similar out)))
+          (write-whysimilar whysimilar)))
+    (write-out-bis out_bis)
+    out_bis))
+
+(defun write-whysimilar (str)
+  (with-temp-file (expand-file-name "whysimilar.txt")
+    (insert str)))
 
 (defun weka-defs ()
   (shell-command (concat "rm " (expand-file-name "temp.csv")))
