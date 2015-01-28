@@ -12,6 +12,15 @@
     (should (equal 1 (length c)))
     (should (stringp c))))
 
+(test-with gen-char-nonempty
+  "Characters from a string"
+  (compose (lambda (s)
+             (list (split-string s "" t)
+                   (funcall (gen-char s))))
+           (gen-nonempty-string))
+  (lambda (chars char)
+    (should (member char chars))))
+
 (test-with gen-string
   "String generator"
   (lambda ()
@@ -95,3 +104,9 @@
   (list-of (gen-coq-correct-theorem-aux))
   (lambda (str)
     (should (coqp str))))
+
+(test-with gen-coq-name
+  "Test Coq names are valid"
+  (list-of (gen-coq-name))
+  (lambda (n)
+    (should (coq-namep n))))

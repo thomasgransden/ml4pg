@@ -25,10 +25,10 @@
      (concat "digraph G {" (treetographvizaux (car tree) (cdr tree) 0) "\n}")))
 
 (defun show-diagram-tree (text)
-  (with-temp-file "temp.gv"
-    (insert text))
-  (progn (shell-command "rm temp.png")
-     (shell-command "dot -Tpng temp.gv -o temp.png; eog temp.png &")))
+  (let ((png  (process-with-cmd "dot" text nil "-Tpng"))
+        (proc (start-process "display" nil "display" "-")))
+    (process-send-string proc png)
+    (process-send-eof proc)))
 
 (defun showtreegraph (tree)
   (show-diagram-tree (treetographviz tree)))

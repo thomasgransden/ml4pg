@@ -10,9 +10,11 @@
   "Generate positive random numbers"
   (lambda () (random ml4pg-test-complexity)))
 
-(defun gen-char ()
-  "Generate a random ASCII character"
-  (lambda () (format "%c" (random 255))))
+(defun gen-char (&optional source)
+  "Generate a random ASCII character. If an optional SOURCE string is given, its
+   characters are used."
+  (if source (gen-elem (split-string source "" t))
+             (lambda () (format "%c" (random 255)))))
 
 (defun gen-string (&optional op-len)
   "Generate a random ASCII string, of given (or random) length"
@@ -82,7 +84,13 @@
            (string-match "[^a-zA-Z]" (subseq n 0 1)))))
 
 (defun gen-coq-name ()
-  (gen-filtered (gen-nonempty-string) (lambda (x) (coq-namep x))))
+  (lambda ()
+    (let* ((alpha "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+           (alnum (concat alpha "_0123456789"))
+           (c     (funcall (gen-char alpha)))
+           (cs    (funcall (gen-list (gen-char alnum))))
+           (cs2   (if cs (apply 'concat cs) "")))
+      (concat c cs2))))
 
 (defun gen-coq-arg (&optional types)
   (let ((gen-type (or types (gen-coq-name))))
@@ -147,12 +155,11 @@
                                  (list "simpl." "reflexivity.")
                                  (list "compute." "auto.")))))
 
-(defun gen-coq-correct-theorem-aux ()
+(defun gen-coq-correct-theorem-aux (&optional name)
   (compose (uncurry (lambda (stmt proof)
-                      (message "STMT\n%S\nPROOF\n%S\n" stmt proof)
                       (concat stmt "\n" proof "\n")))
-           (list-of (gen-coq-correct-statement) (gen-coq-correct-proof))))
+           (list-of (gen-coq-correct-statement name) (gen-coq-correct-proof))))
 
-(defun gen-coq-correct-theorem ()
-  (gen-filtered (gen-coq-correct-theorem-aux)
+(defun gen-coq-correct-theorem (&optional name)
+  (gen-filtered (gen-coq-correct-theorem-aux name)
                 (lambda (x) (coqp x))))

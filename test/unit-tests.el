@@ -48,22 +48,30 @@
                                                    tables-definitions
                                                    number-of-defs))))
 
+(defun generate-and-run (func)
+  `(lambda ()
+     (let (str (funcall (gen-coq-correct-theorem)))
+       (list str
+             (ml4pg-load-and-extract-info str ',func)))))
+
 (test-with extract-defs-theorem
   "Try extracting definitions given a single theorem."
-  (compose (lambda (str)
-             (message "THM:\n%s" str)
-             (list str
-                   (ml4pg-load-and-extract-info str 'dependencygraph-defs-aux)))
-           (gen-coq-correct-theorem))
+  (generate-and-run 'dependencygraph-defs-aux)
   (lambda (str result)
-    (message "STR:\n%s\nRESULT:\n%s\n" str result)))
+    ))
 
 (test-with dependencygraph-statements-empty
   "statements"
-           nil
-           (lambda ()
-             (list (ml4pg-load-and-extract-info ""
-                                                'dependencygraph-statements-aux))))
+  nil
+  (lambda ()
+    (list (ml4pg-load-and-extract-info ""
+                                       'dependencygraph-statements-aux))))
+
+(test-with dependencygraph-statements-theorem
+  "Try extracting statements given a single theorem"
+  (generate-and-run 'dependencygraph-statements-aux)
+  (lambda (str result)
+    ))
 
 (test-with dependencygraph-proof-empty
   "proofs"
@@ -71,34 +79,84 @@
   (lambda ()
     (list (ml4pg-load-and-extract-info "" 'dependencygraph-proof-aux))))
 
+(test-with dependencygraph-proof-theorem
+  "Proof, given a theorem"
+  (generate-and-run 'dependencygraph-proof-aux)
+  (lambda (str result)
+    ))
+
 (test-with showtreegraphthm-empty
   "tree"
   nil
   (lambda ()
-    (list (ml4pg-load-and-extract-info ""
-                                       (lambda () (showtreegraphthm-aux ""))))))
+    (ml4pg-load-and-extract-info ""
+                                 (lambda ()
+                                   (showtreegraphthm-aux "")))))
+
+(test-with showtreegraphthm-empty
+  "show tree graph of theorems, with no theorems"
+  (lambda ()
+    (let* ((name (funcall (gen-coq-name)))
+           (str  (funcall (gen-coq-correct-theorem (gen-const name)))))
+      (list name
+            str
+            (ml4pg-load-and-extract-info str
+                                         `(lambda ()
+                                            (showtreegraphthm-aux ,name))))))
+  (lambda (name str result)
+    (should t)))
 
 (test-with show-cluster-bis-empty
   "clusters"
   nil
   (lambda () 'show-clusters-bis))
 
+(test-with show-cluster-bis-theorem
+  "clusters with theorem"
+  (generate-and-run 'show-clusters-bis)
+  (lambda (str result)
+    ))
+
 (test-with cluster-definitions-empty
   "clusterdefs"
   nil
   (lambda () (list (ml4pg-load-and-extract-info "" 'cluster-definitions))))
 
+(test-with cluster-definitions-theorem
+  "clusterdefs, given a theorem"
+  (generate-and-run 'cluster-definitions)
+  (lambda (str result)
+    ))
+
 (test-with show-clusters-of-theorem-empty
-  "clustertheorems"
+  "cluster theorems"
   nil
   (lambda () (list (ml4pg-load-and-extract-info "" 'show-clusters-of-theorem))))
+
+(test-with show-clusters-of-theorem-theorem
+  "Clusters, given a theorem"
+  (generate-and-run 'show-clusters-of-theorem)
+  (lambda (str result)
+    ))
 
 (test-with save-numbers-empty
   "savenumbers"
   nil
   (lambda () (list (ml4pg-load-and-extract-info "" 'save-numbers))))
 
+(test-with save-numbers-theorem
+  ""
+  (generate-and-run 'save-numbers)
+  (lambda (str result)
+    ))
+
 (test-with exported-libraries-empty
   "clusterlibs"
   nil
   (lambda () (list (ml4pg-load-and-extract-info "" 'exported-libraries))))
+
+(test-with exported-libraries-theorem
+  ""
+  (generate-and-run 'exported-libraries)
+  (lambda (str result)
+    ))

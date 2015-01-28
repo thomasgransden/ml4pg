@@ -4,11 +4,11 @@
 ;; Obtain definition and clean the term
 
 (defun obtain-theorem (name)
-  (proof-shell-invisible-cmd-get-result (format "Check %s" name)))
+  (send-coq-cmd (format "Check %s" name)))
 
 
 
-(defun replace-questionmark (term) 
+(defun replace-questionmark (term)
   (do ((temp0 term)
        (ift (search "?" term))
        (temp2 ""))
@@ -28,7 +28,7 @@
             (comma (subseq clean-term (+ 1 comma)))
             (t (subseq clean-term (+ 1 (search ":" clean-term :from-end t))))))
      (sfor (search "forall" clean-term))
-     (vars (if sfor 
+     (vars (if sfor
            (variables-fun2 (subseq clean-term (+ 7 sfor) comma))
          nil)))
     (list (replace-questionmark (replace-quote obj)) (replace-quote vars))))
@@ -72,7 +72,7 @@
 ;;; Transform the term to a list
 
 
-(defun thm-to-list (term) 
+(defun thm-to-list (term)
   (if (search "match" term)
       (transform-match (subseq term (+ 2 (search "=>" term))))
   (string-to-list (concatenate 'string "("  term ")"))))
@@ -83,31 +83,25 @@
 
 (defun addthm (name)
   (interactive)
-  (proof-shell-invisible-cmd-get-result (format "Unset Printing All."))
-  (proof-shell-invisible-cmd-get-result (format "Unset Printing Notations."))
-  (let ((iftable (proof-shell-invisible-cmd-get-result (format "Print Table Printing If.")))
+  (send-coq-cmd (format "Unset Printing All."))
+  (send-coq-cmd (format "Unset Printing Notations."))
+  (let ((iftable (send-coq-cmd (format "Print Table Printing If.")))
     (term nil))
     (if (search "None" iftable)
     nil
-      (proof-shell-invisible-cmd-get-result (format "Remove Printing If %s."
+      (send-coq-cmd (format "Remove Printing If %s."
                           (subseq iftable (+ 1 (search ":" iftable))))))
 
     (setf term (obtain-theorem name))
     (setf listofstatements (append listofstatements
                     (list (list 'theorem (make-symbol name) (thm-to-list (car (clean-term-thm term)))))))
     (setf listofthmvariables (append listofthmvariables
-                  (list (list (cadr (clean-term-thm term)) )))  )   
-    (if (search "None" iftable)
-    nil
-      (proof-shell-invisible-cmd-get-result (format "Add Printing If %s."
-                          (subseq iftable (+ 1 (search ":" iftable))))))
-    (proof-shell-invisible-cmd-get-result (format "Set Printing Notations."))
-    (proof-shell-invisible-cmd-get-result (format "Set Printing All."))
-    
-    )
-  )
-
-
+                  (list (list (cadr (clean-term-thm term)) )))  )
+    (unless (search "None" iftable)
+      (send-coq-cmd (format "Add Printing If %s."
+                                                    (subseq iftable (+ 1 (search ":" iftable))))))
+    (send-coq-cmd (format "Set Printing Notations."))
+    (send-coq-cmd (format "Set Printing All."))))
 
 (defvar tables-thms nil)
 
@@ -116,7 +110,7 @@
   (do ((temp statements-libraries (cdr temp))
        (temp2 variablesthm-libraries (cdr temp2)))
       ((endp temp) nil)
-    (setf tables-thms (append tables-thms 
+    (setf tables-thms (append tables-thms
                   (list (build-table (extract-info (car temp) (car temp2))))))))
 
 
@@ -124,7 +118,7 @@
 
 
 (defun clean-goal (goal)
-  (let* ((clean-term (remove-whitespaces (remove-jumps (subseq goal (+ 28 (search "============================" goal)) 
+  (let* ((clean-term (remove-whitespaces (remove-jumps (subseq goal (+ 28 (search "============================" goal))
                                    (search "(dependent " goal)))))
      (arr (search "->" clean-term :from-end t))
      (comma (search "," clean-term :from-end t))
@@ -151,7 +145,7 @@
 
 (defun vars-goal (goal)
   (let* ((clean-vars (remove-jumps (replace-quote (subseq goal (+ 1 (search ")" goal :start2 ( + 1 (search ")" goal)))) (search "============================" goal)) ))))
-    (search-vars clean-vars)     
+    (search-vars clean-vars)
     ))
 
 
@@ -160,24 +154,21 @@
 
 (defun addcurrentgoal ()
   (interactive)
-  (proof-shell-invisible-cmd-get-result (format "Unset Printing All."))
-  (proof-shell-invisible-cmd-get-result (format "Unset Printing Notations."))
-  (let ((iftable (proof-shell-invisible-cmd-get-result (format "Print Table Printing If.")))
+  (send-coq-cmd (format "Unset Printing All."))
+  (send-coq-cmd (format "Unset Printing Notations."))
+  (let ((iftable (send-coq-cmd (format "Print Table Printing If.")))
     (term nil))
     (if (search "None" iftable)
     nil
-      (proof-shell-invisible-cmd-get-result (format "Remove Printing If %s."
+      (send-coq-cmd (format "Remove Printing If %s."
                           (subseq iftable (+ 1 (search ":" iftable))))))
 
-    (setf term (proof-shell-invisible-cmd-get-result (format "Focus")))
+    (setf term (send-coq-cmd (format "Focus")))
     (setf listofstatements (append (list (list 'theorem (make-symbol "temp") (thm-to-list (clean-goal term)))) listofstatements))
-    (setf listofthmvariables (append (list (list (vars-goal term) )) listofthmvariables)    )   
+    (setf listofthmvariables (append (list (list (vars-goal term) )) listofthmvariables)    )
     (if (search "None" iftable)
     nil
-      (proof-shell-invisible-cmd-get-result (format "Add Printing If %s."
+      (send-coq-cmd (format "Add Printing If %s."
                           (subseq iftable (+ 1 (search ":" iftable))))))
-    (proof-shell-invisible-cmd-get-result (format "Set Printing Notations."))
-    (proof-shell-invisible-cmd-get-result (format "Set Printing All."))
-    
-    )
-  )
+    (send-coq-cmd (format "Set Printing Notations."))
+    (send-coq-cmd (format "Set Printing All."))))

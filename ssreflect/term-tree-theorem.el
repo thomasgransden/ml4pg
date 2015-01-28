@@ -73,9 +73,9 @@
 
 (defun addthm (name)
   (interactive)
-  (send-coq-cmd (format "Unset Printing All."))
-  (send-coq-cmd (format "Unset Printing Notations."))
-  (let ((iftable (send-coq-cmd (format "Print Table Printing If.")))
+  (send-coq-cmd "Unset Printing All.")
+  (send-coq-cmd "Unset Printing Notations.")
+  (let ((iftable (send-coq-cmd "Print Table Printing If."))
     (term nil))
     (if (search "None" iftable)
     nil
@@ -91,8 +91,8 @@
     nil
       (send-coq-cmd (format "Add Printing If %s."
                           (subseq iftable (+ 1 (search ":" iftable))))))
-    (send-coq-cmd (format "Set Printing Notations."))
-    (send-coq-cmd (format "Set Printing All."))
+    (send-coq-cmd "Set Printing Notations.")
+    (send-coq-cmd "Set Printing All.")
 
     )
   )
@@ -141,8 +141,7 @@
 
 (defun vars-goal (goal)
   (let* ((clean-vars (remove-jumps (replace-quote (subseq goal (+ 1 (search ")" goal :start2 ( + 1 (search ")" goal)))) (search "============================" goal)) ))))
-    (search-vars clean-vars)
-    ))
+    (search-vars clean-vars)))
 
 
 
@@ -150,27 +149,24 @@
 
 (defun addcurrentgoal ()
   (interactive)
-  (send-coq-cmd (format "Unset Printing All."))
-  (send-coq-cmd (format "Unset Printing Notations."))
-  (let ((iftable (send-coq-cmd (format "Print Table Printing If.")))
+  (send-coq-cmd "Unset Printing All.")
+  (send-coq-cmd "Unset Printing Notations.")
+  (let ((iftable (send-coq-cmd "Print Table Printing If."))
     (term nil))
     (if (search "None" iftable)
     nil
       (send-coq-cmd (format "Remove Printing If %s."
                           (subseq iftable (+ 1 (search ":" iftable))))))
 
-    (setf term (send-coq-cmd (format "Focus")))
+    (setf term (send-coq-cmd "Focus"))
     (setf listofstatements (append (list (list 'theorem (make-symbol "temp") (thm-to-list (clean-goal term)))) listofstatements))
     (setf listofthmvariables (append (list (list (vars-goal term) )) listofthmvariables)    )
     (if (search "None" iftable)
     nil
       (send-coq-cmd (format "Add Printing If %s."
                           (subseq iftable (+ 1 (search ":" iftable))))))
-    (send-coq-cmd (format "Set Printing Notations."))
-    (send-coq-cmd (format "Set Printing All."))
-
-    )
-  )
+    (send-coq-cmd "Set Printing Notations.")
+    (send-coq-cmd "Set Printing All.")))
 
 (defvar varstypes nil)
 
@@ -226,8 +222,7 @@
 (defun split-term-> (term)
   (let ((trm (split-term->-aux term)))
     (if trm (car trm)
-      (progn (message "FAILED TO PARSE: %s" term)
-             (error "FAILED TO PARSE: %s" term)))))
+            (error "FAILED TO PARSE: %s" term))))
 
 (defun split-term->-aux (term)
   (condition-case nil
@@ -239,7 +234,7 @@
 
 (defun varsterms (term1)
   (let* ((term2 (subseq term1 (1+ (search ":" term1))))
-         (term2 (remove-whitespaces (remove-jumps term2)))
+         (term3 (remove-whitespaces (remove-jumps term2)))
          (term  (subseq term3 1)))
     (if (search "," term)
         (append (split-vars (subseq term 0 (search "," term :from-end t)))
@@ -260,29 +255,33 @@
 (defun thm-for-tree (name)
   (interactive)
   (setf varstypes nil)
-  (send-coq-cmd (format "Unset Printing All."))
-  (send-coq-cmd (format "Unset Printing Notations."))
-  (let* ((iftable (send-coq-cmd (format "Print Table Printing If.")))
-         (term nil)
-         (ifs (subseq iftable (+ 1 (search ":" iftable)))))
+  (send-coq-cmd "Unset Printing All.")
+  (send-coq-cmd "Unset Printing Notations.")
+  (let* ((iftable (send-coq-cmd "Print Table Printing If."))
+         (term    nil)
+         (colon   (search ":" iftable))
+         (ifs     (subseq iftable (+ 1 colon))))
     (unless (search "None" iftable)
-      (send-coq-cmd (format "Remove Printing If %s." ifs)))
+      (send-coq-cmd (format "Remove Printing If %s" ifs)))
 
-    (setf term (replace-regexp-in-string "'" "1" (obtain-theorem name))   )
+    (setf term (replace-regexp-in-string "'" "1" (obtain-theorem name)))
     (unless (search "None" iftable)
-      (send-coq-cmd (format "Add Printing If %s." ifs)))
-    (send-coq-cmd (format "Set Printing Notations."))
-    (send-coq-cmd (format "Set Printing All."))
-    (if (= 1 (length (varsterms term)))
-        (car (varsterms term))
-        (varsterms term))))
+      (send-coq-cmd (format "Add Printing If %s" ifs)))
+    (send-coq-cmd "Set Printing Notations.")
+    (send-coq-cmd "Set Printing All.")
+    (unless (search "not a defined object" term)
+      (if (= 1 (length (varsterms term)))
+          (car (varsterms term))
+        (varsterms term)))))
 
 (defun showtreegraphthm-aux (thm)
   (unless (equal thm "")
-    (let ((t1 (obtain-theorem thm)))
-      (if (search "Error" t1)
-          (message (format "Theorem %s is undefined" thm))
-        (showtreegraph (thm-for-tree thm))))))
+    (if (search "Error" (obtain-theorem thm))
+        (message "Theorem %s is undefined" thm)
+        (let ((t2 (thm-for-tree thm)))
+          (if t2
+              (showtreegraph t2)
+              (message "Theorem %s isn't defined" thm))))))
 
 (defun showtreegraphthm ()
   (interactive)
