@@ -14,7 +14,8 @@
 
 (defun handle-error (msg)
   (message msg)
-  (if noninteractive (kill-emacs)
+  (if noninteractive (progn (backtrace)
+                            (kill-emacs))
                      (debug)))
 
 (defun do-focus (&optional handler)

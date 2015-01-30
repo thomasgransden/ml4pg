@@ -14,62 +14,36 @@
 (defvar libs-defs nil)
 
 (defun available-defs-libraries ()
-  (setf libs-defs nil)
-  (shell-command  (concat "ls " home-dir "definitions |  wc -l"))
-  (let ((n nil)
-    (i 0))
-  (with-current-buffer "*Shell Command Output*"
-    (beginning-of-buffer)
-    (setq n (string-to-number (format "%s"  (read (current-buffer))))))
-  (shell-command  (concat "ls " home-dir "definitions"))
-  (with-current-buffer "*Shell Command Output*"
-    (progn (beginning-of-buffer)
-       (while (< i n)
-         (let ((r (format "%s" (read (current-buffer)))))
-           (progn (setq i (1+ i))
-              (setq libs-defs (append libs-defs (list r))))))))))
+  (setf libs-defs (directory-files (concat home-dir "definitions"))))
 
 (defvar libs-statements nil)
 
 (defun available-thm-libraries ()
-  (setf libs-statements nil)
-  (shell-command  (concat "ls " home-dir "theorems |  wc -l"))
-  (let ((n nil)
-    (i 0))
-  (with-current-buffer "*Shell Command Output*"
-    (beginning-of-buffer)
-    (setq n (string-to-number (format "%s"  (read (current-buffer))))))
-  (shell-command  (concat "ls " home-dir "theorems"))
-  (with-current-buffer "*Shell Command Output*"
-    (progn (beginning-of-buffer)
-       (while (< i n)
-         (let ((r (format "%s" (read (current-buffer)))))
-           (progn (setq i (1+ i))
-              (setq libs-statements (append libs-statements (list r))))))))))
+  (setf libs-statements (directory-files (concat home-dir "theorems"))))
 
 (defun import-definitions (name)
   (with-temp-buffer
-  (insert-file-contents (concat home-dir "/definitions/" name))
-  (car (read-from-string (format "%s" (read (current-buffer)))))))
+    (insert-file-contents (concat home-dir "/definitions/" name))
+    (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun import-variables (name)
   (with-temp-buffer
-  (insert-file-contents (concat home-dir "/variables/" name))
-  (car (read-from-string (format "%s" (read (current-buffer)))))))
+    (insert-file-contents (concat home-dir "/variables/" name))
+    (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun import-statements (name)
   (with-temp-buffer
-  (insert-file-contents (concat home-dir "/theorems/" name))
-  (car (read-from-string (format "%s" (read (current-buffer)))))))
+    (insert-file-contents (concat home-dir "/theorems/" name))
+    (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun import-variablesthm (name)
   (with-temp-buffer
-  (insert-file-contents (concat home-dir "/variablesthms/" name))
-  (car (read-from-string (format "%s" (read (current-buffer)))))))
+    (insert-file-contents (concat home-dir "/variablesthms/" name))
+    (car (read-from-string (format "%s" (read (current-buffer)))))))
 
-(defvar definitions-libraries nil)
-(defvar variables-libraries nil)
-(defvar statements-libraries nil)
+(defvar definitions-libraries  nil)
+(defvar variables-libraries    nil)
+(defvar statements-libraries   nil)
 (defvar variablesthm-libraries nil)
 
 (defvar number-of-defs nil)
@@ -81,13 +55,12 @@
   (setf number-of-defs (append number-of-defs (list (list "current" (length listofdefinitions)))))
   (available-defs-libraries)
   (setf variables-libraries (reverse listofvariables))
-  (do ((temp libs-defs (cdr temp)))
-      ((endp temp) nil)
-    (progn (setf number-of-defs (append number-of-defs (list (list (car temp) (length (import-definitions (car temp)))))))
-       (setf definitions-libraries (append definitions-libraries
-                    (import-definitions (car temp))))
-       (setf variables-libraries (append variables-libraries
-                    (import-variables (car temp)))))))
+  (dolist (elem libs-defs)
+    (let ((defs (import-definitions elem))
+          (vars (import-variables elem)))
+      (append-to number-of-defs   (list elem (length defs)))
+      (setf definitions-libraries (append definitions-libraries defs))
+      (setf variables-libraries   (append variables-libraries   vars)))))
 
 (defvar alllibs nil)
 

@@ -109,23 +109,16 @@
     (setf tables-thms (append tables-thms
                   (list (build-table (extract-info (car temp) (car temp2))))))))
 
-
-
-
-
 (defun clean-goal (goal)
   (let* ((clean-term (remove-whitespaces (remove-jumps (subseq goal (+ 28 (search "============================" goal))
-                                   (search "(dependent " goal)))))
-     (arr (search "->" clean-term :from-end t))
-     (comma (search "," clean-term :from-end t))
-     (obj (cond ((and arr comma (< arr comma))  (subseq clean-term (+ 1 comma)))
-           (arr (subseq clean-term (+ 2 arr)))
-            (comma (subseq clean-term (+ 1 comma)))
-            (t clean-term))))
-    (replace-questionmark (replace-quote obj)) )
-)
-
-
+                                                               (search "(dependent " goal)))))
+         (arr (search "->" clean-term :from-end t))
+         (comma (search "," clean-term :from-end t))
+         (obj (cond ((and arr comma (< arr comma))  (subseq clean-term (+ 1 comma)))
+                    (arr (subseq clean-term (+ 2 arr)))
+                    (comma (subseq clean-term (+ 1 comma)))
+                    (t clean-term))))
+    (replace-questionmark (replace-quote obj))))
 
 (defun search-vars (str)
   (do ((temp str)
@@ -137,34 +130,26 @@
       (setf temp (subseq temp (1+ colon)))
       (setf colon (search ":" temp)))))
 
-
-
 (defun vars-goal (goal)
   (let* ((clean-vars (remove-jumps (replace-quote (subseq goal (+ 1 (search ")" goal :start2 ( + 1 (search ")" goal)))) (search "============================" goal)) ))))
     (search-vars clean-vars)))
-
-
-
-
 
 (defun addcurrentgoal ()
   (interactive)
   (send-coq-cmd "Unset Printing All.")
   (send-coq-cmd "Unset Printing Notations.")
   (let ((iftable (send-coq-cmd "Print Table Printing If."))
-    (term nil))
-    (if (search "None" iftable)
-    nil
+        (term nil))
+    (unless (search "None" iftable)
       (send-coq-cmd (format "Remove Printing If %s."
-                          (subseq iftable (+ 1 (search ":" iftable))))))
+                            (subseq iftable (+ 1 (search ":" iftable))))))
 
     (setf term (send-coq-cmd "Focus"))
     (setf listofstatements (append (list (list 'theorem (make-symbol "temp") (thm-to-list (clean-goal term)))) listofstatements))
     (setf listofthmvariables (append (list (list (vars-goal term) )) listofthmvariables)    )
-    (if (search "None" iftable)
-    nil
+    (unless (search "None" iftable)
       (send-coq-cmd (format "Add Printing If %s."
-                          (subseq iftable (+ 1 (search ":" iftable))))))
+                            (subseq iftable (+ 1 (search ":" iftable))))))
     (send-coq-cmd "Set Printing Notations.")
     (send-coq-cmd "Set Printing All.")))
 
