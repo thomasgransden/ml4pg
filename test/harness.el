@@ -68,11 +68,14 @@
 (defun ml4pg-load-and-extract-info (str action)
   "Insert STR into a temporary buffer, load ML4PG in that buffer then run
    ACTION"
-  (with-temp-buffer
-    (let ((noninteractive t))
-      (insert str)
-      (ml4pg-mode-aux)
-      (coq-build-prog-args)
-      (goto-char (point-max))
-      (extract-feature-theorems)
-      (funcall action))))
+  (let ((path (make-temp-file "ml4pg-test" nil ".v")))
+    (unwind-protect
+        (with-temp-file path
+          (let ((noninteractive t))
+            (insert str)
+            (ml4pg-mode-aux)
+            (coq-build-prog-args)
+            (goto-char (point-max))
+            (extract-feature-theorems)
+            (funcall action)))
+      (delete-file path))))

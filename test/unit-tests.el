@@ -49,10 +49,10 @@
                                                    number-of-defs))))
 
 (defun generate-and-run (func)
-  `(lambda ()
-     (let (str (funcall (gen-coq-correct-theorem)))
-       (list str
-             (ml4pg-load-and-extract-info str ',func)))))
+  (let ((f (indirect-function func)))
+    (compose `(lambda (str)
+                (list str (ml4pg-load-and-extract-info str ,f)))
+             (gen-coq-correct-theorem))))
 
 (test-with extract-defs-theorem
   "Try extracting definitions given a single theorem."
@@ -139,14 +139,23 @@
   (lambda (str result)
     ))
 
+(defun test-save-numbers ()
+  (unwind-protect
+      (save-numbers-mkdir "coq"
+                          'extract-names2
+                          'extract-feature-theorems
+                          "test/"
+                          t)
+    (delete-directory (concat home-dir "libs/coq/test") t)))
+
 (test-with save-numbers-empty
   "savenumbers"
   nil
-  (lambda () (list (ml4pg-load-and-extract-info "" 'save-numbers))))
+  (lambda () (list (ml4pg-load-and-extract-info "" 'test-save-numbers))))
 
 (test-with save-numbers-theorem
   ""
-  (generate-and-run 'save-numbers)
+  (generate-and-run 'test-save-numbers)
   (lambda (str result)
     ))
 
@@ -160,3 +169,43 @@
   (generate-and-run 'exported-libraries)
   (lambda (str result)
     ))
+
+(defun with-coq-example (f)
+  (when proof-script-buffer
+      (proof-deactivate-scripting 'retract))
+  (let ((path (make-temp-file "ml4pg" nil ".v")))
+    (with-temp-file path
+      (insert-file-contents-literally (concat home-dir "ml4pg.v")))
+    (unwind-protect
+        (find-file path)
+        (funcall f)
+      (delete-file path))))
+
+(test-with ml4pg-mode-auto
+  "Does ml4pg-mode activate when loading a .v file?"
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (should (equal major-mode 'coq-mode))))))
+
+(test-with ml4pg-example-is-valid
+  "Does Coq accept ml4pg.v?"
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (proof-process-buffer)
+                        (should
+                         (string= ""
+                                  (replace-regexp-in-string
+                                   "[\s\n]"
+                                   ""
+                                   (buffer-substring (proof-queue-or-locked-end)
+                                                     (point-max)))))))))
+
+(test-with extract-example-info
+  "Extract info from ml4pg.v"
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (goto-char (point-max))
+                        (extract-info-up-to-here)))))

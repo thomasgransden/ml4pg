@@ -2,11 +2,10 @@
 
 (defun export-up-to-here ()
   (interactive)
-  (let* ((buf (buffer-name))
-     (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
-    (with-temp-file (concat home-dir "/definitions/" name)
+  (let ((name (name-from-buf)))
+    (with-temp-file (concat home-dir "definitions/" name)
       (insert (format "%s" listofdefinitions)))
-    (with-temp-file (concat home-dir "/variables/" name)
+    (with-temp-file (concat home-dir "variables/" name)
       (insert (format "%s" listofvariables)))
     )
   t)
@@ -23,22 +22,22 @@
 
 (defun import-definitions (name)
   (with-temp-buffer
-    (insert-file-contents (concat home-dir "/definitions/" name))
+    (insert-file-contents (concat home-dir "definitions/" name))
     (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun import-variables (name)
   (with-temp-buffer
-    (insert-file-contents (concat home-dir "/variables/" name))
+    (insert-file-contents (concat home-dir "variables/" name))
     (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun import-statements (name)
   (with-temp-buffer
-    (insert-file-contents (concat home-dir "/theorems/" name))
+    (insert-file-contents (concat home-dir "theorems/" name))
     (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun import-variablesthm (name)
   (with-temp-buffer
-    (insert-file-contents (concat home-dir "/variablesthms/" name))
+    (insert-file-contents (concat home-dir "variablesthms/" name))
     (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defvar definitions-libraries  nil)

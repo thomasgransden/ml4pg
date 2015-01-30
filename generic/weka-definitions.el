@@ -6,7 +6,6 @@
   (interactive)
   (switch-to-display)
   (let ((out_bis (weka-defs)))
-    (sleep-for 2)
     (print-clusters-weka-defs (weka-defs-n granularity-level tables-definitions)
                               out_bis)))
 
@@ -65,7 +64,6 @@
   (interactive)
   (switch-to-display)
   (let ((out_bis (weka-thms)))
-    (sleep-for 2)
     (print-clusters-weka-thms (floor (length tables-thms) (case granularity-level
                                                             (2 7)
                                                             (3 5)
@@ -105,7 +103,6 @@
   (transform-definitions)
   (switch-to-display)
   (let ((out_bis (weka-defs)))
-    (sleep-for 2)
     (print-similarities-weka-defs 0
                                   (caar tables-definitions)
                                   out_bis)))
@@ -136,7 +133,6 @@
   (addcurrentgoal)
   (switch-to-display)
   (let ((out_bis (weka-thms)))
-    (sleep-for 2)
     (print-similarities-weka-statement out_bis))
   (setf listofstatements (cdr listofstatements))
   (setf listofthmvariables (cdr listofthmvariables)))

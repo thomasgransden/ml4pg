@@ -64,5 +64,5 @@
                       'extract-names2
                       (lambda ()
                         (setf buf (buffer-name))
-                        (setf name (if (search "." buf) (subseq buf 0 (search "." buf)) buf))
+                        (setf name (name-from-buf))
                         (ignore-errors (extract-feature-theorems))))))

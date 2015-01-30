@@ -235,7 +235,6 @@
                                            (5 2)
                                            (t 8)))))
                   (out_bis (weka (funcall arg))))
-             (sleep-for 1)
              (print-similarities-weka-str (funcall arg) out_bis)))))
 
   (proof-shell-invisible-cmd-get-result (format "Unset Printing All")))

@@ -320,7 +320,7 @@
     (setf temp2 (append temp2 (list (cons (replace-colon (car (car temp))) (cdr (car temp))))))))
 
 (defun export-tactics ()
-  (with-temp-file (concat home-dir "/coq/tactics")
+  (with-temp-file (concat home-dir "coq/tactics")
     (insert (format "%s" (replace-colon-rec)))))
 
 (defun get-tactic-id (tac)

@@ -32,7 +32,7 @@
 
 (defun import-thing (type name)
   (with-temp-buffer
-    (insert-file-contents (concat home-dir "/" type "/" name))
+    (insert-file-contents (concat home-dir type "/" name))
     (car (read-from-string (format "%s" (read (current-buffer)))))))
 
 (defun add-several-libraries-aux (libs1 list1
@@ -73,8 +73,8 @@
 
 (defun export-up-to-here-aux (dir1 val1 dir2 val2)
   (let ((name (name-from-buf)))
-    (write-lisp-to-file (concat home-dir "/" dir1 "/" name) val1)
-    (write-lisp-to-file (concat home-dir "/" dir2 "/" name) val2)
+    (write-lisp-to-file (concat home-dir dir1 "/" name) val1)
+    (write-lisp-to-file (concat home-dir dir2 "/" name) val2)
     t))
 
 (defun random-elem (list)
@@ -214,89 +214,50 @@
               (remove-if-not #'(lambda (x) (= (cadr x) pivot)) list)
               (quicksort-pair (remove-if-not #'(lambda (x) (< (cadr x) pivot)) list))))))
 
+(defun save-numbers-aux-aux (name)
+  (dolist (elem (list (list "definitions"   listofdefinitions)
+                      (list "variables"     listofvariables)
+                      (list "theorems"      listofstatements)
+                      (list "variablesthms" listofthmvariables)))
+    (with-temp-file (concat home-dir (car elem) "/" name)
+      (insert (format "%s" (cadr elem))))))
+
 (defun save-numbers-aux (dir func func2)
+  (let ((d     (read-string (concat "Where do you want to store this library ("
+                                    (list-to-string dirs)
+                                    "n (create new directory)): ")))
+        (mkdir nil)
+        (d2    (cond
+                ((string-member d dirs)
+                 (concat d "/"))
+
+                ((string= d "n")
+                 (setq mkdir t)
+                 (concat (read-string "Introduce a name for the directory: ") "/"))
+
+                (t ""))))
+    (save-numbers-mkdir dir func func2 d2 mkdir)))
+
+(defun save-numbers-mkdir (dir func func2 d mkdir)
+  (when mkdir
+    (shell-command (concat "mkdir " home-dir "libs/" dir "/" d)))
+  (save-numbers-noask dir func func2 d))
+
+(defun save-numbers-noask (dir func func2 d)
   (interactive)
-  (progn (beginning-of-buffer)
-         (proof-goto-point)
-         (end-of-buffer)
-         (funcall func2)
-         (let* ((buf (buffer-name))
-                (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
-           (with-temp-file (concat home-dir "/definitions/" name)
-             (insert (format "%s" listofdefinitions)))
-           (with-temp-file (concat home-dir "/variables/" name)
-             (insert (format "%s" listofvariables))))
-         (let* ((buf (buffer-name))
-                (name (if (search "." buf) (subseq buf 0 (search "." buf)) buf)))
-           (with-temp-file (concat home-dir "/theorems/" name)
-             (insert (format "%s" listofstatements)))
-           (with-temp-file (concat home-dir "/variablesthms/" name)
-             (insert (format "%s" listofthmvariables))))
-         (let ((d (read-string (concat "Where do you want to store this library (" (list-to-string dirs) "n (create new directory)): ")))
-               (d2 nil))
-           (cond ((string-member d dirs)
-                  (progn (with-temp-file
-                             (concat home-dir "libs/" dir "/" d "/"
-                                     (subseq (buffer-name (current-buffer)) 0
-                                             (search "." (buffer-name (current-buffer))))
-                                     ".csv") (insert (extract-features-1)))
-                         (with-temp-file
-                             (concat home-dir "libs/" dir "/" d "/"
-                                     (subseq (buffer-name (current-buffer)) 0
-                                             (search "." (buffer-name (current-buffer))))
-                                     "_tactics.csv") (insert (extract-features-2 tactic-level)))
-                         (with-temp-file
-                             (concat home-dir "libs/" dir "/" d "/"
-                                     (subseq (buffer-name (current-buffer)) 0
-                                             (search "." (buffer-name (current-buffer))))
-                                     "_tree.csv") (insert (extract-features-2 proof-tree-level)))
-                         (with-temp-file (concat home-dir "libs/" dir "/" d "/"
-                                                 (subseq (buffer-name (current-buffer)) 0
-                                                         (search "." (buffer-name (current-buffer))))
-                                                 "_names") (insert (funcall func name)))))
-                 ((string= d "n")
-                  (progn
-                    (setf d2 (read-string (concat "Introduce a name for the directory: ")))
-                    (shell-command (concat "mkdir " home-dir "libs/" dir "/" d2))
-                    (with-temp-file
-                        (concat home-dir "libs/" dir "/" d2 "/"
-                                (subseq (buffer-name (current-buffer)) 0
-                                        (search "." (buffer-name (current-buffer))))
-                                ".csv") (insert (extract-features-1)))
-                    (with-temp-file
-                        (concat home-dir "libs/" dir "/" d2 "/"
-                                (subseq (buffer-name (current-buffer)) 0
-                                        (search "." (buffer-name (current-buffer))))
-                                "_tree.csv") (insert (extract-features-2 proof-tree-level)))
-                    (with-temp-file
-                        (concat home-dir "libs/" dir "/" d2 "/"
-                                (subseq (buffer-name (current-buffer)) 0
-                                        (search "." (buffer-name (current-buffer))))
-                                "_tactics.csv") (insert (extract-features-2 tactic-level)))
-                    (with-temp-file (concat home-dir "libs/" dir "/" d2 "/"
-                                            (subseq (buffer-name (current-buffer)) 0
-                                                    (search "." (buffer-name (current-buffer))))
-                                            "_names") (insert (funcall func name)))))
-                 (t
-                  (progn (with-temp-file
-                             (concat home-dir "libs/" dir "/"
-                                     (subseq (buffer-name (current-buffer)) 0
-                                             (search "." (buffer-name (current-buffer))))
-                                     ".csv") (insert (extract-features-1)))
-                         (with-temp-file
-                             (concat home-dir "libs/" dir "/"
-                                     (subseq (buffer-name (current-buffer)) 0
-                                             (search "." (buffer-name (current-buffer))))
-                                     "_tree.csv") (insert (extract-features-2 proof-tree-level)))
-                         (with-temp-file
-                             (concat home-dir "libs/" dir "/"
-                                     (subseq (buffer-name (current-buffer)) 0
-                                             (search "." (buffer-name (current-buffer))))
-                                     "_tactics.csv") (insert (extract-features-2 tactic-level)))
-                         (with-temp-file (concat home-dir "libs/" dir "/"
-                                                 (subseq (buffer-name (current-buffer)) 0
-                                                         (search "." (buffer-name (current-buffer))))
-                                                 "_names") (insert (funcall func name)))))))))
+  (goto-char (point-min))
+  (proof-retract-until-point-interactive)
+  (goto-char (point-max))
+  (funcall func2)
+  (save-numbers-aux-aux (name-from-buf))
+
+  (dolist (elem (list (list ".csv"         (lambda (x) (extract-features-1)))
+                      (list "_tree.csv"    (lambda (x) (extract-features-2 proof-tree-level)))
+                      (list "_tactics.csv" (lambda (x) (extract-features-2 tactic-level)))
+                      (list "_names"       func)))
+    (with-temp-file
+        (concat home-dir "libs/" dir "/" d (name-from-buf) (car elem))
+      (insert (funcall (cadr elem) name)))))
 
 (defun coqp (str)
   "Check whether STR contains valid Coq code by trying to compile it"
@@ -308,11 +269,9 @@
             (insert str))
           (write-to-messages
            `(lambda ()
-              (let ((output (process-with-cmd "coqc"
-                                              ""
-                                              (lambda (&rest x)
-                                                (list nil (buffer-string)))
-                                              ,f)))
-                (message "OUTPUT:\n%s\n" output)
-                (stringp output)))))
+              (stringp (process-with-cmd "coqc"
+                                         ""
+                                         (lambda (&rest x)
+                                           (list nil (buffer-string)))
+                                         ,f)))))
       (delete-directory dir t nil))))

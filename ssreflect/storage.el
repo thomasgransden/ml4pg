@@ -1,7 +1,5 @@
-(defvar home-dir "/home/jonathan/Dropbox/emacs-matlab/")
-
 (defun save-lemma-aux (string)
-  (append-to-file string nil (concat home-dir "lemmas.txt"))  
+  (append-to-file string nil (concat home-dir "lemmas.txt"))
 )
 
 (defun save-lemma (name value)
@@ -9,7 +7,7 @@
 
 
 (defun save-view-aux (string)
-  (append-to-file string nil (concat home-dir "views.txt"))  
+  (append-to-file string nil (concat home-dir "views.txt"))
 )
 
 (defun save-view (name value)
@@ -38,16 +36,7 @@
       ((not (search "$" temp)) temp2)
       (let ((dollar (search "$" temp))
         (amper (search "&" temp)))
-    (progn 
+    (progn
       (setf temp2 (append temp2 (list (cons (subseq temp 0 amper)
                      (string-to-number (subseq temp (1+ amper) dollar))))))
            (setf temp (subseq temp (1+ dollar)))))))
-
-
-
-
-
-
-
-
-
