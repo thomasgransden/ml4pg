@@ -45,7 +45,8 @@
 (defun get-types-list-aux (f list res)
   (if (endp list)
       (* -1 res)
-    (get-types-list-aux (cdr list)
+    (get-types-list-aux f
+                        (cdr list)
                         (+ (* -1 (apply f (list (car list)))
                               (expt 10 (1- (length list))))
                            res))))
@@ -129,9 +130,9 @@
       (search ";intros" cmd)))
 
 (defun generate-zeros (n)
-  (if (= n 0)
-      nil
-      (cons 0 (generate-zeros-aux (1- n)))))
+  (let (res)
+    (dotimes (i n res)
+      (setq res (cons 0 res)))))
 
 (defun print-list (list)
   (let ((str ""))
