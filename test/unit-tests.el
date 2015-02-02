@@ -2,6 +2,13 @@
 ;; As much as possible, these functions should be broken down into simple,
 ;; pure functions, with separate tests.
 
+(test-with pg-available
+  "Test ProofGeneral is available"
+  nil
+  (lambda ()
+    (should (fboundp 'coq-mode))
+    (should (fboundp 'coq-build-prog-args))))
+
 (test-with lookup-type-id
   "Looks up types in an assoc list"
   (list-of (gen-types-id))

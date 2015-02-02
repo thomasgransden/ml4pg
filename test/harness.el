@@ -73,7 +73,7 @@
         (with-temp-file path
           (let ((noninteractive t))
             (insert str)
-            (ml4pg-mode-aux)
+            (normal-mode)
             (coq-build-prog-args)
             (goto-char (point-max))
             (extract-feature-theorems)

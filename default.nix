@@ -6,9 +6,9 @@ stdenv.mkDerivation {
   buildInputs = [
     jre
     emacs
+    emacs24Packages.proofgeneral
     graphviz
     coq
-    emacs24Packages.proofgeneral
   ];
   shellHook = ''
     export CWD=$(pwd)
