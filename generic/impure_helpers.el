@@ -284,7 +284,7 @@
       (delete-directory dir t nil))))
 
 (defun send-coq-cmd (str)
-  (message "SENDING: %s" str)
+  ;(message "SENDING: %s" str)
   (let ((result (proof-shell-invisible-cmd-get-result str)))
-    (message "GOT: %s" result)
+    ;(message "GOT: %s" result)
     result))
