@@ -29,9 +29,11 @@
                     "-s" "weka.attributeSelection.Ranker -T 0 -N 5"))
 
 (defun weka (n)
+  (weka-notemp n (read-file (expand-file-name "temp.csv"))))
+
+(defun weka-notemp (n temp)
   (let* ((alg     (weka-alg algorithm))
          (headers (read-file (concat home-dir "aux_files/headers.txt")))
-         (temp    (read-file (expand-file-name "temp.csv")))
          (temp3   (concat headers temp))
          (out     (process-with-cmd "java" temp3 nil
                                     "-classpath" *weka-dir*

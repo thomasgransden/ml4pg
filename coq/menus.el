@@ -3,11 +3,6 @@
 (easy-menu-define statistics-menu global-map "Statistics"
   '("Statistics"
     ("Configuration"
-     ("ML system"
-       ["Weka" (change-ml-system "w")
-    :selected (string= ml-system "w")
-    :style toggle
-    :help "Use Weka as ML system"])
      ("Level"
        ["Goal level" (change-level "g")
     :selected (string= level "g")
@@ -26,21 +21,14 @@
     :selected (string= algorithm "k")
     :style toggle
     :help "Use k-means algorithm"]
-       ["Gaussian" (change-algorithm "g")
-    :selected (string= algorithm "g")
-    :style toggle
-    :active (string= ml-system "m")
-    :help "Use Gaussian algorithm"]
        ["EM" (change-algorithm "e")
     :selected (string= algorithm "e")
     :style toggle
-    :active (string= ml-system "w")
     :help "Use Simple EM algorithm"]
        ["FarthestFirst" (change-algorithm "f")
     :selected (string= algorithm "f")
     :style toggle
-    :active (string= ml-system "w")
-    :help "Use FarhestFirst algorithm"])
+    :help "Use FarthestFirst algorithm"])
       ("Granularity"
        ["1"  (change-granularity 1)
     :selected (eq granularity-level 1)
@@ -131,14 +119,8 @@
       (list 'menu-item "Clustering" 'show-clusters-bis
           :help "Clustering"
           :image (list 'image :type 'xpm
-                :file (concat home-dir "icons/clustering.xpm"))))
+                :file (concat home-dir "icons/clustering.xpm"))))))
 
-    ))
-
-
-
-
-(defvar ml-system "w")
 (defvar algorithm "k")
 (defvar granularity-level 3)
 (defvar frequency-precision 1)
@@ -152,14 +134,6 @@
 
 (defun change-algorithm (s)
   (setq algorithm s))
-
-(defun change-ml-system (s)
-  (setq ml-system s)
-  (setq algorithm "k")
-  (cond ((string= s "w")
-     (setq iterative nil)
-     ))
-  )
 
 (defun change-granularity (n)
   (setq granularity-level n))

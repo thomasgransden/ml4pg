@@ -49,9 +49,3 @@
 (defun do-goal-str (&optional handler)
   (do-set-printing)
   (goal-str-aux (do-focus handler)))
-
-(defun send-coq-cmd (str)
-  (message "SENDING: %s" str)
-  (let ((result (proof-shell-invisible-cmd-get-result str)))
-    (message "GOT: %s" result)
-    result))

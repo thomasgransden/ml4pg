@@ -133,7 +133,7 @@
             (read-views)
             (setq init 1)))
      (export-theorem-aux nil nil)
-     (proof-shell-invisible-cmd-get-result (format "Unset Printing All"))
+     (send-coq-cmd (format "Unset Printing All"))
        ))
 
 
@@ -154,7 +154,7 @@
 (defun get-type-id (object)
   (if (string= "(" (subseq object 0 1))
       -4
-  (let* ((a (remove-jumps (proof-shell-invisible-cmd-get-result (concat "Check " object))))
+  (let* ((a (remove-jumps (send-coq-cmd (concat "Check " object))))
      (pos_jump (search "
 " a :start2 (+ 2 (search " " a))))
      (pos_space (search " " a :start2 (+ 2 (search ": " a))))
@@ -173,7 +173,7 @@
       ))))
 
 (defun get-type-id2 (object)
-  (let* ((a (proof-shell-invisible-cmd-get-result (concat "Check " object)))
+  (let* ((a (send-coq-cmd (concat "Check " object)))
      (pos_jump (search "
 " a :start2 (+ 2 (search " " a))))
      (pos_space (search " " a :start2 (+ 2 (search ": " a))))
@@ -195,8 +195,8 @@
 ;; A function to obtain the value of a top symbol
 
 (defun get-top-symbol ()
-  (proof-shell-invisible-cmd-get-result (format "Set Printing All"))
-  (let* ((res (proof-shell-invisible-cmd-get-result (format "Focus")))
+  (send-coq-cmd (format "Set Printing All"))
+  (let* ((res (send-coq-cmd (format "Focus")))
     (res2 (subseq res (+ 32 (search "============================" res))))
     (fst-symbol (subseq res2 0 (search " " res2))))
     (cond ((search "->" res2) 7)
@@ -217,7 +217,7 @@
 ;; Sobra
 (defun get-obj-intro ()
   (let* ((undo (proof-undo-last-successful-command))
-     (obj (proof-shell-invisible-cmd-get-result (format "Show Intro")))
+     (obj (send-coq-cmd (format "Show Intro")))
      (object (subseq obj 0 (search "
 " obj)))
      (dod (proof-assert-next-command-interactive))
@@ -274,14 +274,14 @@
   (if (= len 0)
       res
     (let ((gs (get-top-symbol))
-      (ps (proof-shell-invisible-cmd-get-result (format "intro"))))
+      (ps (send-coq-cmd (format "intro"))))
       (+ (get-top-symbols-list (- len 1) (+ (* gs (expt 10 (- len 1))) res))))))
 
 (defun get-top-symbols-seq (seq res)
   (if (endp seq)
       res
     (let ((gs (get-top-symbol))
-      (ps (proof-shell-invisible-cmd-get-result (format (concat "intro " (car seq))))))
+      (ps (send-coq-cmd (format (concat "intro " (car seq))))))
       (+ (get-top-symbols-seq (cdr seq) (+ (* gs (expt 10 (- (length seq) 1))) res))))))
 
 ;; To obtain the value associated with a theorem
@@ -837,7 +837,7 @@
     0)))
 
 (defun get-number-of-goals ()
-  (let ((r (proof-shell-invisible-cmd-get-result (format "Show Proof"))))
+  (let ((r (send-coq-cmd (format "Show Proof"))))
     (count-seq "?" r)))
 
 
@@ -1127,7 +1127,7 @@
     (setf tactic-temp (cadr (compute-tactic-result "")))
     (setf proof-tree-temp (cadr (compute-proof-tree-result "")))
     (take-30 (append (flat (reverse result)) (generate-zeros 30) ))
-    (proof-shell-invisible-cmd-get-result (format "Unset Printing All"))
+    (send-coq-cmd (format "Unset Printing All"))
   ))
 
 

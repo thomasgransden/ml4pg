@@ -182,15 +182,18 @@
   (showclustergraph-proof (dependencygraph-proof-aux)))
 
 (defun dependencygraph-proof-writetmp ()
+  (with-temp-file (expand-file-name "temp.csv")
+    (insert (dependencygraph-proof-writetmp-aux))))
+
+(defun dependencygraph-proof-writetmp-aux ()
   (if libs-menus
-      (progn (with-temp-file (expand-file-name "temp.csv")
-               (cond ((string= level "g") (insert (extract-features-1)))
-                     ((string= level "t") (insert (extract-features-2 tactic-level)))
-                     ((string= level "p") (insert (extract-features-2 proof-tree-level)))))
-             (add-libraries-temp)
-             (add-names))
-    (with-temp-file (expand-file-name "temp.csv")
-      (insert (extract-features-1)))))
+      (let ((s1 (cond ((string= level "g") (extract-features-1))
+                      ((string= level "t") (extract-features-2 tactic-level))
+                      ((string= level "p") (extract-features-2 proof-tree-level))))
+            (s2 (add-libraries-notemp)))
+        (add-names)
+        (concat s1 s2))
+      (extract-features-1)))
 
 (defun dependencygraph-proof-aux ()
   (interactive)

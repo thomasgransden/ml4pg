@@ -52,3 +52,47 @@
                                                                             (list 'quote l2))
                         'face (list 'link)
                         'follow-link t)))
+
+(defun add-names-aux (type)
+  (let ((nt (expand-file-name "names_temp.txt")))
+    (shell-command (concat "rm " nt))
+    (shell-command (concat "touch " nt))
+    (do ((temp libs-menus (cdr temp)))
+        ((endp temp) nil)
+      (shell-command  (concat "cat " home-dir "libs/" type "/" (car temp)
+                              "_names >> " nt)))))
+
+(defun add-libraries-temp-str (type add)
+  (let ((path (concat home-dir "libs/" type "/"))
+        (post (cond (((string= level "g") "")
+                     ((string= level "t") "_tactics")
+                     ((string= level "p") "_tree"))))
+        (res  ""))
+    (dolist (elem libs-menu res)
+      (setq res (concat res (read-file (concat path elem post ".csv"))))
+      (when (and add (string= level "g"))
+        (add-to-saved-theorems-libs (concat path elem post ".csv"))))))
+
+(defun add-libraries-temp-aux (type add)
+  (let ((str (add-libraries-temp-str type add)))
+    (with-temp-file (expand-file-name "temp.csv")
+      (goto-char (point-max))
+      (insert str))))
+
+(defun add-to-saved-theorems-libs (file)
+  (add-to-saved-theorems-libs-aux (read-lines file)))
+
+(defun add-to-saved-theorems-libs-aux (lines)
+  (setf saved-theorems-libs
+        (append saved-theorems-libs
+                (mapcar (lambda (x)
+                          (mapcar (lambda (y)
+                                    (car (read-from-string y)))
+                                  (cluster-string-to-list x)))
+                        lines))))
+
+(defun size-notemp (str)
+  (length (split-string str "\n" t)))
+
+(defun size-temp ()
+  (length (read-lines (expand-file-name "temp.csv"))))

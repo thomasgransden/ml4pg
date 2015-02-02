@@ -209,3 +209,66 @@
     (with-coq-example (lambda ()
                         (goto-char (point-max))
                         (extract-info-up-to-here)))))
+
+(test-with example-dependencygraph-defs
+  ""
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (dependencygraph-defs)))))
+
+(test-with example-dependencygraph-statements
+  ""
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (dependencygraph-statements)))))
+
+(test-with example-dependencygraph-prof
+  ""
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (dependencygraph-proof)))))
+
+(test-with example-showtreegraphthm
+  ""
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (showtreegraphthm)))))
+
+(test-with example-show-clusters-bis
+  ""
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (show-clusters-bis)))))
+
+(test-with example-cluster-definitions
+  ""
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (cluster-definitions)))))
+
+(test-with example-show-clusters-of-theorem
+  ""
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (show-clusters-of-theorem)))))
+
+(test-with example-save-numbers
+  ""
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (save-numbers)))))
+
+(test-with example-exported-libraries
+  ""
+  nil
+  (lambda ()
+    (with-coq-example (lambda ()
+                        (exported-libraries)))))

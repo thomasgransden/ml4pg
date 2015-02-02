@@ -4,7 +4,7 @@
 ;; Obtain definition and clean the term
 
 (defun obtain-definition (name)
-  (proof-shell-invisible-cmd-get-result (format "Print %s" name)))
+  (send-coq-cmd (format "Print %s" name)))
 
 (defun remove-jumps (string)
   (do ((temp0 string)
@@ -182,12 +182,12 @@
 
 (defun adddefinition (name)
   (interactive)
-  (proof-shell-invisible-cmd-get-result (format "Unset Printing Notations."))
-  (let ((iftable (proof-shell-invisible-cmd-get-result (format "Print Table Printing If.")))
+  (send-coq-cmd (format "Unset Printing Notations."))
+  (let ((iftable (send-coq-cmd (format "Print Table Printing If.")))
     (term nil))
     (if (search "None" iftable)
     nil
-      (proof-shell-invisible-cmd-get-result (format "Remove Printing If %s."
+      (send-coq-cmd (format "Remove Printing If %s."
                           (subseq iftable (+ 1 (search ":" iftable))))))
 
     (setf term (obtain-definition name))
@@ -197,9 +197,9 @@
                   (list (cadr (definition-to-list (car (clean-term term)))))))
     (if (search "None" iftable)
     nil
-      (proof-shell-invisible-cmd-get-result (format "Add Printing If %s."
+      (send-coq-cmd (format "Add Printing If %s."
                           (subseq iftable (+ 1 (search ":" iftable))))))
-    (proof-shell-invisible-cmd-get-result (format "Set Printing Notations."))
+    (send-coq-cmd (format "Set Printing Notations."))
 
     )
   )

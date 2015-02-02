@@ -54,5 +54,5 @@
   (ml4pg-mode-aux)
   (select-mode))
 
-(add-to-list 'auto-mode-alist
-             '("\\.v\\'" . 'ml4pg-mode))
+;; (add-to-list 'auto-mode-alist
+;;              '("\\.v\\'" . 'ml4pg-mode))

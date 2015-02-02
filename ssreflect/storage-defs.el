@@ -13,12 +13,16 @@
 (defvar libs-defs nil)
 
 (defun available-defs-libraries ()
-  (setf libs-defs (directory-files (concat home-dir "definitions"))))
+  (setf libs-defs (directory-files (concat home-dir "definitions")
+                                   nil
+                                   "[^.]")))
 
 (defvar libs-statements nil)
 
 (defun available-thm-libraries ()
-  (setf libs-statements (directory-files (concat home-dir "theorems"))))
+  (setf libs-statements (directory-files (concat home-dir "theorems")
+                                         nil
+                                         "[^.]")))
 
 (defun import-definitions (name)
   (with-temp-buffer
