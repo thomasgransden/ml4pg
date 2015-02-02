@@ -1,17 +1,3 @@
-(defun use-nix-if-present ()
-  (dolist (path '("~/.nix-profile/share/emacs/site-lisp"
-                  "/run/current-system/sw/share/emacs/site-lisp"))
-    (when (and (file-exists-p path)
-               (not (member path load-path)))
-      (message "Adding %s to load path" path)
-      (setq load-path (append load-path (list path))))))
-
-(defun load-proof-general ()
-  (unless (fboundp 'coq-mode)
-    (message "Loading Proof General")
-    (load "ProofGeneral/generic/proof-site")
-    (message "Finished loading Proof General")))
-
 (defun ml4pg-reload ()
   (message "Loading ML4PG")
   (load (concat (if (boundp 'home-dir)

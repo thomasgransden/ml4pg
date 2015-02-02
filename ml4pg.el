@@ -1,6 +1,13 @@
 ;; Package-Requires: ((emacs "24"))
 
-(defconst home-dir (or (getenv "ML4PG_HOME") "/put/path/to/ML4PG/here"))
+(unless (getenv "ML4PG_HOME")
+  (error "ML4PG_HOME environment variable must be set"))
+
+(defconst home-dir (let ((raw (getenv "ML4PG_HOME")))
+                     (if (string= "/" (substring raw (1- (length raw))))
+                         raw
+                         (concat raw "/"))))
+
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 
 (defvar mode nil)
@@ -44,7 +51,6 @@
 (require 'cl)
 
 (defun ml4pg-mode-aux ()
-  (coq-mode)
   (when noninteractive
     (coq-build-prog-args)  ;; PG assumes coqtop will never run non-interactively
     (setq proof-shell-fiddle-frames nil)  ;; Don't alter non-existent windows
@@ -54,5 +60,21 @@
   (ml4pg-mode-aux)
   (select-mode))
 
-;; (add-to-list 'auto-mode-alist
-;;              '("\\.v\\'" . 'ml4pg-mode))
+(defun use-nix-if-present ()
+  (dolist (path '("~/.nix-profile/share/emacs/site-lisp"
+                  "/run/current-system/sw/share/emacs/site-lisp"))
+    (when (and (file-exists-p path)
+               (not (member path load-path)))
+      (message "Adding %s to load path" path)
+      (setq load-path (append load-path (list path))))))
+
+(defun load-proof-general ()
+  (unless (fboundp 'coq-mode)
+    (message "Loading Proof General")
+    (load "ProofGeneral/generic/proof-site")
+    (message "Finished loading Proof General")))
+
+(use-nix-if-present)
+(load-proof-general)
+
+(add-hook 'coq-mode-hook 'ml4pg-mode)

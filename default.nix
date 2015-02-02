@@ -6,7 +6,6 @@ stdenv.mkDerivation {
   buildInputs = [
     jre
     emacs
-    git
     graphviz
     coq
     emacs24Packages.proofgeneral

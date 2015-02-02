@@ -253,7 +253,8 @@
   nil
   (lambda ()
     (with-coq-example (lambda ()
-                        (showtreegraphthm)))))
+                        (dolist (thm (extract-coq-names-from (buffer-string)))
+                          (showtreegraphthm-aux thm))))))
 
 (test-with example-show-clusters-bis
   ""
@@ -281,7 +282,7 @@
   nil
   (lambda ()
     (with-coq-example (lambda ()
-                        (save-numbers)))))
+                        (test-save-numbers)))))
 
 (test-with example-exported-libraries
   ""
