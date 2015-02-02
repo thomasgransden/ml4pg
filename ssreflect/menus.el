@@ -95,10 +95,8 @@
 (defvar algorithm "k")
 (defvar granularity-level 3)
 (defvar frequency-precision 1)
-(defvar iterative nil)
 (defvar save-automatically nil)
 (defvar level "g")
-
 
 (defun change-level (n)
   (setq level n))
@@ -139,16 +137,6 @@
                   ((string= "2" alg) 2)
                   ((string= "3" alg) 3)
                   (t frequency-precision)))))
-
-(defun change-iterative-interactive ()
-  (interactive)
-  (let ((alg (read-string
- "Do you want to perform iterative search? (yes -> y, no -> n): ")))
-    (setf iterative (cond ((string= "y" alg) 1)
-              ((string= "n" alg) 2)
-              (t iterative)))))
-
-
 
 (defun exported-libraries ()
   (interactive)

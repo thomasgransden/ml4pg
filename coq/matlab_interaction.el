@@ -55,8 +55,6 @@
                     (car temp)))
         (setf temp2 (append temp2 (list (car temp)))))))
 
-(defvar granularity-level-temp 1)
-
 (defun print-similarities (res)
   (print-similarities-aux (lambda (&rest args)) res))
 
@@ -207,7 +205,7 @@
 (defun show-clusters-of-theorem ()
   (interactive)
   (let* ((alg (show-clusters-alg algorithm))
-         (gra (case (if iterative granularity-level-temp granularity-level)
+         (gra (case granularity-level
                 (2 8)
                 (3 15)
                 (4 25)

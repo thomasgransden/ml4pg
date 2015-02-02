@@ -8,6 +8,5 @@
 (global-set-key (kbd "C-c a") 'change-algorithm-interactive)
 (global-set-key (kbd "C-c g") 'change-granularity-interactive)
 (global-set-key (kbd "C-c f") 'change-frequency-interactive)
-(global-set-key (kbd "C-c i") 'change-iterative-interactive)
 (global-set-key (kbd "C-c C-m") 'proof-assert-next-command-interactive3)
 (global-set-key (kbd "C-c n") 'save-numbers)
