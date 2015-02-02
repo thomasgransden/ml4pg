@@ -86,7 +86,7 @@
             (insert (format "Sorry no similarities"))
           (progn
             (insert (format "Similarities:\n"))
-            (insert (format "------------------------------------------------------------------------------------------------\n"))
+            (insert single-line)
             (if (equal (length temp1) 2)
                 (insert (format "Definition %s is similar to definition:\n" name))
               (insert (format "Definition %s is similar to definitions:\n" name)))
@@ -97,7 +97,7 @@
                   (progn
                     (insert (format "- %s (library %s)\n" (car (nth (- (car temp2)  1) tables-definitions))
                                     (library-belong (1- (car temp2))))))))
-            (insert (format "------------------------------------------------------------------------------------------------\n"))))))))
+            (insert single-line)))))))
 
 (defun show-similarities-last-def ()
   (interactive)
@@ -120,7 +120,7 @@
             (insert "Sorry no similarities")
           (progn
             (insert "Similarities:\n")
-            (insert "------------------------------------------------------------------------------------------------\n")
+            (insert single-line)
             (if (equal (length temp1) 2)
                 (insert "Your current goal is similar to theorem:\n" )
               (insert "Your current goal is similar to theorems:\n" ))
@@ -128,7 +128,7 @@
                 ((endp temp2))
               (insert (format "- %s (library %s)\n" (car (nth (- (car temp2) 1) tables-thms))
                               (library-belong-thm (1- (car temp2))))))
-            (insert "------------------------------------------------------------------------------------------------\n")))))))
+            (insert single-line)))))))
 
 (defun show-similarities-statement ()
   (interactive)

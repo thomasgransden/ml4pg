@@ -172,7 +172,7 @@
     (insert str)))
 
 (defun weka-defs ()
-  (shell-command (concat "rm " (expand-file-name "temp.csv")))
+  (ignore-errors (delete-file (expand-file-name "temp.csv")))
   (weka-defs-aux algorithm))
 
 (defun weka-defs-n (gl td)

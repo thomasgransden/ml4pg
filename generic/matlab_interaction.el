@@ -3,36 +3,33 @@
 (defun print-similarities-weka-str (n str)
   (print-similarities-weka-aux n (extract-clusters-from-file-aux str)))
 
+(defconst single-line "-----------------------------------------------------------------------------------\n")
+
 (defun print-similarities-weka-aux (n clusters)
   (with-current-buffer "*display*"
     (erase-buffer)
     (insert "Similarities:\n")
-    (insert "-----------------------------------------------------------------------------------\n")
+    (insert single-line)
     (insert "This lemma is similar to the lemmas:\n")
-    (do ((temp2 (remove-occurrence (clusters-of-n clusters (nth (1- (length saved-theorems))
-                                                                clusters))
-                                   (1+ (length saved-theorems)))
-                (cdr temp2)))
-        ((endp temp2))
-      (if (<= (car temp2) (length saved-theorems))
-          (progn (insert "- ")
-                 (insert-button-lemma (remove_last_colon (car (nth (- (car temp2)
-                                                                      1)
-                                                                   saved-theorems)))))
-        (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt")
-                                      " | sed -n '"
-                                      (format "%s" (- (car temp2)
-                                                      (length saved-theorems)))
-                                      "p'"))
-               (with-current-buffer "*Shell Command Output*"
-                 (beginning-of-buffer)
-                 (read (current-buffer))
-                 (setf temp-res (remove_last_colon (format "%s"  (read (current-buffer))))))
-               (insert "- ")
-               (insert-button-lemma temp-res))))
-    (insert "-----------------------------------------------------------------------------------\n")))
+    (let ((l-s-t (length saved-theorems)))
+      (dolist (elem (remove-occurrence (clusters-of-n clusters (nth (1- l-s-t)
+                                                                    clusters))
+                                       (1+ l-t-s)))
+        (if (<= elem l-t-s)
+            (progn
+              (insert "- ")
+              (insert-button-lemma (remove_last_colon (car (nth (1- elem)
+                                                                saved-theorems)))))
+          (progn
+            (setf temp-res (remove_last_colon (format "%s" (print-clusters-weka-namecmd-aux elem))))
+            (insert "- ")
+            (insert-button-lemma temp-res)))))
+    (insert single-line)))
 
 (defun print-clusters-weka-namecmd (elem)
+  (setf temp-res (format "%s" (print-clusters-weka-namecmd-aux elem))))
+
+(defun print-clusters-weka-namecmd-aux (elem)
   (shell-command (concat "cat "(expand-file-name "names_temp.txt")
                          " | sed -n '"
                          (format "%s" (- elem (length saved-theorems)))
@@ -41,7 +38,7 @@
   (with-current-buffer "*Shell Command Output*"
     (beginning-of-buffer)
     (read (current-buffer))
-    (setf temp-res (format "%s" (read (current-buffer))))))
+    (read (current-buffer))))
 
 (defun insert-button-automaton-macro2 (l l2)
   (list 'lambda '(x)
@@ -55,12 +52,10 @@
 
 (defun add-names-aux (type)
   (let ((nt (expand-file-name "names_temp.txt")))
-    (shell-command (concat "rm " nt))
-    (shell-command (concat "touch " nt))
-    (do ((temp libs-menus (cdr temp)))
-        ((endp temp) nil)
-      (shell-command  (concat "cat " home-dir "libs/" type "/" (car temp)
-                              "_names >> " nt)))))
+    (delete-file nt)
+    (with-temp-file nt
+      (dolist (elem libs-menus)
+        (insert (read-file (concat home-dir "libs/" type "/" elem "_names")))))))
 
 (defun add-libraries-temp-str (type add)
   (let ((path (concat home-dir "libs/" type "/"))
@@ -96,3 +91,30 @@
 
 (defun size-temp ()
   (length (read-lines (expand-file-name "temp.csv"))))
+
+(defun show-clusters-of-theorem-aux (func action)
+  (interactive)
+  (let* ((alg (show-clusters-alg algorithm))
+         (gra (case granularity-level
+                (2 8)
+                (3 15)
+                (4 25)
+                (5 50)
+                (t 5))))
+    (setq my-buffer "")
+    (setf buf (current-buffer))
+    (setf res (extract-info-up-to-here))
+    (let* ((tmp1 (show-clusters-of-theorem-data res))
+           (tmp2 (if libs-menus
+                     (let ((str (add-libraries-notemp)))
+                       (add-names)
+                       str)
+                   ""))
+           (tmp  (concat tmp1 tmp2))
+           (size (size-notemp tmp)))
+      (funcall action)
+      (switch-to-display)
+      (setf signal 5)
+      (let ((arg (funcall func size gra)))
+        (print-similarities-weka-str arg (weka-notemp arg tmp)))))
+  (send-coq-cmd (format "Unset Printing All")))

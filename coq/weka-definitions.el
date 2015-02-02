@@ -21,11 +21,11 @@
     (with-current-buffer "*display*"
       (erase-buffer)
       (insert (format "We have found the following clusters:\n" ))
-      (insert (format "------------------------------------------------------------------------------------------------\n" ))
+      (insert single-line)
 
       (do ((temp res1 (cdr temp))
        (i 1 (1+ i)))
-      ((endp temp) (insert (format "------------------------------------------------------------------------------------------------\n")) )
+          ((endp temp) (insert single-line) )
       (progn (insert (format "Cluster %s\n" i ))
          (do ((temp2 (car temp) (cdr temp2)))
              ((endp temp2) (insert (format "\n")))
@@ -39,11 +39,11 @@
     (with-current-buffer "*display*"
       (erase-buffer)
       (insert (format "We have found the following clusters:\n" ))
-      (insert (format "------------------------------------------------------------------------------------------------\n" ))
+      (insert single-line)
 
       (do ((temp res1 (cdr temp))
        (i 1 (1+ i)))
-      ((endp temp) (insert (format "------------------------------------------------------------------------------------------------\n")) )
+          ((endp temp) (insert single-line) )
       (progn (insert (format "Cluster %s\n" i ))
          (do ((temp2 (car temp) (cdr temp2)))
              ((endp temp2) (insert (format "\n")))

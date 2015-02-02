@@ -87,12 +87,12 @@
            (res1 (car temp0))
            (freq1 (cadr  temp0)))
       (insert (format "We have found the following clusters:\n" ))
-      (insert (format "------------------------------------------------------------------------------------------------------------\n"))
+      (insert single-line)
       (do ((temp res1 (cdr temp))
            (temp-freq freq1 (cdr temp-freq))
            (i 1 (1+ i)))
           ((endp temp)
-           (insert (format "------------------------------------------------------------------------------------------------------------\n"))
+           (insert single-line)
            )
         (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq)))
 
@@ -115,9 +115,9 @@
     (with-current-buffer "*display*"
       (erase-buffer)
       (insert "We have found the following clusters:\n")
-      (insert "-------------------------------------------------------------------------------------\n")
+      (insert single-line)
 
-      (dotimes (j (length res1) (insert "-------------------------------------------------------------------------------------\n"))
+      (dotimes (j (length res1) (insert single-line))
         (let ((i    (1+ j))
               (elems (nth j res1)))
           (insert (format "Cluster %s: (" i))
@@ -203,38 +203,18 @@
         ((string= level "p") (extract-features-2-bis proof-tree-temp proof-tree-level))))
 
 (defun show-clusters-of-theorem ()
-  (interactive)
-  (let* ((alg (show-clusters-alg algorithm))
-         (gra (case granularity-level
-                (2 8)
-                (3 15)
-                (4 25)
-                (5 50)
-                (t 5))))
-    (setq my-buffer "")
-    (setf buf (current-buffer))
-    (setf res (extract-info-up-to-here))
-    (let* ((tmp1 (show-clusters-of-theorem-data res))
-           (tmp2 (if libs-menus
-                     (let ((str (add-libraries-notemp)))
-                       (add-names)
-                       str)
-                   ""))
-           (tmp  (concat tmp1 tmp2))
-           (size (size-notemp tmp)))
-      (setf saved-theorems-libs (mapcar 'cadr saved-theorems))
-      (switch-to-display)
-      (setf signal 5)
-      (let* ((arg (floor size
-                         (case granularity-level
-                           (2 7)
-                           (3 5)
-                           (4 4)
-                           (5 2)
-                           (t 8))))
-             (out_bis (weka-notemp arg tmp)))
-        (print-similarities-weka-str arg out_bis))))
-  (send-coq-cmd (format "Unset Printing All")))
+  (show-clusters-of-theorem-aux 'show-clusters-of-theorem-size
+                                (lambda () (setf saved-theorems-libs
+                                                 (mapcar 'cadr saved-theorems)))))
+
+(defun show-clusters-of-theorem-size (size gra)
+  (floor size
+         (case granularity-level
+           (2 7)
+           (3 5)
+           (4 4)
+           (5 2)
+           (t 8))))
 
 (defun show-clusters ())
 
@@ -242,9 +222,8 @@
   (interactive)
   (setf saved-theorems (remove-nil-cases))
   (setf buf (current-buffer))
-  (let* ((alg (cond ((string= "g" algorithm)
-                     "gaussian_clusters")
-                    (t "kmeans_clusters_and_frequencies")))
+  (let* ((alg (if (string= "g" algorithm) "gaussian_clusters"
+                                          "kmeans_clusters_and_frequencies"))
          (gra (case granularity-level
                 (2 5)
                 (3 10)
@@ -255,21 +234,19 @@
                  (2 500)
                  (3 1000)
                  (t 100))))
-
     (setf signal 4)
     (setf my-buffer "")
     (let ((temp (dependencygraph-proof-writetmp-aux)))
-      (setf saved-theorems-libs (mapcar (lambda (x)
-                                          (cadr x))
-                                        saved-theorems))
+      (setf saved-theorems-libs (mapcar 'cadr saved-theorems))
       (switch-to-display)
       (setf signal 5)
-      (let ((lvl (floor (size-temp) (case granularity-level
-                                      (2 7)
-                                      (3 5)
-                                      (4 4)
-                                      (5 2)
-                                      (t 8)))))
+      (let ((lvl (floor (size-notemp temp)
+                        (case granularity-level
+                          (2 7)
+                          (3 5)
+                          (4 4)
+                          (5 2)
+                          (t 8)))))
         (print-clusters-weka lvl (weka-notemp lvl temp))))
     (send-coq-cmd "Unset Printing All")))
 
