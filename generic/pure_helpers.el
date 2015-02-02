@@ -139,3 +139,36 @@
     (progn (setf temp2 (concatenate 'string temp2 (subseq temp0 0 jump) " "))
            (setf temp0 (subseq temp0 (+ 2 jump)))
            (setf jump (search "  " temp0)))))
+
+(defun extract-coq-names-from (str)
+  (mapcar (lambda (s)
+            (replace-regexp-in-string (format "\\(%s\\)\\|[\s\n]+"
+                                              coq-declaration-re)
+                                      ""
+                                      s))
+          (extract-coq-names-from-aux str)))
+
+(defconst coq-declaration-re
+  (join-strings '("Theorem" "Lemma" "Fact" "Remark" "Corollary" "Definition"
+                  "Fixpoint" "CoFixpoint" "Example" "Proposition")
+                "\\|")
+  "A regexp matching Coq declaration keywords")
+
+(defun extract-coq-names-from-aux (str)
+  "An unreliable, conservative way to extract some of the names defined in a
+   string of Coq vernacular. Note that this does *not* respect Sections and
+   Modules, so the names you get back might not be defined globally."
+  (let* ((ws "[\s\n]+")
+         (re (format "\\(%s\\)%s\\([a-zA-Z0-9_]+\\)%s"
+                     coq-declaration-re ws ws)))
+    (re-seq re str)))
+
+(defun re-seq (regexp string)
+  "Get a list of all regexp matches in a string"
+  (save-match-data
+    (let ((pos 0)
+          matches)
+      (while (string-match regexp string pos)
+        (push (match-string 0 string) matches)
+        (setq pos (match-end 0)))
+      matches)))

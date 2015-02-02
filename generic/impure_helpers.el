@@ -261,6 +261,12 @@
       (insert (funcall (cadr elem) name)))))
 
 (defun coqp (str)
+  (let ((res (coqp-aux str)))
+    (unless res
+      (message "Not valid Coq code: %s" str))
+    res))
+
+(defun coqp-aux (str)
   "Check whether STR contains valid Coq code by trying to compile it"
   (let* ((dir (make-temp-file "ml4pg_check_coq" t))
          (f   (concat dir "/file.v")))

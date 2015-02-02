@@ -231,6 +231,23 @@
     (with-coq-example (lambda ()
                         (dependencygraph-proof)))))
 
+(test-with extract-coq-names
+  "Test extracting Coq names from vernacular strings"
+  (compose (lambda (ns)
+             (let ((proofs (mapcar (lambda (n)
+                                     (funcall (gen-coq-correct-theorem
+                                                 (gen-const n))))
+                                   ns)))
+               (list ns (join-strings proofs "\n"))))
+           (gen-list (gen-coq-name)))
+  (lambda (names str)
+    (let ((got (extract-coq-names-from str)))
+      (should (equal (length got) (length names)))
+      (dolist (name got)
+        (should (member name names)))
+      (dolist (name names)
+        (should (member name got))))))
+
 (test-with example-showtreegraphthm
   ""
   nil

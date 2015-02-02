@@ -138,13 +138,12 @@
 (defun gen-ltac-step ()
   )
 
-(defun gen-coq-proof (&optional ltac)
+(defun gen-coq-proof (ltac)
   "Generate a Coq proof, including 'Proof' and 'Qed' or 'Defined' markers.
    The proof will probably not be correct!"
-  (let ((gen-ltac (or ltac (gen-list (gen-ltac-step)))))
-    (compose (uncurry (lambda (steps end)
-                        (concat "Proof. " (join-strings steps " ") end ".\n")))
-             (list-of gen-ltac (gen-elem (list " Qed" " Defined"))))))
+  (compose (uncurry (lambda (steps end)
+                      (concat "Proof. " (join-strings steps " ") end ".\n")))
+           (list-of ltac (gen-elem (list " Qed" " Defined")))))
 
 (defun gen-coq-correct-proof ()
   "Generate a Coq proof whihc will work for trivial theorems, like those from

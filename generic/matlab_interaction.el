@@ -14,8 +14,8 @@
     (let ((l-s-t (length saved-theorems)))
       (dolist (elem (remove-occurrence (clusters-of-n clusters (nth (1- l-s-t)
                                                                     clusters))
-                                       (1+ l-t-s)))
-        (if (<= elem l-t-s)
+                                       (1+ l-s-t)))
+        (if (<= elem l-s-t)
             (progn
               (insert "- ")
               (insert-button-lemma (remove_last_colon (car (nth (1- elem)

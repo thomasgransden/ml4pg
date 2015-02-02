@@ -34,17 +34,14 @@
                                    tables-definitions))
 
 (defun dependencygraph-get-cluster-aux2 (granularity-level divisor func size)
-  (let ((out_bis (funcall func)))
-    (sleep-for 2)
-    (cdr (form-clusters (extract-clusters-from-file-aux out_bis)
-                        (floor (funcall size)
-                               divisor)))))
+  (cdr (form-clusters (extract-clusters-from-file-aux (funcall func))
+                      (floor size divisor))))
 
 (defun dependencygraph-get-cluster-aux (granularity-level divisor func tbl)
   (dependencygraph-get-cluster-aux2 granularity-level
                                     divisor
                                     func
-                                    `(lambda () (length ',tbl))))
+                                    (length tbl)))
 
 (defun dependencygraph-defs ()
   (interactive)
@@ -197,16 +194,19 @@
 
 (defun dependencygraph-proof-aux ()
   (interactive)
-  (dependencygraph-proof-writetmp)
-  (let* ((clusters3 nil)
-         (clusters1 (dependencygraph-get-cluster-aux2 3
-                                                      5
-                                                      (lambda () (weka (floor (size-temp) 5)))
-                                                      'size-temp))
-         (clusters3 (dependencygraph-get-cluster-aux2 5
-                                                      2
-                                                      (lambda () (weka (floor (size-temp) 2)))
-                                                      'size-temp)))
+  (let* ((temp      (dependencygraph-proof-writetmp-aux))
+         (size      (size-notemp temp))
+         (clusters3 nil)
+         (clusters1 (dependencygraph-get-cluster-aux2
+                     3
+                     5
+                     `(lambda () (weka-notemp (floor ,size 5) ,temp))
+                     size))
+         (clusters3 (dependencygraph-get-cluster-aux2
+                     5
+                     2
+                     `(lambda () (weka-notemp (floor ,size 2) ,temp))
+                     size)))
     (subclustersseveral (removenil (remove-if-empty clusters3))
                         (removenil (remove-if-empty clusters1)))))
 
