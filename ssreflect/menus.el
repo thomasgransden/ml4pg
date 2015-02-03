@@ -138,18 +138,6 @@
                   ((string= "3" alg) 3)
                   (t frequency-precision)))))
 
-(defun exported-libraries ()
-  (interactive)
-  (easy-menu-remove-item nil '("Statistics") "Show cluster libraries")
-  (easy-menu-add-item nil '("Statistics")
-              (cons "Available libraries for clustering:"
-               (cons ["Current" nil
-                :selected t
-                :style toggle
-                :help "Use the current library for clustering"]
-               (select-libraries)))))
-
-
 (defun select-libraries ()
   (available-libraries)
   (available-dirs)

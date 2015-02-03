@@ -154,11 +154,7 @@
                                  (list "simpl." "reflexivity.")
                                  (list "compute." "auto.")))))
 
-(defun gen-coq-correct-theorem-aux (&optional name)
+(defun gen-coq-correct-theorem (&optional name)
   (compose (uncurry (lambda (stmt proof)
                       (concat stmt "\n" proof "\n")))
            (list-of (gen-coq-correct-statement name) (gen-coq-correct-proof))))
-
-(defun gen-coq-correct-theorem (&optional name)
-  (gen-filtered (gen-coq-correct-theorem-aux name)
-                (lambda (x) (coqp x))))

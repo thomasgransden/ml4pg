@@ -69,9 +69,11 @@
       (setq load-path (append load-path (list path))))))
 
 (defun load-proof-general ()
-  (unless (fboundp 'coq-mode)
+  (unless (fboundp 'coq-build-prog-args)
     (message "Loading Proof General")
     (load "ProofGeneral/generic/proof-site")
+    (with-temp-buffer
+      (coq-mode))
     (message "Finished loading Proof General")))
 
 (use-nix-if-present)

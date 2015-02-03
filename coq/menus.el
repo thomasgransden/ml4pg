@@ -4,129 +4,124 @@
   '("Statistics"
     ("Configuration"
      ("Level"
-       ["Goal level" (change-level "g")
-    :selected (string= level "g")
-    :style toggle
-    :help "Use goal level"]
-       ["Tactic level" (change-level "t")
-    :selected (string= level "t")
-    :style toggle
-    :help "Use tactic level"]
-       ["Proof tree level" (change-level "p")
-    :selected (string= level "p")
-    :style toggle
-    :help "Use Proof tree level"])
+      ["Goal level" (change-level "g")
+       :selected (string= level "g")
+       :style toggle
+       :help "Use goal level"]
+      ["Tactic level" (change-level "t")
+       :selected (string= level "t")
+       :style toggle
+       :help "Use tactic level"]
+      ["Proof tree level" (change-level "p")
+       :selected (string= level "p")
+       :style toggle
+       :help "Use Proof tree level"])
      ("Algorithm"
-       ["K-means" (change-algorithm "k")
-    :selected (string= algorithm "k")
-    :style toggle
-    :help "Use k-means algorithm"]
-       ["EM" (change-algorithm "e")
-    :selected (string= algorithm "e")
-    :style toggle
-    :help "Use Simple EM algorithm"]
-       ["FarthestFirst" (change-algorithm "f")
-    :selected (string= algorithm "f")
-    :style toggle
-    :help "Use FarthestFirst algorithm"])
-      ("Granularity"
-       ["1"  (change-granularity 1)
-    :selected (eq granularity-level 1)
-    :style toggle
-    :help "We will use 3 clusters"]
-       ["2"  (change-granularity 2)
-    :selected (eq granularity-level 2)
-    :style toggle
-    :help "We will use 5 clusters"]
-       ["3"  (change-granularity 3)
-    :selected (eq granularity-level 3)
-    :style toggle
-    :help "We will use 10 clusters"]
-       ["4"  (change-granularity 4)
-    :selected (eq granularity-level 4)
-    :style toggle
-    :help "We will use 15 clusters"]
-       ["5"  (change-granularity 5)
-    :selected (eq granularity-level 5)
-    :style toggle
-    :help "We will use 20 clusters"])
-      ("Frequencies"
-       ["1" (change-frequency 1)
-    :selected (eq frequency-precision 1)
-    :style toggle
-    :help "The experiments will be run 100 times"]
-       ["2" (change-frequency 2)
-    :selected (eq frequency-precision 2)
-    :style toggle
-    :help "The experiments will be run 500 times"]
-       ["3" (change-frequency 3)
-    :selected (eq frequency-precision 3)
-    :style toggle
-    :help "The experiments will be run 1000 times"])
-)
+      ["K-means" (change-algorithm "k")
+       :selected (string= algorithm "k")
+       :style toggle
+       :help "Use k-means algorithm"]
+      ["EM" (change-algorithm "e")
+       :selected (string= algorithm "e")
+       :style toggle
+       :help "Use Simple EM algorithm"]
+      ["FarthestFirst" (change-algorithm "f")
+       :selected (string= algorithm "f")
+       :style toggle
+       :help "Use FarthestFirst algorithm"])
+     ("Granularity"
+      ["1"  (change-granularity 1)
+       :selected (eq granularity-level 1)
+       :style toggle
+       :help "We will use 3 clusters"]
+      ["2"  (change-granularity 2)
+       :selected (eq granularity-level 2)
+       :style toggle
+       :help "We will use 5 clusters"]
+      ["3"  (change-granularity 3)
+       :selected (eq granularity-level 3)
+       :style toggle
+       :help "We will use 10 clusters"]
+      ["4"  (change-granularity 4)
+       :selected (eq granularity-level 4)
+       :style toggle
+       :help "We will use 15 clusters"]
+      ["5"  (change-granularity 5)
+       :selected (eq granularity-level 5)
+       :style toggle
+       :help "We will use 20 clusters"])
+     ("Frequencies"
+      ["1" (change-frequency 1)
+       :selected (eq frequency-precision 1)
+       :style toggle
+       :help "The experiments will be run 100 times"]
+      ["2" (change-frequency 2)
+       :selected (eq frequency-precision 2)
+       :style toggle
+       :help "The experiments will be run 500 times"]
+      ["3" (change-frequency 3)
+       :selected (eq frequency-precision 3)
+       :style toggle
+       :help "The experiments will be run 1000 times"]))
     ("Generate Similarity graph"
-       ["Similarity graph of definitions" (dependencygraph-defs)]
-       ["Similarity graph of lemma statements" (dependencygraph-statements)]
-       ["Similarity graph of proofs" (dependencygraph-proof)]
-       ["Term tree of a lemma statement" (showtreegraphthm)])
-    ["Extract info up to point" (extract-feature-theorems)
-     :keys "C-c C-SPC"]
-    ["Show clusters" (show-clusters-bis)]
-    ["Show clusters definitions" (cluster-definitions)]
-    ["Show similar theorems" (show-clusters-of-theorem)]
-    ["Export library" (save-numbers)
-     :keys "C-c n"]
-    ["Show cluster libraries" (exported-libraries)]
-    ["Activate Icons" (activate-icons)]
-))
+     ["Similarity graph of definitions"      (dependencygraph-defs)      ]
+     ["Similarity graph of lemma statements" (dependencygraph-statements)]
+     ["Similarity graph of proofs"           (dependencygraph-proof)     ]
+     ["Term tree of a lemma statement"       (showtreegraphthm)          ])
+    ["Extract info up to point"  (extract-feature-theorems) :keys "C-c C-SPC"]
+    ["Show clusters"             (show-clusters-bis)                         ]
+    ["Show clusters definitions" (cluster-definitions)                       ]
+    ["Show similar theorems"     (show-clusters-of-theorem)                  ]
+    ["Export library"            (save-numbers)             :keys "C-c n"    ]
+    ["Show cluster libraries"    (exported-libraries)                        ]
+    ["Activate Icons"            (activate-icons)                            ]))
 
 (easy-menu-remove-item global-map '("menu-bar") "Statistics")
 
 (easy-menu-add-item nil nil statistics-menu "help-menu")
 
-
-
 (defun activate-icons ()
   (interactive)
-  (progn
-    (easy-menu-remove-item nil '("Statistics") "Activate Icons")
-    (define-key coq-mode-map [tool-bar statistical-hint-statements]
-      (list 'menu-item "Similar Theorems" 'show-similarities-statement
-          :help "Similar Theorems"
-          :image (list 'image :type 'xpm
-                :file (concat home-dir "icons/sh-hint-thm.xpm"))))
-    (define-key coq-mode-map [tool-bar clustering-statements]
-      (list 'menu-item "Clustering Statements" 'cluster-statements
-          :help "Clustering Statements"
-          :image (list 'image :type 'xpm
-                :file (concat home-dir "icons/clustering-thms.xpm"))))
-    (define-key coq-mode-map [tool-bar statistical-hint-defs]
-      (list 'menu-item "Similar Definitions" 'show-similarities-last-def
-          :help "Similar Definitions"
-          :image (list 'image :type 'xpm
-                :file (concat home-dir "icons/sh-hint-def.xpm"))))
-    (define-key coq-mode-map [tool-bar clustering-defs]
-      (list 'menu-item "Clustering Definitions" 'cluster-definitions
-          :help "Clustering Definitions"
-          :image (list 'image :type 'xpm
-                :file (concat home-dir "icons/clustering-defs.xpm"))))
-    (define-key coq-mode-map [tool-bar statistical-hint]
-      (list 'menu-item "Statistical Hint" 'show-clusters-of-theorem
-          :help "Statistical Hint"
-          :image (list 'image :type 'xpm
-                :file (concat home-dir "icons/sh-hint.xpm"))))
-    (define-key coq-mode-map [tool-bar clustering]
-      (list 'menu-item "Clustering" 'show-clusters-bis
-          :help "Clustering"
-          :image (list 'image :type 'xpm
-                :file (concat home-dir "icons/clustering.xpm"))))))
+  (easy-menu-remove-item nil '("Statistics") "Activate Icons")
+  (dolist (args (list (list statistical-hint-statements
+                            "Similar Theorems"
+                            'show-similarities-statement
+                            "sh-hint-thm")
+                      (list clustering-statements
+                            "Clustering Statements"
+                            'cluster-statements
+                            "clustering-thms")
+                      (list statistical-hint-defs
+                            "Similar Definitions"
+                            'show-similarities-last-def
+                            "sh-hint-def")
+                      (list clustering-defs
+                            "Clustering Definitions"
+                            'cluster-definitions
+                            "clustering-defs")
+                      (list statistical-hint
+                            "Statistical Hint"
+                            'show-clusters-of-theorem
+                            "sh-hint")
+                      (list clustering
+                            "Clustering"
+                            'show-clusters-bis
+                            "clustering")))
+    (let ((tb   [tool-bar (nth 0 args)])
+          (name (nth 1 args))
+          (func (nth 2 args))
+          (icon (list 'image
+                      :type 'xpm
+                      :file (concat home-dir "icons/" (nth 3 args) ".xpm"))))
+      (define-key coq-mode-map tb (list 'menu-item name func
+                                        :help  name
+                                        :image icon)))))
 
-(defvar algorithm "k")
-(defvar granularity-level 3)
+(defvar algorithm           "k")
+(defvar granularity-level   3)
 (defvar frequency-precision 1)
-(defvar save-automatically nil)
-(defvar level "g")
-
+(defvar save-automatically  nil)
+(defvar level               "g")
 
 (defun change-level (n)
   (setq level n))
@@ -167,18 +162,6 @@
                   ((string= "2" alg) 2)
                   ((string= "3" alg) 3)
                   (t frequency-precision)))))
-
-(defun exported-libraries ()
-  (interactive)
-  (easy-menu-remove-item nil '("Statistics") "Show cluster libraries")
-  (easy-menu-add-item nil '("Statistics")
-              (cons "Available libraries for clustering:"
-               (cons ["Current" nil
-                :selected t
-                :style toggle
-                :help "Use the current library for clustering"]
-               (select-libraries)))))
-
 
 (defun select-libraries ()
   (available-libraries)

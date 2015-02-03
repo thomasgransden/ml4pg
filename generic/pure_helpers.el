@@ -159,7 +159,7 @@
    string of Coq vernacular. Note that this does *not* respect Sections and
    Modules, so the names you get back might not be defined globally."
   (let* ((ws "[\s\n]+")
-         (re (format "\\(%s\\)%s\\([a-zA-Z0-9_]+\\)%s"
+         (re (format "\\(%s\\)%s[a-zA-Z0-9_]+%s"
                      coq-declaration-re ws ws)))
     (re-seq re str)))
 

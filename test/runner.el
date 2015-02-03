@@ -22,8 +22,6 @@
 
 (defun ml4pg-reload-and-test ()
   (interactive)
-  (use-nix-if-present)
-  (load-proof-general)
   (ml4pg-reload)
   (ml4pg-load-tests)
   (ml4pg-run-tests))

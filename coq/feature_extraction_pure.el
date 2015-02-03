@@ -7,11 +7,11 @@
   (if s (str-after s "============================\n   ")))
 
 (defun get-type-id-aux (txt)
-  (flet ((txt-pos (begin end)
-                  (search begin txt :start2 (+ 2 (search end txt)))))
+  (let ((txt-pos `(lambda (begin end)
+                    (search begin ,txt :start2 (+ 2 (search end ,txt))))))
     (subseq txt (+ 2 (search ": " txt))
-            (or (txt-pos " " ": ")
-                (txt-pos nl  " ")))))
+            (or (funcall txt-pos " " ": ")
+                (funcall txt-pos nl  " ")))))
 
 (defun get-top-symbol-aux (goal)
   (if goal

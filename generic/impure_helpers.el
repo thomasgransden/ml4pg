@@ -288,3 +288,16 @@
   (let ((result (proof-shell-invisible-cmd-get-result str)))
     ;(message "GOT: %s" result)
     result))
+
+(defun exported-libraries ()
+  (interactive)
+  (unless noninteractive
+    (easy-menu-remove-item nil '("Statistics") "Show cluster libraries")
+    (easy-menu-add-item nil
+                        '("Statistics")
+                        (cons "Available libraries for clustering:"
+                              (cons ["Current" nil
+                                     :selected t
+                                     :style toggle
+                                     :help "Use the current library for clustering"]
+                                    (select-libraries))))))
