@@ -9,6 +9,7 @@ stdenv.mkDerivation {
     emacs24Packages.proofgeneral
     graphviz
     coq
+    ## FIXME: Weka is in Nix
   ];
   shellHook = ''
     export CWD=$(pwd)
