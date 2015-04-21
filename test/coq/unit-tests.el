@@ -221,22 +221,28 @@
   ""
   nil
   (lambda ()
-    (with-coq-example (lambda ()
-                        (dependencygraph-defs)))))
+    (should nil)
+    ;; (with-coq-example (lambda ()
+    ;;                     (dependencygraph-defs)))
+    ))
 
 (test-with example-dependencygraph-statements
   ""
   nil
   (lambda ()
-    (with-coq-example (lambda ()
-                        (dependencygraph-statements)))))
+    (should nil)
+    ;; (with-coq-example (lambda ()
+    ;;                     (dependencygraph-statements)))
+    ))
 
 (test-with example-dependencygraph-prof
   ""
   nil
   (lambda ()
-    (with-coq-example (lambda ()
-                        (dependencygraph-proof)))))
+    (should nil)
+    ;; (with-coq-example (lambda ()
+    ;;                     (dependencygraph-proof)))
+    ))
 
 (test-with extract-coq-names
   "Test extracting Coq names from vernacular strings"

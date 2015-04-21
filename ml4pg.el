@@ -30,7 +30,7 @@
           "clusterdigraph" "graph_pure" "trees")))
 
 (defun ml4pg-load-ss ()
-  (mapc (loads-els "generic")
+  (mapc (load-els "generic")
         '("pure_helpers" "impure_helpers"))
   (mapc (load-els "ssreflect")
         '("auxiliary_files" "feature_extraction_2" "matlab_interaction"
