@@ -133,11 +133,12 @@
 
 (test-with compute-tactic-value-rest
   "Relation between the input and output of compute-tactic-value"
-  (list-of (gen-nonempty-list (gen-list (gen-num) (gen-const 4))))
+  (list-of (gen-list (gen-list (gen-num) (gen-const 4))
+                     (compose (lambda (x) (+ 2 x)) (gen-num))))
   (lambda (lst)
     (let ((result (compute-tactic-value lst)))
       (should (equal (length lst)    (nth 4 result)))
-      (dolist (elem lst)
+      (dolist (elem (cdr lst))
         (dolist (bits '((0 1) (1 1) (2 2) (3 3)))
           (should (subnum (nth (cadr bits) result)
                           (nth (car  bits) elem))))))))
