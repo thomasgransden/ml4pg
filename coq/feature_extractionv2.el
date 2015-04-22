@@ -24,8 +24,6 @@
 (defvar   theorems_id      nil)
 (defvar   add_to           0.1)
 (defvar   start            100)
-(defconst nl               "
-")
 
 ;; The integer values associated with the tactics, types and rewrite rules
 

@@ -1,5 +1,8 @@
 ;; Generic, pure functions for common, everyday tasks
 
+(defconst nl "
+")
+
 (defun flatten (structure)
   (cond ((null structure) nil)
         ((atom structure)
@@ -132,13 +135,7 @@
         (setf result (append result (list elem)))))))
 
 (defun remove-whitespaces (string)
-  (do ((temp0 string)
-       (jump (search "  " string))
-       (temp2 ""))
-      ((not jump) (concatenate 'string temp2 temp0))
-    (progn (setf temp2 (concatenate 'string temp2 (subseq temp0 0 jump) " "))
-           (setf temp0 (subseq temp0 (+ 2 jump)))
-           (setf jump (search "  " temp0)))))
+  (replace-regexp-in-string "  " " " string))
 
 (defun extract-coq-names-from (str)
   (mapcar (lambda (s)
@@ -172,3 +169,18 @@
         (push (match-string 0 string) matches)
         (setq pos (match-end 0)))
       matches)))
+
+(defun strip-parens (x)
+  "Remove [, ], { and } chars from a string"
+  (replace-regexp-in-string
+   (regexp-opt (list "[" "]" "{" "}"))
+   ""
+   x))
+
+(defun strip-spaces (x)
+  "Remove space characters from a string"
+  (replace-regexp-in-string " " "" x))
+
+(defun strip-quotes (x)
+  "Remove quote characters from a string"
+  (replace-regexp-in-string (regexp-quote "\"") "" x))

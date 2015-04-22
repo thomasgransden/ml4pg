@@ -55,12 +55,6 @@
                                                    tables-definitions
                                                    number-of-defs))))
 
-(defun generate-and-run (func)
-  (let ((f (indirect-function func)))
-    (compose `(lambda (str)
-                (list str (ml4pg-load-and-extract-info str ,f)))
-             (gen-coq-correct-theorem))))
-
 (test-with extract-defs-theorem
   "Try extracting definitions given a single theorem."
   (generate-and-run 'dependencygraph-defs-aux)

@@ -8,20 +8,9 @@
 (defvar libs-defs nil)
 
 (defun available-defs-libraries ()
-  (setf libs-defs nil)
-  (shell-command  (concat "ls " home-dir "definitions |  wc -l"))
-  (let ((n nil)
-        (i 0))
-    (with-current-buffer "*Shell Command Output*"
-      (beginning-of-buffer)
-      (setq n (string-to-number (format "%s"  (read (current-buffer))))))
-    (shell-command  (concat "ls " home-dir "definitions"))
-    (with-current-buffer "*Shell Command Output*"
-      (progn (beginning-of-buffer)
-             (while (< i n)
-               (let ((r (format "%s" (read (current-buffer)))))
-                 (progn (setq i (1+ i))
-                        (setq libs-defs (append libs-defs (list r))))))))))
+  (setf libs-defs
+        (mapcar (lambda (x) (list x))
+                (directory-files (concat home-dir "definitions")))))
 
 (defvar libs-statements nil)
 
