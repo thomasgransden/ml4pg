@@ -876,33 +876,38 @@
 
 
 
-(defvar useless-terms '("Defined" "Structure" "Section" "Add Ring" "Hypothesis" "Hypotheses" "Include" "Export" "Parameter" "Axiom"
-"End" "Notation" "Hint" "Inductive" "Variable" "Implicit" "Import" "Canonical" "Coercion"
-"Module" "Ltac" "Let" "Opaque" "Bind" "Scope" "Require" "Infix" "Record" "Fact" "Print"))
+(defvar useless-terms '("Defined" "Structure" "Section" "Add Ring" "Hypothesis"
+                        "Hypotheses" "Include" "Export" "Parameter" "Axiom"
+                        "End" "Notation" "Hint" "Inductive" "Variable"
+                        "Implicit" "Import" "Canonical" "Coercion" "Module"
+                        "Ltac" "Let" "Opaque" "Bind" "Scope" "Require" "Infix"
+                        "Record" "Fact" "Print"))
 
 (defun is-in-search (cmd)
-  (do ((temp useless-terms (cdr temp))
-       (is nil))
-      ((or (endp temp) is) is)
-      (if (search (car temp) cmd) (setf is t))))
+  (let ((is nil))
+    (dolist (elem useless-terms is)
+            (setf is (or is (search (car temp) cmd))))))
 
-
-
-(defun compute-tactic-value (list)
-  (if (not list) (list 0 0 0 0 0)
-  (let ((len (length list))
-    (arg0 (car (car list)))
-    (arg1 (format "%s" (nth 1 (car list))))
-    (hyp (format "%s" (nth 2 (car list))))
-    (top (format "%s" (nth 3 (car list)))))
-    (do ((temp (cdr list) (cdr temp)))
-    ((endp temp) (list arg0 (string-to-number arg1) (string-to-number hyp) (string-to-number top) len))
-    (progn (setf arg1 (format "%s%s%s" arg1 (nth 0 (car temp)) (nth 1 (car temp))))
-           (setf hyp (format "%s%s" hyp (nth 2 (car temp))))
-           (setf top (format "%s%s" top (nth 3 (car temp))))
-          )))))
-
-
+(defun compute-tactic-value (lst)
+  "Concatenate the numbers in LST"
+  (if lst
+      (let* ((len  (length lst))
+             (head (car lst))
+             (arg0              (nth 0 head))
+             (arg1 (format "%s" (nth 1 head)))
+             (hyp  (format "%s" (nth 2 head)))
+             (top  (format "%s" (nth 3 head))))
+        (dolist (elem
+                 (cdr lst)
+                 (list arg0
+                       (string-to-number arg1)
+                       (string-to-number hyp)
+                       (string-to-number top)
+                       len))
+          (setf arg1 (format "%s%s%s" arg1 (nth 0 elem) (nth 1 elem)))
+          (setf hyp  (format "%s%s"   hyp  (nth 2 elem)))
+          (setf top  (format "%s%s"   top  (nth 3 elem)))))
+      (list 0 0 0 0 0)))
 
 (defun compute-tactic-result (name)
   (append (list name) (list (append
@@ -930,52 +935,58 @@
                     (skip-chars-backward " \t\n"
                                          (proof-queue-or-locked-end))
                     (proof-segment-up-to-using-cache (point))))
-         (comment (caar semis))
-         (cmd     (cadar semis))
+         (first   (car semis))
+         (comment (nth 0 first))
+         (cmd     (nth 1 first))
+         (subcmd  (subseq cmd (1+ (search " " cmd))
+                              (search " " cmd :start2 (1+ (search " " cmd)))))
          (ts      nil))
-    (if semis
-        (let ((subcmd (subseq cmd (1+ (search " " cmd))
-                              (search " " cmd :start2 (1+ (search " " cmd))))))
-          (cond ((or (string= comment "comment")
-                     (is-in-search cmd))
-                 (proof-assert-next-command-interactive)
-                 (export-theorem-aux result name))
+    (when semis
+      (cond ((or (string= comment "comment")
+                 (is-in-search cmd))
+             ;; Skip comments and anything in useless-terms
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result name))
 
-                ((or (search "Definition" cmd) (search "Fixpoint" cmd))
-                 (proof-assert-next-command-interactive)
-                 (ignore-errors (adddefinition subcmd))
-                 (export-theorem-aux result subcmd)
-                 (proof-assert-next-command-interactive))
+            ((or (search "Definition" cmd) (search "Fixpoint" cmd))
+             (proof-assert-next-command-interactive)
+             (ignore-errors (adddefinition subcmd))
+             (export-theorem-aux result subcmd)
+             (proof-assert-next-command-interactive))
 
-                ((search "Lemma" cmd)
-                 (proof-assert-next-command-interactive)
-                 (export-theorem-aux result subcmd))
+            ((search "Lemma" cmd)
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result subcmd))
 
-                ((search "Proof" cmd)
-                 (proof-assert-next-command-interactive)
-                 (export-theorem-aux result name))
+            ((search "Proof" cmd)
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result name))
 
-                ((search "Theorem" cmd)
-                 (proof-assert-next-command-interactive)
-                 (export-theorem-aux result subcmd))
+            ((search "Theorem" cmd)
+             (proof-assert-next-command-interactive)
+             (export-theorem-aux result subcmd))
 
-                ((or (search "Qed." cmd) (search "Defined." cmd))
-                 (proof-assert-next-command-interactive)
-                 (setf tactic-level (append tactic-level (list (compute-tactic-result name))))
-                 (setf proof-tree-level (append proof-tree-level (list (compute-proof-tree-result name))))
-                 (when name
-                   (split-feature-vector name (flat (reverse result))))
-                 (ignore-errors (addthm name)))
+            ((or (search "Qed." cmd) (search "Defined." cmd))
+             (proof-assert-next-command-interactive)
+             (setf tactic-level (append tactic-level (list (compute-tactic-result name))))
+             (setf proof-tree-level (append proof-tree-level (list (compute-proof-tree-result name))))
+             (when name
+               (split-feature-vector name (flat (reverse result))))
+             (ignore-errors (addthm name)))
 
-                (t
-                 (setf ts (get-top-symbol))
-                 (setf ng (get-number-of-goals))
-                 (proof-assert-next-command-interactive)
-                 (setf ng2 (get-number-of-goals))
-                 (export-theorem-aux (cons (append (get-numbers cmd ts current-level) (list ts) (list ng2)) result)
-                                     name)
-                 (add-info-to-level (list 0 0 0 0 0 0 0 0 0 0 0 ng2 (if (< ng2 ng) 1 0)) current-level)
-                 (setf current-level (1+ current-level))))))))
+            (t
+             (setf ts (get-top-symbol))
+             (setf ng (get-number-of-goals))
+             (proof-assert-next-command-interactive)
+             (setf ng2 (get-number-of-goals))
+             (export-theorem-aux (cons (append (get-numbers cmd ts current-level)
+                                               (list ts)
+                                               (list ng2))
+                                       result)
+                                 name)
+             (add-info-to-level (list 0 0 0 0 0 0 0 0 0 0 0 ng2 (if (< ng2 ng) 1 0))
+                                current-level)
+             (setf current-level (1+ current-level)))))))
 
 (defun split-feature-vector (name fv)
   (let ((len (1+ (floor (length fv) 30))))

@@ -107,6 +107,53 @@
 
 (test-with export-theorem-aux
   "Test what export-theorem-aux does"
-  nil
+  (generate-and-run (lambda ()
+                      (export-theorem-aux nil nil)))
   (lambda ()
-    (export-theorem-aux nil nil)))
+    ))
+
+(test-with compute-tactic-result
+  "Test what compute-tactic-result does"
+  (list-of (gen-string))
+  (lambda (str)
+    (let ((result (compute-tactic-result str)))
+      (should (equal (length result) 2))
+      (should (equal (car result) str)))))
+
+(test-with compute-tactic-value-first
+  "How compute-tactic-value treats the first element of its argument"
+  (list-of (gen-nonempty-list (gen-list (gen-num) (gen-const 4))))
+  (lambda (lst)
+    (let ((result (compute-tactic-value lst))
+          (head   (car lst)))
+      (should (equal  (nth 0 result) (nth 0 head)))
+      (should (subnum (nth 1 result) (nth 1 head)))
+      (should (subnum (nth 2 result) (nth 2 head)))
+      (should (subnum (nth 3 result) (nth 3 head))))))
+
+(test-with compute-tactic-value-rest
+  "Relation between the input and output of compute-tactic-value"
+  (list-of (gen-nonempty-list (gen-list (gen-num) (gen-const 4))))
+  (lambda (lst)
+    (let ((result (compute-tactic-value lst)))
+      (should (equal (length lst)    (nth 4 result)))
+      (dolist (elem lst)
+        (dolist (bits '((0 1) (1 1) (2 2) (3 3)))
+          (should (subnum (nth (cadr bits) result)
+                          (nth (car  bits) elem))))))))
+
+(test-with compute-tactic-value-general
+  "General invariants of compute-tactic-value results"
+  (list-of (gen-list (gen-list (gen-num) (gen-const 4))))
+  (lambda (lst)
+    (let ((result (compute-tactic-value lst)))
+      (should (listp result))
+      (should (equal (length result) 5))
+      (dolist (elem result)
+        (should (numberp elem))))))
+
+(test-with compute-proof-tree-result
+  "Test what compute-proof-tree-result does"
+  (list-of (gen-string))
+  (lambda (str)
+    (compute-proof-tree-result str)))

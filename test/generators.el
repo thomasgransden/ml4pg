@@ -41,6 +41,9 @@
          (dotimes (i (funcall ,len) lst)
            (setq lst (cons (funcall ,elem-gen) lst)))))))
 
+(defun gen-nonempty-list (elem-gen)
+  (gen-list elem-gen (compose '1+ (gen-num))))
+
 (defun gen-pair (first second)
   `(lambda ()
      (cons (funcall ,first) (funcall ,second))))

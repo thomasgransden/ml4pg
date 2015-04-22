@@ -184,3 +184,12 @@
 (defun strip-quotes (x)
   "Remove quote characters from a string"
   (replace-regexp-in-string (regexp-quote "\"") "" x))
+
+(defun subnum (big small)
+  "Check whether the digits of SMALL appear in those of BIG"
+  (let ((bigs   (number-to-string big))
+        (smalls (number-to-string small)))
+    (or (equal smalls "0")  ; Zeros can always be prepended
+        (search "e" bigs)   ; Bail out on scientific notation
+        (search "e" smalls) ; Ditto
+        (search smalls bigs))))
