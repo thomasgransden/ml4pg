@@ -17,6 +17,7 @@
      (load-file (concat home-dir ,dir "/" f (if (search ".el" f) "" ".el")))))
 
 (defun ml4pg-load-coq ()
+  (message "Activating Coq mode")
   (mapc (load-els "generic")
         (directory-files (concat home-dir "generic/") nil ".*\.el"))
   (mapc (load-els "coq")
@@ -30,6 +31,7 @@
           "clusterdigraph" "graph_pure" "trees")))
 
 (defun ml4pg-load-ss ()
+  (message "Activating SSReflect mode")
   (mapc (load-els "generic")
         '("pure_helpers" "impure_helpers"))
   (mapc (load-els "ssreflect")
@@ -42,20 +44,21 @@
 (defun select-mode ()
   (interactive)
   (let* ((msg   "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")
-         (smode (if noninteractive "" (read-string msg))))
-    (setq mode (case smode
-                 ("s" "ssreflect")
-                 ("n" nil)
-                 (""  mode)
-                 (t   "coq")))
-    (cond ((string= mode "s") (ml4pg-load-ss))
-          ((string= mode "n") nil)
-          (t                  (ml4pg-load-coq)))))
+         (smode (if noninteractive mode (read-string msg))))
+    (unless (equal smode mode)
+      (setq mode (case smode
+                   ("s" "ssreflect")
+                   ("n" nil)
+                   (t   "coq"))))
+    (cond ((string= mode "ssreflect") (ml4pg-load-ss))
+          ((string= mode "n")         nil)
+          (t                          (ml4pg-load-coq)))))
 
 (require 'cl)
 
 (defun ml4pg-mode-aux ()
   (when noninteractive
+    (message "Hacking ProofGeneral for non-interactive use")
     (coq-build-prog-args)  ;; PG assumes coqtop will never run non-interactively
     (setq proof-shell-fiddle-frames nil)  ;; Don't alter non-existent windows
     (setq proof-three-window-enable nil)))
@@ -80,7 +83,6 @@
       (coq-mode))
     (message "Finished loading Proof General")))
 
+(add-hook 'coq-mode-hook 'ml4pg-mode)
 (use-nix-if-present)
 (load-proof-general)
-
-(add-hook 'coq-mode-hook 'ml4pg-mode)

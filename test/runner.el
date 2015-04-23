@@ -4,12 +4,7 @@
                     home-dir
                     (getenv "ML4PG_HOME"))
                 "ml4pg.el"))
-  (test-mode type))
-
-(defun test-mode (type)
-  (if (equal type "ssreflect")
-      (ml4pg-load-ss)
-      (ml4pg-load-coq)))
+  (select-mode))
 
 (defun ml4pg-load-tests (type)
   (message "Loading ML4PG test suite")

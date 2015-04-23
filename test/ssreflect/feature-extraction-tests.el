@@ -109,11 +109,13 @@
   "Test what export-theorem-aux does"
   (list-of (gen-string) (gen-coq-correct-theorem))
   (lambda (str coq)
-    (ml4pg-load-and-extract-info
+    (ml4pg-load-and-execute
      coq
      `(lambda ()
-        (message "PROOF-SHELL-LIVE-BUFFER: %s" (proof-shell-live-buffer))
-        (export-theorem-aux nil ,str)))))
+        (message "EXTRACTING (%s)" ,str)
+        (send-coq-cmd "Print nat")
+        ;(export-theorem-aux nil ,str)
+        ))))
 
 (test-with compute-tactic-result
   "Test what compute-tactic-result does"

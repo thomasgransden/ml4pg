@@ -65,7 +65,7 @@
   "DO NOT USE: This is for testing our test macro. Don't use in your own code"
   (ert-run-test (ert-get-test 'ml4pg-macro-test)))
 
-(defun ml4pg-load-and-extract-info (str action)
+(defun ml4pg-load-and-execute (str action)
   "Insert STR into a temporary buffer, load ML4PG in that buffer then run
    ACTION"
   (let ((path (make-temp-file "ml4pg-test" nil ".v")))
@@ -73,13 +73,17 @@
         (with-temp-file path
           (let ((noninteractive t))
             (insert str)
-            (message "ACTIVATING %s" mode)
-            (test-mode mode)
-            (message "ACTIVATED %s" mode)
+            (select-mode)
             (goto-char (point-max))
-            (extract-feature-theorems)
             (funcall action)))
       (delete-file path))))
+
+(defun ml4pg-load-and-extract-info (str action)
+  "Insert STR into a temporary buffer, load ML4PG, extract features then run
+   ACTION"
+  (ml4pg-load-and-execute (lambda ()
+                            (extract-feature-theorems)
+                            (funcall ,action))))
 
 (defun generate-and-run (func)
   (let ((f (indirect-function func)))
