@@ -851,7 +851,7 @@
               (concat (format "%s" (nth 3 temp2)) (format "%s" (nth 2 (car temp))))
               (+ (nth 4 temp2) (nth 3 (car temp)))))))
 
-(defvar useless-terms '("Defined" "Structure" "Section" "Add Ring" "Hypothesis"
+(defvar useless-terms '("Structure" "Section" "Add Ring" "Hypothesis"
                         "Hypotheses" "Include" "Export" "Parameter" "Axiom"
                         "End" "Notation" "Hint" "Inductive" "Variable"
                         "Implicit" "Import" "Canonical" "Coercion" "Module"
@@ -958,8 +958,10 @@
             ((or (search "Qed." cmd) (search "Defined." cmd))
              (message "E")
              (proof-assert-next-command-interactive)
-             (setf tactic-level (append tactic-level (list (compute-tactic-result name))))
-             (setf proof-tree-level (append proof-tree-level (list (compute-proof-tree-result name))))
+             (setf tactic-level     (append tactic-level
+                                            (list (compute-tactic-result     name))))
+             (setf proof-tree-level (append proof-tree-level
+                                            (list (compute-proof-tree-result name))))
              (when name
                (split-feature-vector name (flat (reverse result))))
              (ignore-errors (addthm name)))
