@@ -171,17 +171,6 @@
   (lambda (str result)
     ))
 
-(defun with-coq-example (f)
-  (when proof-script-buffer
-    (proof-deactivate-scripting 'retract))
-  (let ((path (make-temp-file "ml4pg" nil ".v")))
-    (with-temp-file path
-      (insert-file-contents-literally (concat home-dir "ml4pg.v")))
-    (unwind-protect
-        (find-file path)
-        (funcall f)
-      (delete-file path))))
-
 (test-with ml4pg-mode-auto
   "Does ml4pg-mode activate when loading a .v file?"
   nil

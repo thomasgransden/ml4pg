@@ -8,9 +8,6 @@
 
 (setq max-lisp-eval-depth 10000) ;; Hacky, but works for now
 
-(defconst test-mode (or test-suite "coq")
-  "Which mode to load, coq or ssreflect")
-
 (defmacro test-with (name doc rawgen test)
   "Declare an ML4PG test. Tests should try to be as reproducible as possible,
    to ease debugging. To get different behaviour on different runs, for example
@@ -76,7 +73,9 @@
         (with-temp-file path
           (let ((noninteractive t))
             (insert str)
-            (test-mode)
+            (message "ACTIVATING %s" mode)
+            (test-mode mode)
+            (message "ACTIVATED %s" mode)
             (goto-char (point-max))
             (extract-feature-theorems)
             (funcall action)))
@@ -87,3 +86,14 @@
     (compose `(lambda (str)
                 (list str (ml4pg-load-and-extract-info str ,f)))
              (gen-coq-correct-theorem))))
+
+(defun with-coq-example (f)
+  (when proof-script-buffer
+    (proof-deactivate-scripting 'retract))
+  (let ((path (make-temp-file "ml4pg" nil ".v")))
+    (with-temp-file path
+      (insert-file-contents-literally (concat home-dir "ml4pg.v")))
+    (unwind-protect
+        (find-file path)
+      (funcall f)
+      (delete-file path))))

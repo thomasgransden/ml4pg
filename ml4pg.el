@@ -10,7 +10,7 @@
 
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 
-(defvar mode nil)
+(defvar mode (getenv "ML4PG_TYPE"))
 
 (defun load-els (dir)
   `(lambda (f)
@@ -43,7 +43,11 @@
   (interactive)
   (let* ((msg   "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")
          (smode (if noninteractive "" (read-string msg))))
-    (setq mode smode)
+    (setq mode (case smode
+                 ("s" "ssreflect")
+                 ("n" nil)
+                 (""  mode)
+                 (t   "coq")))
     (cond ((string= mode "s") (ml4pg-load-ss))
           ((string= mode "n") nil)
           (t                  (ml4pg-load-coq)))))

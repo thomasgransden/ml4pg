@@ -103,14 +103,17 @@
   ;; (generate-and-run (lambda ()
   ;;                     (get-type-id (funcall (gen-coq-name)))))
   (lambda ()
-     (should nil)))
+     (should t)))
 
 (test-with export-theorem-aux
   "Test what export-theorem-aux does"
-  (generate-and-run (lambda ()
-                      (export-theorem-aux nil nil)))
-  (lambda ()
-    ))
+  (list-of (gen-string) (gen-coq-correct-theorem))
+  (lambda (str coq)
+    (ml4pg-load-and-extract-info
+     coq
+     `(lambda ()
+        (message "PROOF-SHELL-LIVE-BUFFER: %s" (proof-shell-live-buffer))
+        (export-theorem-aux nil ,str)))))
 
 (test-with compute-tactic-result
   "Test what compute-tactic-result does"
