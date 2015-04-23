@@ -152,23 +152,16 @@
                    (1+ types_id_n))))))
 
 (defun get-type-id2 (object)
-  (let* ((a (send-coq-cmd (concat "Check " object)))
-     (pos_jump (search "
-" a :start2 (+ 2 (search " " a))))
-     (pos_space (search " " a :start2 (+ 2 (search ": " a))))
-     (type (if pos_space
-           (cdr (assoc (subseq a (+ 2 (search ": " a)) pos_space) types_id))
-         (cdr (assoc (subseq a (+ 2 (search ": " a)) pos_jump) types_id)))))
-    (if type type
-      (progn (setf types_id
-           (append types_id  (list (cons  (if pos_space
-                              (subseq a (+ 2 (search ": " a)) pos_space)
-                            (subseq a (+ 2 (search ": " a)) pos_jump))
-                          types_id_n))))
-
-         (setf types_id_n (1- types_id_n))
-         (1+ types_id_n))
-      )))
+  (let* ((a         (send-coq-cmd (concat "Check " object)))
+         (pos_jump  (search nl  a :start2 (+ 2 (search " "  a))))
+         (pos_space (search " " a :start2 (+ 2 (search ": " a))))
+         (suba      (subseq a (+ 2 (search ": " a)) (or pos_space pos_jump)))
+         (type      (cdr (assoc suba types_id))))
+    (or type
+        (progn (setf types_id
+                     (append types_id  (list (cons suba types_id_n))))
+               (setf types_id_n (1- types_id_n))
+               (1+ types_id_n)))))
 
 
 ;; A function to obtain the value of a top symbol
@@ -819,29 +812,23 @@
 (defun count-seq (item seq)
   (let ((is? (search item seq)))
     (if is?
-    (+ 1 (count-seq item (subseq seq (+ 1 is?))))
-    0)))
+        (1+ (count-seq item (subseq seq (1+ is?))))
+        0)))
 
 (defun get-number-of-goals ()
   (let ((r (send-coq-cmd (format "Show Proof"))))
     (count-seq "?" r)))
 
-
 (defun flat (ll)
-  (if (endp ll)
-    nil
+  (unless (endp ll)
     (append (car ll) (flat (cdr ll)))))
 
-
-
-
 ;; The following function computes the result of the tactic
-
 
 (defun digits (n)
   (if (= (mod n 10) 0)
       0
-    (1+ (digits (/ n 10)))))
+      (1+ (digits (/ n 10)))))
 
 (defun first-digit (n digits)
   (/ n (expt 10 (1- digits))))
@@ -862,12 +849,7 @@
               (+ (nth 1 temp2) (* (expt 10 (length (cdr temp))) (nth 0 (car temp))))
               (+ (nth 2 temp2) (* (expt 10 (length (cdr temp))) (nth 1 (car temp))))
               (concat (format "%s" (nth 3 temp2)) (format "%s" (nth 2 (car temp))))
-              (+ (nth 4 temp2) (nth 3 (car temp))))
-      )
-  ))
-
-
-
+              (+ (nth 4 temp2) (nth 3 (car temp)))))))
 
 (defvar useless-terms '("Defined" "Structure" "Section" "Add Ring" "Hypothesis"
                         "Hypotheses" "Include" "Export" "Parameter" "Axiom"
