@@ -3,76 +3,65 @@
 ;; Different variables which are used to store information about
 ;; the numbers associated with tactics, rewrite rules, types, ...
 
-(defvar hypothesis nil)
-
-(defvar saved-theorems nil)
-(defvar goal-level-temp nil)
-(defvar tactic-level nil)
+(defvar hypothesis       nil)
+(defvar saved-theorems   nil)
+(defvar goal-level-temp  nil)
+(defvar tactic-level     nil)
 (defvar proof-tree-level nil)
 
 ;; Variables to store the different values associated with the tactics, the
 ;; types or the rewrite rules
 
 (defvar tactic_id '(("move"    . 1)
-            ("case"      . 2)
-            ("elim"      . 3)
-            ("apply"     . 4)
-            ("apply/"    . 5)
-            ("move/"     . -5)
-            ("case/"     . 6)
-            ("rewrite"    . 7)
-            ("exists"     . 8)
-            ("[]"         . 0)
-            ("exact"         . 9)))
+                    ("case"    . 2)
+                    ("elim"    . 3)
+                    ("apply"   . 4)
+                    ("apply/"  . 5)
+                    ("move/"   . -5)
+                    ("case/"   . 6)
+                    ("rewrite" . 7)
+                    ("exists"  . 8)
+                    ("[]"      . 0)
+                    ("exact"   . 9)))
 
-
-(defvar move nil)
-(defvar case nil)
-(defvar elim nil)
-(defvar apply nil)
-(defvar apply/ nil)
-(defvar move/ nil)
-(defvar case/ nil)
+(defvar move    nil)
+(defvar case    nil)
+(defvar elim    nil)
+(defvar apply   nil)
+(defvar apply/  nil)
+(defvar move/   nil)
+(defvar case/   nil)
 (defvar rewrite nil)
-(defvar exists nil)
-(defvar done nil)
-(defvar exact nil)
-
+(defvar exists  nil)
+(defvar done    nil)
+(defvar exact   nil)
 
 (defvar types_id '(("nat"  . -2)
-           ("Prop" . -4)
-           ("bool" . -3)
-           ("T"  . -1)
-           ("seq" . -5)))
+                   ("Prop" . -4)
+                   ("bool" . -3)
+                   ("T"    . -1)
+                   ("seq"  . -5)))
 
 (defvar types_id_n -6)
 (defvar views_id nil)
 (defvar theorems_id nil)
 
-(defvar top-symbol-id
-  '(("forall"      . 5)
-    ("@eq"         . 6)
-    ("and"         . 4)
-    ("iff"         . 8)
-    ("or"          . 3)
-    ("is_true"     . 2)
-    ("reflect"     . 9)
-    ))
+(defvar top-symbol-id '(("forall"  . 5)
+                        ("@eq"     . 6)
+                        ("and"     . 4)
+                        ("iff"     . 8)
+                        ("or"      . 3)
+                        ("is_true" . 2)
+                        ("reflect" . 9)))
 
-(defvar top-symbol-n 10)
-
-
-(defvar add_to 0.1)
-(defvar start 100)
-
-(defvar start_view 101)
-(defvar start_thm 101)
-
-
-(defvar init 0)
-
+(defvar top-symbol-n  10)
+(defvar add_to        0.1)
+(defvar start         100)
+(defvar start_view    101)
+(defvar start_thm     101)
+(defvar init          0)
 (defvar current-level 1)
-(defvar dot-level nil)
+(defvar dot-level     nil)
 
 ;;; Proof tree levels
 
@@ -83,59 +72,58 @@
 (defvar tdl5 nil)
 
 (defun add-info-to-level-aux (info list)
-  (if (not list)
-      info
-    (do ((temp list (cdr temp))
-     (temp1 info (cdr temp1))
-     (temp2 nil))
-    ((endp temp) temp2)
-    (cond ((= (car temp) 0) (setf temp2 (append temp2 (list (car temp1)))))
-          ((= (car temp1) 0) (setf temp2 (append temp2 (list (car temp)))))
-          (t (setf temp2 (append temp2 (list (string-to-number (format "%s%s" (car temp) (car temp1)))))))))))
+  "Concatenates numbers together, if they're non-zero"
+  (if list
+      (do ((temp   list (cdr temp))
+           (temp1  info (cdr temp1))
+           (result nil))
+          ((endp temp) result)
+        (setf result (append result (list
+          (cond ((= (car temp)  0) (car temp1))
+                ((= (car temp1) 0) (car temp))
+                (t                 (string-to-number (format "%s%s" (car temp)
+                                                                    (car temp1)))))))))
+      info))
 
 (defun add-info-to-level (info level)
-  (cond ((= level 1) (setf tdl1 (add-info-to-level-aux info tdl1)))
-        ((= level 2) (setf tdl2 (add-info-to-level-aux info tdl2)))
-        ((= level 3) (setf tdl3 (add-info-to-level-aux info tdl3)))
-        ((= level 4) (setf tdl4 (add-info-to-level-aux info tdl4)))
-        ((= level 5) (setf tdl5 (add-info-to-level-aux info tdl5)))
-        (t nil)))
+  (case level
+    (1 (setf tdl1 (add-info-to-level-aux info tdl1)))
+    (2 (setf tdl2 (add-info-to-level-aux info tdl2)))
+    (3 (setf tdl3 (add-info-to-level-aux info tdl3)))
+    (4 (setf tdl4 (add-info-to-level-aux info tdl4)))
+    (5 (setf tdl5 (add-info-to-level-aux info tdl5)))))
 
 ;;; Main function of this file, it is in charge of extracting the
 ;;; information associated with a theorem
 
-
 (defun export-theorem ()
   (interactive)
-  (progn (setf tdl1 nil
-           tdl2 nil
-           tdl3 nil
-           tdl4 nil
-           tdl5 nil
-           move nil
-           case nil
-           elim nil
-           apply nil
-           apply/ nil
-           move/ nil
-           case/ nil
-           rewrite nil
-           exists nil
-           done nil
-           exact nil
-           current-level 1
-           dot-level nil
-           hypothesis nil
-           goal-level nil)
-     (if (equal init 0)
-         (progn (read-lemmas)
-            (read-views)
-            (setq init 1)))
-     (export-theorem-aux nil nil)
-     (send-coq-cmd (format "Unset Printing All"))
-       ))
-
-
+  (setf tdl1          nil
+        tdl2          nil
+        tdl3          nil
+        tdl4          nil
+        tdl5          nil
+        move          nil
+        case          nil
+        elim          nil
+        apply         nil
+        apply/        nil
+        move/         nil
+        case/         nil
+        rewrite       nil
+        exists        nil
+        done          nil
+        exact         nil
+        current-level 1
+        dot-level     nil
+        hypothesis    nil
+        goal-level    nil)
+  (when (equal init 0)
+    (read-lemmas)
+    (read-views)
+    (setq init 1))
+  (export-theorem-aux nil nil)
+  (send-coq-cmd (format "Unset Printing All")))
 
 ;; A function to obtain the type associated with an object
 
@@ -736,54 +724,49 @@
     (remove-multiple-spaces (concatenate 'string (subseq string 0 d) (subseq string (1+ d))))
       string)))
 
-
-
 (defun compute-numbers-cmd (cmd top level)
   (let* ((cmd1 (remove-multiple-spaces cmd)))
     (cond ((search "symmetry" cmd) nil)
-      ((search "last by" cmd) (compute-numbers-cmd (subseq cmd (+ 3 (search "by" cmd))) top level))
-      ((search "first by" cmd) (compute-numbers-cmd (subseq cmd (+ 3 (search "by" cmd))) top level))
-      ((string= "try" (subseq cmd 0 2)) (compute-numbers-cmd (subseq cmd (+ 4 (search "try" cmd))) top level))
-      ((string= "do" (subseq cmd 0 2)) (compute-numbers-cmd (subseq cmd (cond ((search "!" cmd) (1+ (search "!" cmd)))
-                                    ((search "?" cmd) (1+ (search "?" cmd)))
-                                    (t (+ 3 (search "do" cmd))))) top level))
-      ((search "have" cmd) nil)
-      ((or (search "move=>" cmd1) (search "move =>" cmd1)) (numbers-move=> cmd1 top level))
-      ((or (search "move:" cmd1) (search "move :" cmd1)) (numbers-move: cmd1 top level))
-      ((or (search "move/" cmd1) (search "move /" cmd1)) (numbers-move/ cmd1 top level))
-      ((or (search "move<-" cmd1) (search "move->" cmd1) (search "move ->" cmd1) (search "move <-" cmd1)) (numbers-move< cmd1 top level))
-      ((or (search "apply/" cmd1) (search "apply /" cmd1)) (numbers-apply/ cmd1 top level))
-      ((or (search "apply:" cmd1) (search "apply :" cmd1) (search "apply" cmd1)) (numbers-apply: cmd1 top level))
-      ((or (search "elim:" cmd1) (search "elim :" cmd1)) (numbers-elim cmd1 top level))
-      ((or (search "case/" cmd1) (search "case /" cmd1)) (numbers-case/ cmd1 top level))
-      ((or (search "case:" cmd1) (search "case" cmd1)) (numbers-case cmd1 top level))
-      ((or (search "exact" cmd1) (search "exact :" cmd1)) (numbers-exact cmd1 top level))
-      ((search "rewrite" cmd1) (numbers-rewrite cmd1 top level))
-      ((search "exists" cmd1) (numbers-exists cmd1 top level))
-      ((or (search "[]" cmd1) (search "done" cmd1) (search "constructor" cmd1)) (numbers-done cmd1 top level))
+          ((search "last by" cmd) (compute-numbers-cmd (subseq cmd (+ 3 (search "by" cmd))) top level))
+          ((search "first by" cmd) (compute-numbers-cmd (subseq cmd (+ 3 (search "by" cmd))) top level))
+          ((string= "try" (subseq cmd 0 2)) (compute-numbers-cmd (subseq cmd (+ 4 (search "try" cmd))) top level))
+          ((string= "do" (subseq cmd 0 2)) (compute-numbers-cmd (subseq cmd (cond ((search "!" cmd) (1+ (search "!" cmd)))
+                                                                                  ((search "?" cmd) (1+ (search "?" cmd)))
+                                                                                  (t (+ 3 (search "do" cmd))))) top level))
+          ((search "have" cmd) nil)
+          ((or (search "move=>" cmd1) (search "move =>" cmd1)) (numbers-move=> cmd1 top level))
+          ((or (search "move:" cmd1) (search "move :" cmd1)) (numbers-move: cmd1 top level))
+          ((or (search "move/" cmd1) (search "move /" cmd1)) (numbers-move/ cmd1 top level))
+          ((or (search "move<-" cmd1) (search "move->" cmd1) (search "move ->" cmd1) (search "move <-" cmd1)) (numbers-move< cmd1 top level))
+          ((or (search "apply/" cmd1) (search "apply /" cmd1)) (numbers-apply/ cmd1 top level))
+          ((or (search "apply:" cmd1) (search "apply :" cmd1) (search "apply" cmd1)) (numbers-apply: cmd1 top level))
+          ((or (search "elim:" cmd1) (search "elim :" cmd1)) (numbers-elim cmd1 top level))
+          ((or (search "case/" cmd1) (search "case /" cmd1)) (numbers-case/ cmd1 top level))
+          ((or (search "case:" cmd1) (search "case" cmd1)) (numbers-case cmd1 top level))
+          ((or (search "exact" cmd1) (search "exact :" cmd1)) (numbers-exact cmd1 top level))
+          ((search "rewrite" cmd1) (numbers-rewrite cmd1 top level))
+          ((search "exists" cmd1) (numbers-exists cmd1 top level))
+          ((or (search "[]" cmd1) (search "done" cmd1) (search "constructor" cmd1)) (numbers-done cmd1 top level))
 
-      ((string= (subseq cmd1 0 4) "pose") nil)
-      ((string= (subseq cmd1 0 3) "set") nil)
-      ((string= (subseq cmd1 0 4) "left") nil)
-      ((string= (subseq cmd1 0 4) "righ") nil)
-      )
-    )
-  )
-
+          ((string= (subseq cmd1 0 4) "pose") nil)
+          ((string= (subseq cmd1 0 3) "set") nil)
+          ((string= (subseq cmd1 0 4) "left") nil)
+          ((string= (subseq cmd1 0 4) "righ") nil))))
 
 (defun split-command (cmd result end)
-  (if (or (string= " " (subseq cmd 0 1)) (string= "-" (subseq cmd 0 1)))
+  (if (or (string= " " (subseq cmd 0 1))
+          (string= "-" (subseq cmd 0 1)))
       (split-command (subseq cmd 1) result end)
-  (let ((is_by (string= "by" (subseq cmd 0 2))))
-    (if is_by
-    (split-command (subseq cmd 3) result 1)
-      (let ((comma (search ";" cmd)))
-    (if comma
-        (split-command (subseq cmd (1+ comma)) (append result (list (subseq cmd 0 comma))) end)
-      (list (append result (list (subseq cmd 0 (1- (length cmd))))) end)))))))
-
-
-
+      (if (string= "by" (subseq cmd 0 2))
+          (split-command (subseq cmd 3) result 1)
+          (let ((comma (search ";" cmd)))
+            (if comma
+                (split-command (subseq cmd (1+ comma))
+                               (append result (list (subseq cmd 0 comma)))
+                               end)
+                (list (append result
+                              (list (subseq cmd 0 (1- (length cmd)))))
+                      end))))))
 
 (defun add-tactics (tactics end top level)
   (do ((temp tactics (cdr temp))
@@ -792,34 +775,44 @@
       (let ((res (compute-numbers-cmd (car temp) top level)))
     (if res (setf temp2 (append temp2 res))))))
 
-
 ;The first value is the tactic, the second one is the number of tactics,
 ;the third one is the argument type, the fourth one is if the
 ;argument is a hypothesis of a theorem, the fifth one is the top-symbol
 ;and the last one the number of subgoals
 
+(defun minus-any (&rest args)
+  "Return a hyphen if any arg is negative, or an empty string otherwise"
+  (let ((result ""))
+    (dolist (arg args result)
+      (when (< arg 0) (setf result "-")))))
+
+(defun get-numbers-helper (temp2 elem index take-abs)
+    (let ((n1 (string-to-number (nth index temp2)))
+          (n2 (nth index elem)))
+      (concat (format "%s%s"
+                      (minus-any (if take-abs (abs n1) n1)
+                                 n2)
+                      (abs n1))
+              (format "%s" (abs n2)))))
 
 (defun get-numbers (cmd top level)
   (let* ((res (split-command cmd nil 0))
-     (tactics (car res))
-     (end (cadr res))
-     (nums (add-tactics tactics end top level)))
-    (if nums (do ((temp (cdr nums) (cdr temp))
-     (temp2 (list (format "%s" (nth 0 (car nums))) (nth 1 (car nums))   (format "%s" (nth 2 (car nums))) (format "%s" (nth 3 (car nums))))))
-    ((endp temp) (list (string-to-number (nth 0 temp2)) (nth 1 temp2)  (string-to-number (nth 2 temp2)) (string-to-number (nth 3 temp2))) )
-    (setf temp2 (list (if (or (< (string-to-number(nth 0 temp2)) 0) (< (nth 0 (car temp)) 0))
-                  (concatenate 'string (format "-%s" (abs (string-to-number(nth 0 temp2)))) (format "%s" (abs (nth 0 (car temp)))))
-                (concatenate 'string (format "%s" (abs (string-to-number(nth 0 temp2))) ) (format "%s" (abs (nth 0 (car temp))))))
-              (+ (nth 1 temp2) (nth 1 (car temp)))
-              (if (or (< (abs (string-to-number(nth 2 temp2))) 0) (< (nth 2 (car temp)) 0))
-                  (concatenate 'string (format "-%s" (abs (abs (string-to-number(nth 2 temp2))))) (format "%s" (abs (nth 2 (car temp)))))
-                (concatenate 'string (format "%s" (abs (abs (string-to-number(nth 2 temp2))))) (format "%s" (abs (nth 2 (car temp))))))
-              (if (or (< (string-to-number (nth 3 temp2)) 0) (< (nth 3 (car temp)) 0))
-                  (concatenate 'string (format "-%s" (abs (string-to-number (nth 3 temp2)))) (format "%s" (abs (nth 3 (car temp)))))
-                (concatenate 'string (format "%s" (abs (string-to-number (nth 3 temp2)))) (format "%s" (abs (nth 3 (car temp))))))
-             ))
-    )
-    )))
+         (tactics (car res))
+         (end (cadr res))
+         (nums (add-tactics tactics end top level)))
+    (when nums
+      (let ((temp2 (list (format "%s" (nth 0 (car nums)))
+                         (nth 1 (car nums))
+                         (format "%s" (nth 2 (car nums)))
+                         (format "%s" (nth 3 (car nums))))))
+        (dolist (elem (cdr nums) (list (string-to-number (nth 0 temp2))
+                                       (nth 1 temp2)
+                                       (string-to-number (nth 2 temp2))
+                                       (string-to-number (nth 3 temp2))))
+          (setf temp2 (list (get-numbers-helper temp2 elem 0 nil)
+                            (+ (nth 1 temp2) (nth 1 elem))
+                            (get-numbers-helper temp2 elem 2 t)
+                            (get-numbers-helper temp2 elem 3 nil))))))))
 
 ;; Function to obtain the information just about the goals.
 
@@ -886,7 +879,7 @@
 (defun is-in-search (cmd)
   (let ((is nil))
     (dolist (elem useless-terms is)
-            (setf is (or is (search (car temp) cmd))))))
+            (setf is (or is (search elem cmd))))))
 
 (defun compute-tactic-value (lst)
   "Concatenate the numbers in LST"
@@ -931,42 +924,57 @@
     (if tdl5 tdl5 (generate-zeros 13))))))
 
 (defun export-theorem-aux (result name)
+  (message "RESULT: %s NAME: %s" result name)
   (let* ((semis   (save-excursion
                     (skip-chars-backward " \t\n"
                                          (proof-queue-or-locked-end))
                     (proof-segment-up-to-using-cache (point))))
+         (foo     (message "SEMIS: %s" semis))
          (first   (car semis))
          (comment (nth 0 first))
          (cmd     (nth 1 first))
-         (subcmd  (subseq cmd (1+ (search " " cmd))
-                              (search " " cmd :start2 (1+ (search " " cmd)))))
+         (foo     (message "FIRST: %s COMMENT: %s CMD: %s" first comment cmd))
+         (bit1    (search " " cmd))
+         (foo     (message "BIT1: %s" bit1))
+         (bit2    (1+ (or bit1 0)))
+         (foo     (message "BIT2: %s" bit2))
+         (bit3    (search " " cmd :start2 bit2))
+         (foo     (message "BIT3: %s" bit3))
+         (subcmd  (subseq cmd bit2 bit3))
+         (foo     (message "SUBCMD: %s" subcmd))
          (ts      nil))
     (when semis
       (cond ((or (string= comment "comment")
                  (is-in-search cmd))
              ;; Skip comments and anything in useless-terms
+             (message "A")
              (proof-assert-next-command-interactive)
              (export-theorem-aux result name))
 
             ((or (search "Definition" cmd) (search "Fixpoint" cmd))
+             (message "B")
              (proof-assert-next-command-interactive)
              (ignore-errors (adddefinition subcmd))
              (export-theorem-aux result subcmd)
              (proof-assert-next-command-interactive))
 
             ((search "Lemma" cmd)
+             (message "C")
              (proof-assert-next-command-interactive)
              (export-theorem-aux result subcmd))
 
             ((search "Proof" cmd)
+             (message "D")
              (proof-assert-next-command-interactive)
              (export-theorem-aux result name))
 
             ((search "Theorem" cmd)
+             (message "D")
              (proof-assert-next-command-interactive)
              (export-theorem-aux result subcmd))
 
             ((or (search "Qed." cmd) (search "Defined." cmd))
+             (message "E")
              (proof-assert-next-command-interactive)
              (setf tactic-level (append tactic-level (list (compute-tactic-result name))))
              (setf proof-tree-level (append proof-tree-level (list (compute-proof-tree-result name))))
@@ -975,6 +983,7 @@
              (ignore-errors (addthm name)))
 
             (t
+             (message "F")
              (setf ts (get-top-symbol))
              (setf ng (get-number-of-goals))
              (proof-assert-next-command-interactive)
@@ -1126,32 +1135,23 @@
 (defun extract-features-2-bis (thm list)
   (let ((fm (longest-theorem)))
     (do ((temp (append (last-part-of-lists (cdr list)) (list thm)) (cdr temp))
-     (temp2 ""))
-    ((endp temp) temp2)
-    (setf temp2 (concat temp2
-                  (format "%s\n"
-                      (print-list (car temp)))))
-      )
-    ))
-
-
-
-
-
+         (temp2 ""))
+        ((endp temp) temp2)
+      (setf temp2 (concat temp2
+                          (format "%s\n"
+                                  (print-list (car temp))))))))
 
 ;; Function which extract the information from all the theorems up to a point
 
 (defun extract-feature-theorems ()
   (interactive)
   (let ((final (point))
-    (current-level 1)
-    (last-point -1))
+        (current-level 1)
+        (last-point -1))
     (export-theorem)
     (while (and (< (point) final) (not (= (point) last-point)))
-      (progn (setq last-point (point))
-         (export-theorem)))))
-
-
+      (setq last-point (point))
+      (export-theorem))))
 
 ;;; Function to normalize the results
 
