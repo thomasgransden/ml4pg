@@ -112,10 +112,7 @@
     (ml4pg-load-and-execute
      coq
      `(lambda ()
-        (message "EXTRACTING (%s)" ,str)
-        (send-coq-cmd "Print nat")
-        ;(export-theorem-aux nil ,str)
-        ))))
+        (export-theorem-aux nil ,str)))))
 
 (test-with compute-tactic-result
   "Test what compute-tactic-result does"
