@@ -81,9 +81,11 @@
 (defun ml4pg-load-and-extract-info (str action)
   "Insert STR into a temporary buffer, load ML4PG, extract features then run
    ACTION"
-  (ml4pg-load-and-execute (lambda ()
-                            (extract-feature-theorems)
-                            (funcall ,action))))
+  (let ((f (indirect-function action)))
+    (ml4pg-load-and-execute str
+                            `(lambda ()
+                               (extract-feature-theorems)
+                               (funcall ,f)))))
 
 (defun generate-and-run (func)
   (let ((f (indirect-function func)))

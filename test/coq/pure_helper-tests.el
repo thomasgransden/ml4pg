@@ -89,6 +89,16 @@
     (should (equal (after-space (concat start " " end))
                    (1+ (length start))))))
 
+(test-with take-n
+  "Should extract N items from a list"
+  (list-of (gen-list (gen-string)) (gen-num))
+  (lambda (l n)
+    (let ((result (take-n n l)))
+      (should (<= (length result) n))
+      (should (<= (length result) (length l)))
+      (when (>= (length l) n)
+        (should (equal (length result) n))))))
+
 (test-with take-30
   "Should extract 30 items from a list"
   (list-of (gen-list (gen-string) (lambda () (+ 30 (funcall (gen-num))))))
@@ -97,6 +107,15 @@
     (dotimes (n 30)
       (should (equal (nth n (take-30 l))
                      (nth n l))))))
+
+(test-with drop-n
+  "Should remove the first N elements of a list"
+  (list-of (gen-list (gen-string)) (gen-num))
+  (lambda (lst n)
+    (let ((result (drop-n n lst)))
+      (should (<= (length result) (length lst)))
+      (when (>= (length lst) n)
+        (should (equal (length result) (- (length lst) n)))))))
 
 (test-with find-max-length
   "Finds the length of the longest saved theorem"

@@ -48,9 +48,14 @@
   (take-n 30 list))
 
 (defun take-n (n list)
-  (if (= n 0)
+  (if (or (= n 0) (null list))
       nil
-    (cons (car list) (take-n (1- n) (cdr list)))))
+      (cons (car list) (take-n (1- n) (cdr list)))))
+
+(defun drop-n (n list)
+  (if (or (= n 0) (null list))
+      list
+      (drop-n (1- n) (cdr list))))
 
 (defun find-max-length (lst)
   (let ((result 0))

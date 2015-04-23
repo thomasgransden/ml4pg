@@ -107,12 +107,12 @@
 
 (test-with export-theorem-aux
   "Test what export-theorem-aux does"
-  (list-of (gen-string) (gen-coq-correct-theorem))
+  (list-of (gen-coq-name) (gen-coq-correct-theorem))
   (lambda (str coq)
     (ml4pg-load-and-execute
      coq
      `(lambda ()
-        (export-theorem-aux nil ,str)))))
+        (message "EXPORT RESULT: (%S)" (export-theorem-aux nil ,str))))))
 
 (test-with compute-tactic-result
   "Test what compute-tactic-result does"
@@ -160,3 +160,27 @@
   (list-of (gen-string))
   (lambda (str)
     (compute-proof-tree-result str)))
+
+(test-with adddefinition
+  "Test what adddefinition does"
+  (list-of (gen-string))
+  (lambda (str)
+    (adddefinition str)))
+
+(test-with addthm
+  "Test what addthm does"
+  nil
+  (lambda ()
+    (addthm)))
+
+(test-with split-feature-vector
+  "Test what split-feature-vector does"
+  nil
+  (lambda ()
+          (split-feature-vector)))
+
+(test-with normalize
+  "Test what normalize does"
+  nil
+  (lambda ()
+    (normalize)))

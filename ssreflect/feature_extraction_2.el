@@ -906,7 +906,6 @@
     (if tdl5 tdl5 (generate-zeros 13))))))
 
 (defun export-theorem-aux (result name)
-  (message "RESULT: %s NAME: %s" result name)
   (let* ((semis   (save-excursion
                     (skip-chars-backward " \t\n"
                                          (proof-queue-or-locked-end))
@@ -923,34 +922,30 @@
       (cond ((or (string= comment "comment")
                  (is-in-search cmd))
              ;; Skip comments and anything in useless-terms
-             (message "A")
              (proof-assert-next-command-interactive)
              (export-theorem-aux result name))
 
-            ((or (search "Definition" cmd) (search "Fixpoint" cmd))
-             (message "B")
+            ((or (search "Definition" cmd)
+                 (search "Fixpoint" cmd))
              (proof-assert-next-command-interactive)
              (ignore-errors (adddefinition subcmd))
              (export-theorem-aux result subcmd)
              (proof-assert-next-command-interactive))
 
             ((search "Lemma" cmd)
-             (message "C")
              (proof-assert-next-command-interactive)
              (export-theorem-aux result subcmd))
 
             ((search "Proof" cmd)
-             (message "D")
              (proof-assert-next-command-interactive)
              (export-theorem-aux result name))
 
             ((search "Theorem" cmd)
-             (message "D")
              (proof-assert-next-command-interactive)
              (export-theorem-aux result subcmd))
 
-            ((or (search "Qed." cmd) (search "Defined." cmd))
-             (message "E")
+            ((or (search "Qed."     cmd)
+                 (search "Defined." cmd))
              (proof-assert-next-command-interactive)
              (setf tactic-level     (append tactic-level
                                             (list (compute-tactic-result     name))))
@@ -961,7 +956,6 @@
              (ignore-errors (addthm name)))
 
             (t
-             (message "F")
              (setf ts (get-top-symbol))
              (setf ng (get-number-of-goals))
              (proof-assert-next-command-interactive)
@@ -977,20 +971,13 @@
 
 (defun split-feature-vector (name fv)
   (let ((len (1+ (floor (length fv) 30))))
-    (do ((i 0 (+ i 1)))
-    ((equal i len) nil)
-    (setf saved-theorems (append saved-theorems
-                     (list (list name (take-30-from fv i))))))))
+    (dotimes (i len)
+      (setf saved-theorems (append saved-theorems
+                                   (list (list name (take-30-from fv i))))))))
 
-
-(defun take-30-from (list pos)
-  (let ((j (* 30 pos)))
-  (do ((i j (1+ i))
-       (temp2 nil (if (nth i list) (cons (nth i list) temp2) (cons 0 temp2))))
-      ((= i (+ j 30)) (reverse temp2)))))
-
-
-
+(defun take-30-from (list row)
+  "Chunk LIST into runs of length 30, and return run POS"
+  (take-n 30 (drop-n (* row 30))))
 
 ;;; Functions to save the files
 
@@ -1001,15 +988,12 @@
        (with-temp-file (concat file "_tactics.csv") (insert (extract-features-2 tactic-level)))
        (with-temp-file (concat file (format "_summary.txt")) (insert (extract-names))))))
 
-
 (defun extract-names ()
   (do ((temp saved-theorems (cdr temp))
        (temp2 "")
        (i 1 (1+ i)))
       ((endp temp) temp2)
     (setf temp2 (concat temp2 (format "%s %s\n" i (remove_last_colon (caar temp)))) )))
-
-
 
 (defun last-part-of-lists (list)
   (do ((temp list (cdr temp))
@@ -1020,18 +1004,18 @@
 (defun extract-features-1 ()
   (let ((fm (longest-theorem)))
     (do ((temp (last-part-of-lists saved-theorems) (cdr temp))
-     (temp2 ""))
-    ((endp temp) temp2)
-    (setf temp2 (concat temp2
-                  (format "%s\n"
-                      (print-list  (take-30 (append (car temp)
-                                   (generate-zeros 30))))))))))
+         (temp2 ""))
+        ((endp temp) temp2)
+      (setf temp2 (concat temp2
+                          (format "%s\n"
+                                  (print-list  (take-30 (append (car temp)
+                                                                (generate-zeros 30))))))))))
 
 (defun extract-features-2 (list)
   (do ((temp (last-part-of-lists (cdr list)) (cdr temp))
        (temp2 ""))
       ((endp temp) temp2)
-      (setf temp2 (concat temp2 (format "%s\n" (print-list (car temp)))))))
+    (setf temp2 (concat temp2 (format "%s\n" (print-list (car temp)))))))
 
 (defun generate-zeros (n)
   (do ((i 0 (1+ i))
@@ -1043,81 +1027,69 @@
 
 ;; Function which extract the info of a theorem up to a concrete point
 
-(defvar tactic-temp nil)
+(defvar tactic-temp     nil)
 (defvar proof-tree-temp nil)
 
 (defun extract-info-up-to-here ()
   (interactive)
-  (setf move nil
-    case nil
-    elim nil
-    apply nil
-    apply/ nil
-    move/ nil
-    case/ nil
-    rewrite nil
-    exists nil
-    done nil
-    exact nil
-    tactic-temp nil
-    tdl1 nil
-    tdl2 nil
-    tdl3 nil
-    tdl4 nil
-    tdl5 nil
-    current-level 1
-    dot-level nil)
-  (let ((final (point))
-    (result nil)
-    (end nil))
-    (search-backward "Proof.")
+  (setf move          nil
+        case          nil
+        elim          nil
+        apply         nil
+        apply/        nil
+        move/         nil
+        case/         nil
+        rewrite       nil
+        exists        nil
+        done          nil
+        exact         nil
+        tactic-temp   nil
+        tdl1          nil
+        tdl2          nil
+        tdl3          nil
+        tdl4          nil
+        tdl5          nil
+        current-level 1
+        dot-level     nil)
+  (let ((final  (point))
+        (result nil)
+        (end    nil))
+    (search-backward "Proof.") ;; FIXME: what if we don't say "Proof."????
     (proof-goto-point)
     (while (< (point) final)
-      (let* ((semis (save-excursion
-              (skip-chars-backward " \t\n"
-                       (proof-queue-or-locked-end))
-              (proof-segment-up-to-using-cache (point))))
-         (comment (caar semis))
-         (cmd (cadar semis))
-         (ts nil))
-    (progn (setf ts (get-top-symbol))
-           (setf ng (get-number-of-goals))
-           (proof-assert-next-command-interactive)
-           (setf ng2 (get-number-of-goals))
-           (if cmd
-           (setf result (cons (append (get-numbers cmd ts current-level) (list ts) (list ng2)) result)))
-           (add-info-to-level (list 0 0 0 0 0 0 0 0 0 0 0 ng2 (if (< ng2 ng) 1 0)) current-level)
-           (setf current-level (1+ current-level))
-            )
-
-    )
-    )
-    (setf tactic-temp (cadr (compute-tactic-result "")))
+      (let* ((semis   (save-excursion
+                        (skip-chars-backward " \t\n"
+                                             (proof-queue-or-locked-end))
+                        (proof-segment-up-to-using-cache (point))))
+             (comment (caar semis))
+             (cmd     (cadar semis))
+             (ts      nil))
+        (setf ts  (get-top-symbol))
+        (setf ng  (get-number-of-goals))
+        (proof-assert-next-command-interactive)
+        (setf ng2 (get-number-of-goals))
+        (when cmd
+          (setf result (cons (append (get-numbers cmd ts current-level) (list ts) (list ng2)) result)))
+        (add-info-to-level (list 0 0 0 0 0 0 0 0 0 0 0 ng2 (if (< ng2 ng) 1 0)) current-level)
+        (setf current-level (1+ current-level))))
+    (setf tactic-temp     (cadr (compute-tactic-result     "")))
     (setf proof-tree-temp (cadr (compute-proof-tree-result "")))
     (take-30 (append (flat (reverse result)) (generate-zeros 30) ))
-    (send-coq-cmd (format "Unset Printing All"))
-  ))
-
-
+    (send-coq-cmd (format "Unset Printing All"))))
 
 (defun extract-features-1-bis (thm)
-  (let ((fm (longest-theorem)))
-    (do ((temp (append (last-part-of-lists saved-theorems) (list thm)) (cdr temp))
-     (temp2 ""))
-    ((endp temp) temp2)
-    (setf temp2 (concat temp2
-                  (format "%s\n"
-                      (print-list (take-30 (append (car temp)
-                                   (generate-zeros 30))))))))))
+  (let ((fm    (longest-theorem))
+        (temp2 ""))
+    (dolist (elem (append (last-part-of-lists saved-theorems) (list thm)) temp2)
+      (setf temp2 (concat temp2 (format "%s\n"
+                                        (print-list (take-30 (append elem
+                                                                     (generate-zeros 30))))))))))
 
 (defun extract-features-2-bis (thm list)
-  (let ((fm (longest-theorem)))
-    (do ((temp (append (last-part-of-lists (cdr list)) (list thm)) (cdr temp))
-         (temp2 ""))
-        ((endp temp) temp2)
-      (setf temp2 (concat temp2
-                          (format "%s\n"
-                                  (print-list (car temp))))))))
+  (let ((fm    (longest-theorem))
+        (temp2 ""))
+    (dolist (elem (append (last-part-of-lists (cdr list)) (list thm)) temp2)
+      (setf temp2 (concat temp2 (format "%s\n" (print-list elem)))))))
 
 ;; Function which extract the information from all the theorems up to a point
 
@@ -1136,51 +1108,43 @@
 (defun max-two-lists (list1 list2)
   (do ((temp1 (take-30 (append list1 (generate-zeros 24))) (cdr temp1))
        (temp2 (take-30 (append list2 (generate-zeros 24))) (cdr temp2))
-       (temp nil))
+       (temp  nil))
       ((endp temp1) temp)
-      (if (< (car temp1) (car temp2))
-      (setf temp (append temp (list (car temp2))))
-    (setf temp (append temp (list (car temp1))))
-    )))
+    (setf temp (append temp (list (max (car temp1) (car temp2)))))))
 
 (defun min-two-lists (list1 list2)
   (do ((temp1 (take-30 (append list1 (generate-zeros 24))) (cdr temp1))
        (temp2 (take-30 (append list2 (generate-zeros 24))) (cdr temp2))
-       (temp nil))
+       (temp  nil))
       ((endp temp1) temp)
-      (if (> (car temp1) (car temp2))
-      (setf temp (append temp (list (car temp2))))
-    (setf temp (append temp (list (car temp1))))
-    )))
+    (setf temp (append temp (list (min (car temp1) (car temp2)))))))
 
 (defun max-position (list )
   (do ((temp list (cdr temp))
        (max (generate-zeros (length (car list)))))
       ((endp temp) max)
-      (setf max (max-two-lists max (car temp)))))
+    (setf max (max-two-lists max (car temp)))))
 
 (defun min-position (list )
   (do ((temp list (cdr temp))
        (min (generate-zeros (length (car list)))))
       ((endp temp) min)
-      (setf min (min-two-lists min (car temp)))))
+    (setf min (min-two-lists min (car temp)))))
 
-
-(defun normalize-list (list max min)
-  (do ((temp (take-30 (append list (generate-zeros 24))) (cdr temp))
-       (temp-max max (cdr temp-max))
-       (temp-min min (cdr temp-min))
-       (temp2 nil))
+(defun normalize-list (list maxp minp)
+  (do ((temp     (take-30 (append list (generate-zeros 24))) (cdr temp))
+       (temp-max maxp (cdr temp-max))
+       (temp-min minp (cdr temp-min))
+       (temp2    nil))
       ((endp temp) temp2)
-      (cond ((< 0 (car temp)) (setf temp2 (append temp2 (list (/ (+ (car temp) .0) (car temp-max))))))
-        ((= 0 (car temp)) (setf temp2 (append temp2 (list 0))))
-        (t (setf temp2 (append temp2 (list (- (/ (+ (car temp) .0) (car temp-min))))))))))
+    (setf temp2 (append temp2 (list
+      (cond ((= 0 (car temp)) 0)
+            ((< 0 (car temp))    (/ (+ (car temp) .0) (car temp-max)))
+            (t                (- (/ (+ (car temp) .0) (car temp-min))))))))))
 
 (defun normalize (list)
-
-  (let ((max (max-position list))
-    (min (min-position list)))
-   (do ((temp list (cdr temp))
-     (temp2 nil))
-    ((endp temp) temp2)
-    (setf temp2 (append temp2 (list (normalize-list (car temp) max min)))))))
+  (let ((maxp   (max-position list))
+        (minp   (min-position list))
+        (temp2 nil))
+    (dolist (elem list temp2)
+      (setf temp2 (append temp2 (list (normalize-list elem maxp minp)))))))

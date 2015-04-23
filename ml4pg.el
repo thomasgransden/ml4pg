@@ -17,7 +17,6 @@
      (load-file (concat home-dir ,dir "/" f (if (search ".el" f) "" ".el")))))
 
 (defun ml4pg-load-coq ()
-  (message "Activating Coq mode")
   (mapc (load-els "generic")
         (directory-files (concat home-dir "generic/") nil ".*\.el"))
   (mapc (load-els "coq")
@@ -31,7 +30,6 @@
           "clusterdigraph" "graph_pure" "trees")))
 
 (defun ml4pg-load-ss ()
-  (message "Activating SSReflect mode")
   (mapc (load-els "generic")
         '("pure_helpers" "impure_helpers"))
   (mapc (load-els "ssreflect")
@@ -58,7 +56,7 @@
 
 (defun ml4pg-mode-aux ()
   (when noninteractive
-    (message "Hacking ProofGeneral for non-interactive use")
+    ;; Hack Proof General for noninteractive use
     (coq-build-prog-args)  ;; PG assumes coqtop will never run non-interactively
     (setq proof-shell-fiddle-frames nil)  ;; Don't alter non-existent windows
     (setq proof-three-window-enable nil)))

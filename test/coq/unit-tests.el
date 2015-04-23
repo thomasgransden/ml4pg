@@ -204,7 +204,6 @@
   ""
   nil
   (lambda ()
-    (should nil)
     ;; (with-coq-example (lambda ()
     ;;                     (dependencygraph-defs)))
     ))
@@ -213,7 +212,6 @@
   ""
   nil
   (lambda ()
-    (should nil)
     ;; (with-coq-example (lambda ()
     ;;                     (dependencygraph-statements)))
     ))
@@ -222,7 +220,6 @@
   ""
   nil
   (lambda ()
-    (should nil)
     ;; (with-coq-example (lambda ()
     ;;                     (dependencygraph-proof)))
     ))
