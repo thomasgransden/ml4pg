@@ -24,6 +24,7 @@
                     ("[]"      . 0)
                     ("exact"   . 9)))
 
+(message "FIXME: 'apply', 'case', etc. match core ELisp function names!")
 (defvar move    nil)
 (defvar case    nil)
 (defvar elim    nil)
@@ -78,11 +79,12 @@
            (temp1  info (cdr temp1))
            (result nil))
           ((endp temp) result)
-        (setf result (append result (list
-          (cond ((= (car temp)  0) (car temp1))
-                ((= (car temp1) 0) (car temp))
-                (t                 (string-to-number (format "%s%s" (car temp)
-                                                                    (car temp1)))))))))
+        (append-to result
+                   (cond ((= (car temp)  0) (car temp1))
+                         ((= (car temp1) 0) (car temp))
+                         (t                 (string-to-number (format "%s%s"
+                                                                      (car temp)
+                                                                      (car temp1)))))))
       info))
 
 (defun add-info-to-level (info level)
@@ -131,8 +133,8 @@
   (let ((jump (search "
 " string)))
     (if jump
-    (remove-jumps-aux (subseq string (1+ jump)) (concatenate 'string res (subseq string 0 jump)))
-      (concatenate 'string res string))))
+    (remove-jumps-aux (subseq string (1+ jump)) (concat res (subseq string 0 jump)))
+      (concat res string))))
 
 (defun remove-jumps (string)
   (remove-jumps-aux string ""))
@@ -146,8 +148,7 @@
              (suba      (subseq a (+ 2 (search ": " a)) (or pos_space pos_jump)))
              (type      (cdr (assoc suba types_id))))
         (or type
-            (progn (setf types_id
-                         (append types_id (list (cons suba types_id_n))))
+            (progn (append-to types_id (cons suba types_id_n))
                    (setf types_id_n (1- types_id_n))
                    (1+ types_id_n))))))
 
@@ -158,8 +159,7 @@
          (suba      (subseq a (+ 2 (search ": " a)) (or pos_space pos_jump)))
          (type      (cdr (assoc suba types_id))))
     (or type
-        (progn (setf types_id
-                     (append types_id  (list (cons suba types_id_n))))
+        (progn (append-to types_id (cons suba types_id_n))
                (setf types_id_n (1- types_id_n))
                (1+ types_id_n)))))
 
@@ -168,31 +168,28 @@
 
 (defun get-top-symbol ()
   (send-coq-cmd (format "Set Printing All"))
-  (let* ((res (send-coq-cmd (format "Focus")))
-    (res2 (subseq res (+ 32 (search "============================" res))))
-    (fst-symbol (subseq res2 0 (search " " res2))))
+  (let* ((res        (send-coq-cmd (format "Focus")))
+         (res2       (subseq res (+ 32 (search "============================" res))))
+         (fst-symbol (subseq res2 0 (search " " res2))))
     (cond ((search "->" res2) 7)
-      (t (let ((is (assoc fst-symbol top-symbol-id)))
-           (if is
-           (cdr is)
-         (progn (setf top-symbol-id
-                  (append  top-symbol-id  (list (cons fst-symbol top-symbol-n))))
+          (t (let ((is (assoc fst-symbol top-symbol-id)))
+               (if is
+                   (cdr is)
+                   (progn (append-to top-symbol-id
+                                     (cons fst-symbol top-symbol-n))
 
-            (setf top-symbol-n (1+ top-symbol-n))
-            (1- top-symbol-n))))))))
-
-
-
+                          (setf top-symbol-n (1+ top-symbol-n))
+                          (1- top-symbol-n))))))))
 
 ;; In some cases the intro tactic does not have parameters, the following function
 ;; obtain the type of the object introduced with the intro tactic in those cases
 ;; Sobra
 (defun get-obj-intro ()
   (proof-undo-last-successful-command)
-  (let* ((obj (send-coq-cmd (format "Show Intro")))
-         (object (subseq obj 0 (search nl obj)))
-         (dod (proof-assert-next-command-interactive))
-         (foo (setf hypothesis (append hypothesis (list object)))))
+  (let* ((obj    (send-coq-cmd (format "Show Intro")))
+         (object (subseq obj 0 (search nl obj))))
+    (proof-assert-next-command-interactive)
+    (append-to hypothesis object)
     (get-type-id object)))
 
 (defun extract-params (seq res)
@@ -200,13 +197,6 @@
         (pos_jump  (search nl seq)))
     (if pos_space
         (extract-params (subseq seq (+ 1 pos_space)) (cons (subseq seq 0 pos_space) res))
-        (reverse (cons (subseq seq 0 pos_jump) res)))))
-
-(defun extract-params2 (seq res)
-  (let ((pos_space (search " " seq))
-        (pos_jump  (search "." seq)))
-    (if pos_space
-        (extract-params2 (subseq seq (+ 1 pos_space)) (cons (subseq seq 0 pos_space) res))
         (reverse (cons (subseq seq 0 pos_jump) res)))))
 
 ;; Given a list of objects, it obtains the value associated with their types
@@ -272,33 +262,29 @@
   (do ((temp list (cdr temp))
        (temp2 nil))
       ((endp temp) temp2)
-      (if (and (string= (subseq (car temp) 0 1) "/") (not (string= (car temp) "//")) (not (string= (car temp) "/=")) (not (string= (car temp) "//=")))
-      (if (not (string= (subseq (car temp) 0 2) "/("))
-          (setf temp2 (append temp2 (list (subseq (car temp) 1))))
-        (setf temp2 (append temp2 (list (subseq (car temp) 2 (search " " (car temp))))))))))
-
-
-(defun extract-real-params (list)
-  (do ((temp list (cdr temp))
-       (temp2 nil))
-      ((endp temp) temp2)
-      (if (not (or (string= (subseq (car temp) 0 1) "/") (string= (car temp) "//") (string= (car temp) "_")
-           (search "->" (car temp)) (search "<-" (car temp)) (string= (car temp) "/=") (string= (car temp) "//=")))
-      (setf temp2 (append temp2 (list (car temp)))))))
+    (when (and (string= (subseq (car temp) 0 1) "/")
+               (not (string= (car temp) "//"))
+               (not (string= (car temp) "/="))
+               (not (string= (car temp) "//=")))
+      (append-to temp2 (if (string= (subseq (car temp) 0 2) "/(")
+                           (subseq (car temp) 2 (search " " (car temp)))
+                           (subseq (car temp) 1))))))
 
 (defun extract-rewrites (list)
   (do ((temp list (cdr temp))
        (temp2 nil))
       ((endp temp) temp2)
-      (if (or (search "->" (car temp)) (search "<-" (car temp)))
-      (setf temp2 (append temp2 (list (car temp)))))))
+    (when (or (search "->" (car temp)) (search "<-" (car temp)))
+      (append-to temp2 (car temp)))))
 
 (defun extract-simplifications (list)
   (do ((temp list (cdr temp))
        (temp2 nil))
       ((endp temp) temp2)
-      (if (or (string= (car temp) "//") (string= (car temp) "/=") (string= (car temp) "//="))
-      (setf temp2 (append temp2 (list (car temp)))))))
+    (when (or (string= (car temp) "//")
+              (string= (car temp) "/=")
+              (string= (car temp) "//="))
+      (append-to temp2 (car temp)))))
 
 (defun compute-value-simpl (list)
   (list 0 (length list) 0 0))
@@ -308,13 +294,13 @@
   (do ((temp list (cdr temp))
        (temp2 ""))
       ((endp temp) temp2)
-      (if (assoc (car temp) views_id)
-      (setf temp2 (concatenate 'string temp2 (format "%s" (cdr (assoc (car temp) views_id))) ))
-    (progn (setf start_view (+ start_view 1))
-           (save-view (car temp) start_view)
-           (setf views_id
-             (append views_id (list (cons (car temp) start_view))))
-           (setf temp2 (concatenate 'string temp2 (format "%s" (cdr (assoc (car temp) views_id)))))))))
+    (if (assoc (car temp) views_id)
+        (setf temp2 (concat temp2 (format "%s" (cdr (assoc (car temp) views_id))) ))
+        (progn (setf start_view (+ start_view 1))
+               (save-view (car temp) start_view)
+               (setf views_id
+                     (append views_id (list (cons (car temp) start_view))))
+               (setf temp2 (concat temp2 (format "%s" (cdr (assoc (car temp) views_id)))))))))
 
 
 
@@ -325,12 +311,12 @@
       (let* ((obj1 (if (string= "-" (subseq (car temp) 0 1)) (subseq (car temp) 1) (car temp)))
          (obj (if (string= "(" (subseq obj1 0 1)) (subseq obj1 1 (search " " obj1)) obj1)))
       (if (assoc obj theorems_id)
-      (setf temp2 (concatenate 'string temp2 (format "%s" (cdr (assoc obj theorems_id)))) )
+      (setf temp2 (concat temp2 (format "%s" (cdr (assoc obj theorems_id)))) )
     (progn (setf start_thm (+ start_thm 1))
            (save-lemma obj start_thm)
            (setf theorems_id
              (append theorems_id (list (cons obj start_thm))))
-           (setf temp2 (concatenate 'string temp2 (format "%s" (cdr (assoc obj theorems_id))))))))))
+           (setf temp2 (concat temp2 (format "%s" (cdr (assoc obj theorems_id))))))))))
 
 
 (defun compute-values-apply-tactic (list)
@@ -339,14 +325,13 @@
       ((endp temp) (string-to-number temp2))
       (let ((obj (if (string= "(" (subseq (car temp) 0 1)) (subseq (car temp) 1) (car temp))))
     (if (member obj hypothesis)
-        (setf temp2 (concatenate 'string temp2 "1"))
+        (setf temp2 (concat temp2 "1"))
       (if (assoc obj theorems_id)
-          (setf temp2 (concatenate 'string temp2 (format "%s" (cdr (assoc obj theorems_id)))) )
+          (setf temp2 (concat temp2 (format "%s" (cdr (assoc obj theorems_id)))) )
         (progn (setf start_thm (+ start_thm 1))
            (setf theorems_id
              (append theorems_id (list (cons obj start_thm))))
-           (setf temp2 (concatenate 'string temp2 (format "%s" (cdr (assoc obj theorems_id)))))))))))
-
+           (setf temp2 (concat temp2 (format "%s" (cdr (assoc obj theorems_id)))))))))))
 
 (defun compute-value-views-move (list)
   (list (* -1 (get-number-list2 list 5)) (length list) (* -1 (get-number-list2 list 4)) (string-to-number (extract-views-id list))))
@@ -363,95 +348,28 @@
 (defun compute-value-rewrites (list)
   (list (get-number-list2 list 7) (length list) (* -1 (get-number-list2 list 4)) (get-number-list list)))
 
-
-
-(defun remove-empties (list)
-  (do ((temp list (cdr temp))
-       (temp2 nil))
-      ((endp temp) temp2)
-      (if (not (string= (car temp) ""))
-      (setf temp2 (append temp2 (list (car temp)))))))
-
-
-
 (defun occurrences (c string)
   (do ((temp string)
        (n 0))
       ((not (search c temp)) n)
-      (progn (setf n (1+ n))
-         (setf temp (subseq temp (1+ (search c temp)))))))
-
-
-(defun put-together-parenthesis (list)
-  (do ((temp list (cdr temp))
-       (n 0)
-       (temp2 nil)
-       (aux ""))
-      ((endp temp) temp2)
-      (cond ((search "(" (car temp))
-         (progn (setf n (1+ n))
-            (setf aux (concatenate 'string aux (car temp) " "))))
-        ((and (search ")" (car temp)) (not (= (- n (occurrences ")" (car temp))) 0)))
-         (progn (setf n (- n (occurrences ")" (car temp))))
-            (setf aux (concatenate 'string aux (car temp) " "))))
-        ((search ")" (car temp))
-         (progn (setf n (1- n))
-            (setf aux (concatenate 'string aux (car temp)))
-            (setf temp2 (append temp2 (list aux)))
-            (setf aux "")))
-        ((not (= n 0))
-         (progn (setf aux (concatenate 'string aux (car temp) " "))))
-        (t (setf temp2 (append temp2 (list (car temp))))
-        ))))
-
-(defun remove-squared-parenthesis (string res)
-  (let* ((pos1 (search "[" string))
-         (pos2 (search "{" string))
-         (args (cond ((and pos1 pos2 (< pos1 pos2)) (list "]" pos1))
-                     ((and pos1 pos2)               (list "}" pos2))
-                     (pos1                          (list "]" pos1))
-                     (pos2                          (list "}" pos2)))))
-    (if args
-        (remove-squared-parenthesis
-          (subseq string (1+ (search (nth 0 args) string :start2 (nth 1 args))))
-          (concatenate 'string res (subseq string 0 (nth 1 args))))
-        (concatenate 'string res string))))
-
-(defun remove-iterations (string)
-  (do ((temp string)
-       (temp2 ""))
-      ((= (length temp) 0) temp2)
-      (if (or (string= (subseq temp 0 1) "!") (string= (subseq temp 0 1) "?"))
-      (setf temp (subseq temp 1))
-    (progn (setf temp2 (concatenate 'string temp2 (subseq temp 0 1)))
-           (setf temp (subseq temp 1))
-           ))))
-
-
+    (progn (setf n (1+ n))
+           (setf temp (subseq temp (1+ (search c temp)))))))
 
 (defun remove-squared-parenthesis2 (string)
-  (do ((temp string)
+  (do ((temp  string)
        (temp2 ""))
       ((= (length temp) 0) temp2)
-      (if (or (string= (subseq temp 0 1) "[") (string= (subseq temp 0 1) "]") (string= (subseq temp 0 1) "|"))
-      (setf temp (subseq temp 1))
-    (progn (setf temp2 (concatenate 'string temp2 (subseq temp 0 1)))
-           (setf temp (subseq temp 1))
-           ))))
-
-(defun extract-params3 (cmd)
-  (put-together-parenthesis
-   (remove-empties
-    (extract-params2
-     (remove-iterations
-      (remove-squared-parenthesis cmd "")) nil))))
+    (if (or (string= (subseq temp 0 1) "[")
+            (string= (subseq temp 0 1) "]")
+            (string= (subseq temp 0 1) "|"))
+        (setf temp (subseq temp 1))
+        (progn (setf temp2 (concat temp2 (subseq temp 0 1)))
+               (setf temp (subseq temp 1))))))
 
 (defun extract-params4 (cmd)
- (let* ((res (extract-params2 (remove-squared-parenthesis2 cmd) nil))
-    (res1 (remove-empties res)))
-   (put-together-parenthesis res1)))
-
-
+  (let* ((res (extract-params2 (remove-squared-parenthesis2 cmd) nil))
+         (res1 (remove-empties res)))
+    (put-together-parenthesis res1)))
 
 ;;; The following functions provide the numbers associated with a concrete tactic
 
@@ -472,135 +390,192 @@
       (add-info-to-level (list (get-types-list real-params 0)
                                0 0 0 0 0 0 0 0 0 0 0 0)
                          level)
-      (setf move (append move (list (list
-                                (get-types-list (when real-params
-                                                      (list (car real-params)))
-                                                0)
-                                (get-types-list (cdr real-params) 0)
-                                (* -1 (get-number-list real-params))
-                                top))))
+      (append-to move (list (get-types-list (when real-params
+                                              (list (car real-params)))
+                                            0)
+                            (get-types-list (cdr real-params) 0)
+                            (* -1 (get-number-list real-params))
+                            top))
       (let ((result (append (list (list
-                              (get-number-list2 real-params
-                                                (cdr (assoc "move" tactic_id)))
-                              (length real-params)
-                              types-params
-                              (* -1 (get-number-list real-params))))
+                                   (get-number-list2 real-params
+                                                     (cdr (assoc "move" tactic_id)))
+                                   (length real-params)
+                                   types-params
+                                   (* -1 (get-number-list real-params))))
                             (when simpl    (list simpl-nums))
                             (when views    (list views-nums))
                             (when rewrites (list rewrites-nums)))))
         result))))
 
 (defun numbers-move/ (cmd top level)
-  (let* ((params (extract-params3 (remove=> (subseq cmd 4)) ))
-     (views (extract-views params))
-     (simpl (extract-simplifications params))
-     (rewrites (extract-rewrites params))
-     (rewrites-nums (compute-value-rewrites rewrites))
-     (simpl-nums (compute-value-simpl simpl))
-     (views-nums (compute-value-views-move views))
-     (real-params (extract-real-params params))
-     (foo (setf hypothesis (append hypothesis real-params)))
-     (foo3 (add-info-to-level (list 0 0 0 0 0 (nth 2 views-nums) 0 0 0 0 0 0 0) level))
-     (foo2 (setf move/ (append move/ (list (list -4  (* -4 (get-number-list real-params))  (nth 3 views-nums) top)))))
-     (types-params (get-types-list real-params 0)))
+  (let* ((params        (extract-params3 (remove=> (subseq cmd 4)) ))
+         (views         (extract-views params))
+         (simpl         (extract-simplifications params))
+         (rewrites      (extract-rewrites params))
+         (rewrites-nums (compute-value-rewrites rewrites))
+         (simpl-nums    (compute-value-simpl simpl))
+         (views-nums    (compute-value-views-move views))
+         (real-params   (extract-real-params params))
+         (foo           (setf hypothesis (append hypothesis real-params)))
+         (foo3          (add-info-to-level (list 0 0 0 0 0 (nth 2 views-nums) 0 0 0 0 0 0 0) level))
+         (foo2          (append-to move/ (list -4  (* -4 (get-number-list real-params))  (nth 3 views-nums) top)))
+         (types-params  (get-types-list real-params 0)))
     (append (list views-nums)
-        (if real-params (list (list (get-number-list2 real-params (cdr (assoc "move" tactic_id))) (length real-params) types-params (* -1 (get-number-list real-params)))))
-        (if simpl (list simpl-nums) nil)
-        (if rewrites (list rewrites-nums) nil)))
-)
+            (when real-params
+              (list (list (get-number-list2 real-params
+                                            (cdr (assoc "move" tactic_id)))
+                          (length real-params)
+                          types-params
+                          (* -1 (get-number-list real-params)))))
+            (when simpl    (list simpl-nums))
+            (when rewrites (list rewrites-nums)))))
 
 (defun numbers-move: (cmd top level)
-  (let* ((params (extract-params3 (subseq cmd (+ 1 (search ":" cmd)))) )
-     (views (extract-views params))
-     (simpl (extract-simplifications params))
-     (rewrites (extract-rewrites params))
-     (rewrites-nums (compute-value-rewrites rewrites))
-     (simpl-nums (compute-value-simpl simpl))
-     (views-nums (compute-value-views-move views))
-     (real-params (extract-real-params params))
-     (types-params (get-types-list real-params 0))
-     (foo3 (add-info-to-level (list (get-types-list real-params 0) 0 0 0 0 0 0 0 0 0 0 0 0) level))
-     (foo2 (setf move (append move (list (list (get-types-list (if real-params (list (car real-params)) nil) 0)  (get-types-list (cdr real-params) 0)  (* 1 (get-number-list real-params)) top))))))
-    (append (list (list (* -1 (get-number-list2 real-params (cdr (assoc "move" tactic_id)))) (length real-params) types-params (* -1 (get-number-list real-params))))
-        (if views (list views-nums) nil)
-        (if simpl (list simpl-nums) nil)
-        (if rewrites (list rewrites-nums) nil)))
-
-)
+  (let* ((params        (extract-params3 (subseq cmd (+ 1 (search ":" cmd)))) )
+         (views         (extract-views params))
+         (simpl         (extract-simplifications params))
+         (rewrites      (extract-rewrites params))
+         (rewrites-nums (compute-value-rewrites rewrites))
+         (simpl-nums    (compute-value-simpl simpl))
+         (views-nums    (compute-value-views-move views))
+         (real-params   (extract-real-params params))
+         (types-params  (get-types-list real-params 0)))
+    (add-info-to-level (list (get-types-list real-params 0) 0 0 0 0 0 0 0 0 0 0 0 0)
+                       level)
+    (append-to move (list (get-types-list (when real-params
+                                            (list (car real-params)))
+                                          0)
+                          (get-types-list (cdr real-params) 0)
+                          (* 1 (get-number-list real-params))
+                          top))
+    (append (list (list (* -1 (get-number-list2 real-params
+                                                (cdr (assoc "move" tactic_id))))
+                        (length real-params)
+                        types-params
+                        (* -1 (get-number-list real-params))))
+            (when views    (list views-nums))
+            (when simpl    (list simpl-nums))
+            (when rewrites (list rewrites-nums)))))
 
 (defun numbers-move< (cmd top level)
-  (let* ((foo (list (compute-value-rewrites (list 1))))
-     (foo3 (add-info-to-level (list 0 0 0 0 0 0 0 top 0 0 0 0 0) level))
-     (foo2 (setf rewrite (append rewrite (list (list 4 0 1 top))))))
-    foo
-    )
-)
+  (let* ((result  (list (compute-value-rewrites (list 1)))))
+    (add-info-to-level (list 0 0 0 0 0 0 0 top 0 0 0 0 0) level)
+    (append-to rewrite (list 4 0 1 top))
+    result))
 
 (defun numbers-apply: (cmd top level)
   (if (string= cmd "apply")
       (list (list (cdr (assoc "apply" tactic_id)) 1 0 0))
-  (let ((moves (search "=>" cmd))
-    (foo3 (add-info-to-level (list 0 0 0 100 0 0 0 0 0 0 0 0 0) level))
-    (foo2 (setf apply (append apply (list (list -4  0 100 top))))))
-    (if (not moves)
-    (list (list (cdr (assoc "apply" tactic_id))
-          1
-          -4
-          (compute-values-apply-tactic (extract-real-params (extract-params3 (subseq cmd (+ 1 (if (search ":" cmd) (search ":" cmd) (search " " cmd)))))))))
-      (let* ((args0 (extract-params4 (subseq cmd (+ 2 moves))))
-        (simpl (extract-simplifications args0))
-        (simpl-nums (compute-value-simpl simpl))
-        (args (extract-real-params args0))
-        )
-      (append (list (list (cdr (assoc "apply" tactic_id))
-              1 -4
-              (compute-values-apply-tactic (extract-real-params (extract-params3 (subseq cmd (+ 1 (if (search ":" cmd) (search ":" cmd) (search " " cmd))) moves))))
-              ))
-          (list (list (* -1 (get-number-list2 args (cdr (assoc "move" tactic_id)))) (length args) (get-types-list args 0) (* -1 (get-number-list args))))
-          (if simpl (list simpl-nums) nil)))))
-))
+      (let ((moves  (search "=>" cmd))
+            (cmdidx (+ 1 (or (search ":" cmd) (search " " cmd)))))
+        (add-info-to-level (list 0 0 0 100 0 0 0 0 0 0 0 0 0) level)
+        (append-to apply (list -4  0 100 top))
+        (if moves
+            (let* ((args0      (extract-params4 (subseq cmd (+ 2 moves))))
+                   (simpl      (extract-simplifications args0))
+                   (simpl-nums (compute-value-simpl simpl))
+                   (args       (extract-real-params args0)))
+              (append (list (list (cdr (assoc "apply" tactic_id))
+                                  1
+                                  -4
+                                  (compute-values-apply-tactic
+                                   (extract-real-params
+                                    (extract-params3
+                                     (subseq cmd cmdidx
+                                                 moves))))))
+                      (list (list (* -1
+                                     (get-number-list2 args
+                                                       (cdr (assoc "move" tactic_id))))
+                                  (length args)
+                                  (get-types-list args 0)
+                                  (* -1 (get-number-list args))))
+                      (when simpl (list simpl-nums))))
+            (list (list (cdr (assoc "apply" tactic_id))
+                        1
+                        -4
+                        (compute-values-apply-tactic
+                         (extract-real-params
+                          (extract-params3
+                           (subseq cmd cmdidx))))))))))
 
 (defun numbers-elim (cmd top level)
-  (let* ((moves (search "=>" cmd))
-     (foo3 (add-info-to-level (list 0 0 (get-types-list (list (car (extract-real-params (extract-params3 (subseq cmd (+ 1 (search ":" cmd)) moves))))) 0) 0 0 0 0 0 0 0 0 0 0) level))
-    (foo2 (setf elim (append elim (list (list (get-types-list (list (car (extract-real-params (extract-params3 (subseq cmd (+ 1 (search ":" cmd)) moves))))) 0)  0 -1 top))))))
-    (if (not moves)
-    (list (list (cdr (assoc "elim" tactic_id))
-          1 (get-types-list (extract-real-params (extract-params3 (subseq cmd (+ 1 (search ":" cmd))))) 0) -1))
-      (let* ((args0 (extract-params4 (subseq cmd (+ 2 moves))))
-        (simpl (extract-simplifications args0))
-        (simpl-nums (compute-value-simpl simpl))
-        (args (extract-real-params args0)))
-      (append (list (list (cdr (assoc "elim" tactic_id))
-              1 (get-types-list (extract-real-params (extract-params3 (subseq cmd (+ 1 (search ":" cmd)) moves))) 0) -1))
-          (list (list (* -1 (get-number-list2 args (cdr (assoc "move" tactic_id)))) (length args) (get-types-list args 0) (* -1 (get-number-list args))))
-          (if simpl (list simpl-nums) nil))))))
+  (let* ((moves  (search "=>" cmd))
+         (cmdidx (+ 1 (search ":" cmd))))
+    (add-info-to-level (list 0 0
+                             (get-types-list (list (car (extract-real-params
+                                                         (extract-params3 (subseq cmd cmdidx moves)))))
+                                             0)
+                             0 0 0 0 0 0 0 0 0 0)
+                       level)
+    (append-to elim (list (get-types-list (list (car (extract-real-params
+                                                      (extract-params3 (subseq cmd cmdidx moves)))))
+                                          0)
+                          0
+                          -1
+                          top))
+    (if moves
+        (let* ((args0      (extract-params4 (subseq cmd (+ 2 moves))))
+               (simpl      (extract-simplifications args0))
+               (simpl-nums (compute-value-simpl simpl))
+               (args       (extract-real-params args0)))
+          (append (list (list (cdr (assoc "elim" tactic_id))
+                              1
+                              (get-types-list (extract-real-params
+                                               (extract-params3 (subseq cmd cmdidx moves)))
+                                              0)
+                              -1))
+                  (list (list (* -1
+                                 (get-number-list2 args
+                                                   (cdr (assoc "move" tactic_id))))
+                              (length args)
+                              (get-types-list args 0)
+                              (* -1 (get-number-list args))))
+                  (when simpl (list simpl-nums))))
+      (list (list (cdr (assoc "elim" tactic_id))
+                  1
+                  (get-types-list (extract-real-params
+                                   (extract-params3 (subseq cmd cmdidx)))
+                                  0)
+                  -1)))))
 
 (defun numbers-case (cmd top level)
   (if (string= cmd "case")
       (list (list (cdr (assoc "case" tactic_id)) 1 0 0))
-  (let ((moves (search "=>" cmd))
-    (foo3 (add-info-to-level (list 0 (if (extract-real-params (extract-params3 (if (search ":" cmd) (subseq cmd (+ 1 (search ":" cmd))) (subseq cmd (+ 1 (search " " cmd))))))
-                              (get-types-list (list (car (extract-real-params (extract-params3 (if (search ":" cmd) (subseq cmd (+ 1 (search ":" cmd))) (subseq cmd (+ 1 (search " " cmd)))))))) 0) 1) 0 0 0 0 0 0 0 0 0 0 0) level))
-    (foo2 (setf case (append case (list (list (if (extract-real-params (extract-params3 (if (search ":" cmd) (subseq cmd (+ 1 (search ":" cmd))) (subseq cmd (+ 1 (search " " cmd))))))
-                              (get-types-list (list (car (extract-real-params (extract-params3 (if (search ":" cmd) (subseq cmd (+ 1 (search ":" cmd))) (subseq cmd (+ 1 (search " " cmd)))))))) 0) 1)
-  0 -1 top))))))
-    (if (not moves)
-    (list (list (cdr (assoc "case" tactic_id))
-          1 (get-types-list (extract-real-params (extract-params3 (if (search ":" cmd) (subseq cmd (+ 1 (search ":" cmd))) (subseq cmd (+ 1 (search " " cmd)))))) 0) -1))
-      (let* ((args0 (extract-params4 (subseq cmd (+ 2 moves))))
-        (simpl (extract-simplifications args0))
-        (simpl-nums (compute-value-simpl simpl))
-        (args (extract-real-params args0)))
-    (if (extract-params3 (if (search ":" cmd) (subseq cmd (+ 1 (search ":" cmd))) (subseq cmd (+ 1 (search " " cmd)))))
-        (append (list (list (cdr (assoc "case" tactic_id))
-                1 (get-types-list (extract-real-params (extract-params3 (if (search ":" cmd) (subseq cmd (+ 1 (search ":" cmd))) (subseq cmd (+ 1 (search " " cmd)))))) 0) -1))
-            (list (list (* -1 (get-number-list2 args (cdr (assoc "move" tactic_id)))) (length args) (get-types-list args 0) (* -1 (get-number-list args))))
-            (if simpl (list simpl-nums) nil))
-      (append (list (list (cdr (assoc "case" tactic_id))
-                1 0 0))
-            (list (list (* -1 (get-number-list2 args (cdr (assoc "move" tactic_id)))) (length args) (get-types-list args 0) (* -1 (get-number-list args))))
-            (if simpl (list simpl-nums) nil))))))))
+      (let* ((moves  (search "=>" cmd))
+             (subcmd (extract-params3 (subseq cmd (+ 1 (or (search ":" cmd)
+                                                           (search " " cmd))))))
+             (subreal (extract-real-params subcmd)))
+        (add-info-to-level (list 0
+                                 (if subreal
+                                     (get-types-list (list (car subreal)) 0)
+                                     1)
+                                 0 0 0 0 0 0 0 0 0 0 0)
+                           level)
+        (append-to case (list (if subreal
+                                  (get-types-list (list (car subreal)) 0)
+                                  1)
+                              0
+                              -1
+                              top))
+        (if moves
+            (let* ((args0      (extract-params4 (subseq cmd (+ 2 moves))))
+                   (simpl      (extract-simplifications args0))
+                   (simpl-nums (compute-value-simpl simpl))
+                   (args       (extract-real-params args0)))
+              (append (list (append (list (cdr (assoc "case" tactic_id)) 1)
+                                    (if subcmd
+                                        (list (get-types-list subreal 0) -1)
+                                        (list 0 0))))
+                      (list (list (* -1 (get-number-list2 args
+                                                          (cdr (assoc "move" tactic_id))))
+                                  (length args)
+                                  (get-types-list args 0)
+                                  (* -1 (get-number-list args))))
+                      (when simpl (list simpl-nums))))
+            (list (list (cdr (assoc "case" tactic_id))
+                        1
+                        (get-types-list subreal 0)
+                        -1))))))
 
 (defun numbers-case/ (cmd top level)
   (let* ((params (extract-params4 (separate-/ (remove=> (subseq cmd 5)) "")))
@@ -624,11 +599,11 @@
 (defun separate-/ (string res)
   (let ((pos (search "/" string)))
     (if (not pos)
-    (concatenate 'string res string)
-      (cond ((= pos 0) (separate-/ (subseq string (1+ pos)) (concatenate 'string "/" res (subseq string 0 pos))))
+    (concat res string)
+      (cond ((= pos 0) (separate-/ (subseq string (1+ pos)) (concat "/" res (subseq string 0 pos))))
         ((not (string= " " (subseq string (1- pos) pos)))
-         (separate-/ (subseq string (1+ pos)) (concatenate 'string res (subseq string 0 pos) " /")))
-        (t (separate-/ (subseq string (1+ pos)) (concatenate 'string res (subseq string 0 pos))))))))
+         (separate-/ (subseq string (1+ pos)) (concat res (subseq string 0 pos) " /")))
+        (t (separate-/ (subseq string (1+ pos)) (concat res (subseq string 0 pos))))))))
 
 
 (defun numbers-apply/ (cmd top level)
@@ -714,7 +689,7 @@
 (defun remove-multiple-spaces (string)
   (let ((d (search "  " string)))
     (if d
-    (remove-multiple-spaces (concatenate 'string (subseq string 0 d) (subseq string (1+ d))))
+    (remove-multiple-spaces (concat (subseq string 0 d) (subseq string (1+ d))))
       string)))
 
 (defun compute-numbers-cmd (cmd top level)
@@ -977,7 +952,7 @@
 
 (defun take-30-from (list row)
   "Chunk LIST into runs of length 30, and return run POS"
-  (take-n 30 (drop-n (* row 30))))
+  (take-n 30 (drop-n (* row 30) list)))
 
 ;;; Functions to save the files
 

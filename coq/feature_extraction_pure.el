@@ -30,18 +30,6 @@
 (defun extract-params (seq res)
   (extract-params-aux nl seq res))
 
-(defun extract-params2 (seq res)
-  (extract-params-aux "." seq res))
-
-(defun extract-params-aux (sep seq res)
-  (let ((pos_space (first-space seq))
-        (pos_jump  (search sep seq)))
-    (if pos_space
-        (extract-params-aux sep
-                            (subseq seq (1+ pos_space))
-                            (cons (subseq seq 0 pos_space) res))
-      (reverse (cons (subseq seq 0 pos_jump) res)))))
-
 (defun get-types-list-aux (f list res)
   (if (endp list)
       (* -1 res)

@@ -142,6 +142,9 @@
 (defun remove-whitespaces (string)
   (replace-regexp-in-string "  " " " string))
 
+(defun remove-whitespace (string)
+  (replace-regexp-in-string "[\s\n\r\t]" "" string))
+
 (defun extract-coq-names-from (str)
   (mapcar (lambda (s)
             (replace-regexp-in-string (format "\\(%s\\)\\|[\s\n]+"
@@ -198,3 +201,82 @@
         (search "e" bigs)   ; Bail out on scientific notation
         (search "e" smalls) ; Ditto
         (search smalls bigs))))
+
+(defun remove-squared-parenthesis (string res)
+  (let* ((pos1 (search "[" string))
+         (pos2 (search "{" string))
+         (args (cond ((and pos1 pos2 (< pos1 pos2)) (list "]" pos1))
+                     ((and pos1 pos2)               (list "}" pos2))
+                     (pos1                          (list "]" pos1))
+                     (pos2                          (list "}" pos2)))))
+    (if args
+        (remove-squared-parenthesis
+         (subseq string (1+ (search (nth 0 args) string :start2 (nth 1 args))))
+         (concat res (subseq string 0 (nth 1 args))))
+      (concat res string))))
+
+(defun remove-iterations (string)
+  (replace-regexp-in-string "[!?]" "" string))
+
+(defun extract-params2 (seq res)
+  (extract-params-aux "." seq res))
+
+(defun extract-params-aux (sep seq res)
+  (let ((pos_space (first-space seq))
+        (pos_jump  (search sep seq)))
+    (if pos_space
+        (extract-params-aux sep
+                            (subseq seq (1+ pos_space))
+                            (cons (subseq seq 0 pos_space) res))
+      (reverse (cons (subseq seq 0 pos_jump) res)))))
+
+(defun remove-empties (list)
+  (message "FIXME: This is a filter")
+  (let ((result nil))
+    (dolist (elem list result)
+      (unless (string= elem "")
+        (append-to result elem)))))
+
+(defun put-together-parenthesis (list)
+  (message "FIXME: This parenthesis-handling looks dubious")
+  (let ((n      0)
+        (result nil)
+        (aux    ""))
+    (dolist (elem list result)
+      (cond ((search "(" elem)
+             (setf n (1+ n))
+             (setf aux (concat aux elem " ")))
+
+            ((and (search ")" elem)
+                  (not (= 0 (- n (occurrences ")" elem)))))
+             (setf n (- n (occurrences ")" elem)))
+             (setf aux (concat aux elem " ")))
+
+            ((search ")" elem)
+             (setf n (1- n))
+             (setf aux (concat aux elem))
+             (append-to result aux)
+             (setf aux ""))
+
+            ((not (= n 0))
+             (setf aux (concat aux elem " ")))
+
+            (t
+             (append-to result elem))))))
+
+(defun extract-params3 (cmd)
+  (put-together-parenthesis
+   (remove-empties
+    (extract-params2
+     (remove-iterations
+      (remove-squared-parenthesis cmd "")) nil))))
+
+(defun extract-real-params (list)
+  (message "FIXME: This is a filter")
+  (let ((result nil))
+    (dolist (elem list result)
+      (unless (or (search  "->"  elem)
+                  (search  "<-"  elem)
+                  (string= "_"   elem)
+                  (string= (subseq elem 0 1) "/"))
+        (append-to result elem)))))
