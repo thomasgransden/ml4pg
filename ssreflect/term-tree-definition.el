@@ -99,21 +99,26 @@
 
 (defun add-parentheses-match0 (term)
   (concat "("
-          (replace-quote (remove-arrow (remove-bar (add-parenthesis-match (remove-end (remove-with term))))))
+          (replace-quote
+           (remove-arrow
+            (remove-bar
+             (add-parenthesis-match
+              (remove-end
+               (remove-with term))))))
           ")"))
 
 (defun transform-match (term)
   (transform-length-1 (car (read-from-string (add-parentheses-match0 term)))))
 
-(defun string-to-list (str)
+(defun ml4pg-string-to-list (str)
   (car (read-from-string str)))
 
 (defun definition-to-list-aux (term)
   (unless (search "=" term) (error "No '=' found in '%s'" term))
-  (string-to-list (concat "(" (subseq term (1+ (search "=" term))) ")")))
+  (ml4pg-string-to-list (concat "(" (subseq term (1+ (search "=" term))) ")")))
 
 (defun definition-to-list-let (term)
-  (string-to-list (concat "(nosimpl " (subseq term (+ 3 (search "in" term))) ")")))
+  (ml4pg-string-to-list (concat "(nosimpl " (subseq term (+ 3 (search "in" term))) ")")))
 
 (defun  definition-to-list-fix (term)
   (transform-match (subseq term (+ 2 (search ":=" term)))))
@@ -121,7 +126,7 @@
 (defun  definition-to-list-fun (term)
   (if (search "match" term)
       (transform-match (subseq term (+ 2 (search "=>" term))))
-      (string-to-list (concat "("  (subseq term (+ 2 (search "=>" term))) ")"))))
+      (ml4pg-string-to-list (concat "("  (subseq term (+ 2 (search "=>" term))) ")"))))
 
 (defun variables-fun (term)
   (do ((posop (search "(" term))
@@ -155,10 +160,17 @@
 
 
 (defun definition-to-list (term)
-  (cond ((search "fix " term) (list (definition-to-list-fix term) (definition-variables term)))
-        ((search "let " term) (list (definition-to-list-let term) nil))
-        ((search "fun " term) (list (definition-to-list-fun term) (definition-variables term)))
-        (t                    (list (definition-to-list-aux term) nil))))
+  (cond ((search "fix " term)
+         (list (definition-to-list-fix term) (definition-variables term)))
+
+        ((search "let " term)
+         (list (definition-to-list-let term) nil))
+
+        ((search "fun " term)
+         (list (definition-to-list-fun term) (definition-variables term)))
+
+        (t
+         (list (definition-to-list-aux term) nil))))
 
 (defvar listofdefinitions nil)
 (defvar listofvariables   nil)

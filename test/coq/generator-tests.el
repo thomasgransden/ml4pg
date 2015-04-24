@@ -113,7 +113,11 @@
 
 (test-with gen-string-without
   "Test that gen-string-without works"
-  (list-of (gen-list (gen-nonempty-string)))
+  ;; Mod 20 since too many constraints makes filtering very slow
+  (list-of (gen-list (gen-nonempty-string)
+                     (compose (lambda (n)
+                                (% n 20))
+                              (gen-num))))
   (lambda (strs)
     (message "TRYING WITH '%S'" strs)
     (let ((result (funcall (apply 'gen-string-without strs))))

@@ -280,3 +280,15 @@
                   (string= "_"   elem)
                   (string= (subseq elem 0 1) "/"))
         (append-to result elem)))))
+
+(defun string/reverse (str)
+  "Reverse the str where str is a string"
+  (message "GIVEN STRING %S" str)
+  (if (equal str "")
+      (progn (message "EMPTY, returning it")
+             "")
+      (progn (message "NONEMPTY")
+             (message "AS LIST: %S" (string-to-list str))
+             (message "REVERSED: %S" (reverse (string-to-list str)))
+             (message "BACK TO STRING: %S" (apply 'string (reverse (string-to-list str))))
+             (apply 'string (reverse (string-to-list str))))))

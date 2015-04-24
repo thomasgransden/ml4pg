@@ -206,48 +206,49 @@
 
 (test-with definition-to-list
   "Test how definition-to-list behaves"
-  (list-of (compose (lambda (args)
-                      (join-strings (cadr args) (case (% (car args) 4)
-                                                  (0 "")
-                                                  (1 "fix ")
-                                                  (2 "let ")
-                                                  (3 "fun "))))
-                    (list-of (gen-num) (gen-list (gen-string)))))
-  (lambda (term)
-    (definition-to-list term)))
-
-(defun gen-balanced-parens-aux (pre count gen-str gen-choice)
-  (if (funcall gen-choice)
-      (gen-balances-parens-aux (concat pre (funcall gen-str) "(")
-                               (1+ count)
-                               gen-str
-                               gen-choice)
-      (if (= 0 count)
-          (concat pre (funcall gen-str))
-          (gen-balanced-parens-aux (concat pre (funcall gen-str) ")")
-                                   (1- count)
-                                   gen-str
-                                   gen-choice))))
-
-(defun gen-balanced-parens ()
-  (lambda ()
-    (gen-balanced-parens-aux ""
-                             0
-                             ;; Don't allow ( or ) in our strings
-                             (gen-string)
-                             (gen-filtered (gen-string)
-                                           (lambda (x)
-                                             (not (or (search "(" x)
-                                                      (search ")" x)))))
-                             ;; gen-bool gives trees of unlimited expected depth
-                             (compose (lambda (x) (= 0 (% x 3)))
-                                      (gen-num)))))
+  (list-of (gen-list (compose (lambda (args)
+                                (join-strings (cadr args) (case (% (car args) 4)
+                                                            (0 "")
+                                                            (1 "fix ")
+                                                            (2 "let ")
+                                                            (3 "fun "))))
+                              (list-of (gen-num) (gen-list (gen-string))))
+                     (compose (lambda (x) (+ 2 x)) (gen-num))))
+  (lambda (terms)
+    (let ((term (join-strings terms ":=")))
+      (message "TERMS: %S" terms)
+      (message "TERM: %S" term)
+      (definition-to-list term))))
 
 (test-with definition-to-list-aux
   "Test definition-to-list-aux"
-  (list-of (gen-string) (gen-string))
+  ;; Semicolons make our life harder, since the strings go to "read"
+  (list-of (gen-string-without ";")
+           (gen-string-without ";"))
   (lambda (pre post)
     (definition-to-list-aux (concat pre "=" post))))
+
+(test-with definition-to-list-fix
+  "Test behaviour of definition-to-list-fix"
+  (list-of (gen-string) (gen-string))
+  (lambda (pre post)
+    (definition-to-list-fix (concat pre ":=" post))))
+
+(test-with transform-match
+  "Test the behaviour of transform-match"
+  (list-of (gen-string))
+  (lambda (str)
+    (transform-match str)))
+
+(test-with add-parentheses-match0
+  "Test behaviour of add-parentheses-match0"
+  (list-of (gen-string))
+  (lambda (str)
+    (let ((result (add-parentheses-match0 str)))
+      (should (equal "(" (subseq result 0 1)))
+      (should (equal ")" (subseq (reverse re))))
+      (message "BEFORE: %S" str)
+      (message "AFTER: %S" ))))
 
 (test-with take-30
   "Test we can take 30 elements from a list"

@@ -112,15 +112,15 @@
 (defun transform-match (term)
   (transform-length-1 (car (read-from-string (add-parentheses-match0 term)))))
 
-(defun string-to-list (str)
+(defun ml4pg-string-to-list (str)
   (car (read-from-string str)))
 
 (defun definition-to-list-aux (term)
-  (string-to-list (concatenate 'string "(" (subseq term (1+ (search "=" term)))
+  (ml4pg-string-to-list (concatenate 'string "(" (subseq term (1+ (search "=" term)))
                                ")")))
 
 (defun definition-to-list-let (term)
-  (string-to-list (concatenate 'string "(nosimpl " (subseq term (+ 3 (search "in" term)))
+  (ml4pg-string-to-list (concatenate 'string "(nosimpl " (subseq term (+ 3 (search "in" term)))
                                ")")))
 
 (defun  definition-to-list-fix (term)
@@ -129,7 +129,7 @@
 (defun  definition-to-list-fun (term)
   (if (search "match" term)
       (transform-match (subseq term (+ 2 (search "=>" term))))
-    (string-to-list (concatenate 'string "("  (subseq term (+ 2 (search "=>" term)))
+    (ml4pg-string-to-list (concatenate 'string "("  (subseq term (+ 2 (search "=>" term)))
                                  ")"))))
 
 (defun variables-fun (term)

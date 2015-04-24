@@ -171,3 +171,22 @@
       (should-not (search nl   result))
       (should-not (search "\t" result))
       (should-not (search "\r" result)))))
+
+(test-with string/reverse-ends
+  "String reversal swaps the start and end"
+  (list-of (gen-nonempty-string))
+  (lambda (str)
+    (should (equal (subseq (string/reverse str) 0 (1- (length str)))
+                   (string/reverse (subseq str 1))))))
+
+(test-with string/reverse-length
+  "String reversal preserves length"
+  (list-of (gen-string))
+  (lambda (str)
+    (should (equal (length str) (length (string/reverse str))))))
+
+(test-with string/reverse-inverse
+  "String reversal is its own inverse"
+  (list-of (gen-string))
+  (lambda (str)
+    (should (equal str (string/reverse (string/reverse str))))))

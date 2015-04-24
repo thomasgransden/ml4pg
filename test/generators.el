@@ -166,3 +166,34 @@
   (compose (uncurry (lambda (stmt proof)
                       (concat stmt "\n" proof "\n")))
            (list-of (gen-coq-correct-statement name) (gen-coq-correct-proof))))
+
+(defun gen-balanced-parens-aux (pre count gen-str gen-choice)
+  "Recursive helper for gen-balanced-parens"
+  (if (funcall gen-choice)
+      (gen-balances-parens-aux (concat pre (funcall gen-str) "(")
+                               (1+ count)
+                               gen-str
+                               gen-choice)
+      (if (= 0 count)
+          (concat pre (funcall gen-str))
+          (gen-balanced-parens-aux (concat pre (funcall gen-str) ")")
+                                   (1- count)
+                                   gen-str
+                                   gen-choice))))
+
+(defun gen-balanced-parens ()
+  "Generate random strings where any parentheses are balanced"
+  (lambda ()
+    (gen-balanced-parens-aux ""
+                             0
+                             ;; Don't allow (, ), [ or ] in our strings
+                             (gen-string)
+                             (gen-filtered (gen-string)
+                                           (lambda (x)
+                                             (not (or (search "(" x)
+                                                      (search ")" x)
+                                                      (search "[" x)
+                                                      (search "]" x)))))
+                             ;; gen-bool gives trees of unlimited expected depth
+                             (compose (lambda (x) (= 0 (% x 3)))
+                                      (gen-num)))))
