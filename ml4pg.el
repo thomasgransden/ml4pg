@@ -78,8 +78,7 @@
     (message "Loading Proof General")
     (load "ProofGeneral/generic/proof-site")
     (with-temp-buffer
-      (coq-mode))
-    (message "Finished loading Proof General")))
+      (coq-mode))))
 
 (add-hook 'coq-mode-hook 'ml4pg-mode)
 (use-nix-if-present)
