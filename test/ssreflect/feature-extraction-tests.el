@@ -163,9 +163,15 @@
 
 (test-with adddefinition
   "Test what adddefinition does"
-  (list-of (gen-string))
-  (lambda (str)
-    (adddefinition str)))
+  (list-of (gen-coq-name))
+  (lambda (name)
+    (message "NAME: %s" name)
+    (should-not listofdefinitions)
+    (let ((pre listofdefinitions)
+          (def nil))
+      (adddefinition name)
+      (should (equal 1 (length listofdefinitions)))
+      (message "POST:\n\n%S\n\n" listofdefinitions))))
 
 (test-with addthm
   "Test what addthm does"
@@ -184,3 +190,90 @@
   nil
   (lambda ()
     (normalize)))
+
+(test-with obtain-definition
+  "Test that obtain-definition gets a definition from Coq"
+  (list-of (gen-coq-name))
+  (lambda (name)
+    (let ((result (obtain-definition name)))
+      (if (search "Error" result)
+          (should (equal (remove-whitespace result)
+                         (remove-whitespace (format "Error: %s not a defined object."
+                                                    name))))
+          (progn ;; More likely than you think; eg. I : True
+            (should (search ":=" result))
+            (should (search name result)))))))
+
+(test-with definition-to-list
+  "Test how definition-to-list behaves"
+  (list-of (compose (lambda (args)
+                      (join-strings (cadr args) (case (% (car args) 4)
+                                                  (0 "")
+                                                  (1 "fix ")
+                                                  (2 "let ")
+                                                  (3 "fun "))))
+                    (list-of (gen-num) (gen-list (gen-string)))))
+  (lambda (term)
+    (definition-to-list term)))
+
+(defun gen-balanced-parens-aux (pre count gen-str gen-choice)
+  (if (funcall gen-choice)
+      (gen-balances-parens-aux (concat pre (funcall gen-str) "(")
+                               (1+ count)
+                               gen-str
+                               gen-choice)
+      (if (= 0 count)
+          (concat pre (funcall gen-str))
+          (gen-balanced-parens-aux (concat pre (funcall gen-str) ")")
+                                   (1- count)
+                                   gen-str
+                                   gen-choice))))
+
+(defun gen-balanced-parens ()
+  (lambda ()
+    (gen-balanced-parens-aux ""
+                             0
+                             ;; Don't allow ( or ) in our strings
+                             (gen-string)
+                             (gen-filtered (gen-string)
+                                           (lambda (x)
+                                             (not (or (search "(" x)
+                                                      (search ")" x)))))
+                             ;; gen-bool gives trees of unlimited expected depth
+                             (compose (lambda (x) (= 0 (% x 3)))
+                                      (gen-num)))))
+
+(test-with definition-to-list-aux
+  "Test definition-to-list-aux"
+  (list-of (gen-string) (gen-string))
+  (lambda (pre post)
+    (definition-to-list-aux (concat pre "=" post))))
+
+(test-with take-30
+  "Test we can take 30 elements from a list"
+  (list-of (gen-list (gen-string)))
+  (lambda (lst)
+    (let ((result (take-30 lst)))
+      (should (<= (length result) 30))
+      (if (<= (length lst) 30)
+          (should (equal (length result) (length lst)))
+          (should (equal (length result) 30)))
+      (dolist (elem result)
+        (should (member elem lst))))))
+
+(test-with take-30-from-chunks
+  "Check recursive property of take-30-from"
+  (list-of (gen-list (gen-num)) (compose '1+ (gen-num)))
+  (lambda (lst n)
+    (should (> n 0))  ;; Due to 1+
+    (should (equal (take-30-from lst     n)
+                   (take-30-from lst (1- n))))))
+
+(test-with take-30-from
+  "Test take-30-from"
+  (list-of (gen-list (gen-num)) (gen-num))
+  (lambda (lst n)
+    (let ((result (take-30-from lst n)))
+      (should (<= (length result) 30))
+      (dolist (elem result)
+        (should (member elem lst))))))

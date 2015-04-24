@@ -1,7 +1,8 @@
 (require 'cl)
 
 (defun obtain-definition (name)
-  "Obtain definition and clean the term"
+  "Obtain definition"
+  (message "FIXME: Stop trying to parse output intended for humans!")
   (send-coq-cmd (format "Print %s" name)))
 
 (defun remove-jumps (string)
@@ -18,6 +19,7 @@
   (subseq string 0 (search "Argument" string)))
 
 (defun clean-term (term)
+  "Clean a term"
   (let* ((clean-term (remove-argument (remove-whitespaces (remove-jumps term))))
          (obj        (subseq clean-term 0 (search ":" clean-term :from-end t)))
          (type       (subseq clean-term (1+ (search ":" clean-term :from-end t)))))
@@ -79,11 +81,11 @@
   (do ((temp list (cdr temp))
        (temp2 nil))
       ((endp temp) temp2)
-    (setf temp2 (append temp2 (list (if (consp (car temp))
-                                        (if (equal (length (car temp)) 1)
-                                            (caar temp)
-                                            (transform-length-1 (car temp)))
-                                        (car temp)))))))
+    (append-to temp2 (if (consp (car temp))
+                         (if (equal (length (car temp)) 1)
+                             (caar temp)
+                             (transform-length-1 (car temp)))
+                         (car temp)))))
 
 (defun replace-quote (term)
   (do ((temp0 term)
@@ -107,6 +109,7 @@
   (car (read-from-string str)))
 
 (defun definition-to-list-aux (term)
+  (unless (search "=" term) (error "No '=' found in '%s'" term))
   (string-to-list (concat "(" (subseq term (1+ (search "=" term))) ")")))
 
 (defun definition-to-list-let (term)
@@ -163,20 +166,21 @@
 (defun adddefinition (name)
   (interactive)
   (send-coq-cmd (format "Unset Printing Notations."))
-  (let ((iftable (send-coq-cmd (format "Print Table Printing If.")))
-        (term nil))
-    (unless (search "None" iftable)
-      (send-coq-cmd (format "Remove Printing If %s."
-                            (subseq iftable (+ 1 (search ":" iftable))))))
-
+  (let* ((iftable  (send-coq-cmd (format "Print Table Printing If.")))
+         (coqprint `(lambda (action)
+                      (unless (search "None" ,iftable)
+                        (send-coq-cmd (format "%s Printing If %s."
+                                              action
+                                              (subseq ,iftable
+                                                      (1+ (search ":" ,iftable))))))))
+         (term     nil))
+    (funcall coqprint "Remove")
     (setf term (obtain-definition name))
-    (setf listofdefinitions (append listofdefinitions
-                                    (list (list 'definition (make-symbol name) (car (definition-to-list (car (clean-term term))))))))
-    (setf listofvariables (append listofvariables
-                                  (list (cadr (definition-to-list (car (clean-term term)))))))
-    (unless (search "None" iftable)
-      (send-coq-cmd (format "Add Printing If %s."
-                            (subseq iftable (+ 1 (search ":" iftable))))))
+    (append-to listofdefinitions (list 'definition
+                                       (make-symbol name)
+                                       (car (definition-to-list (car (clean-term term))))))
+    (append-to listofvariables (cadr (definition-to-list (car (clean-term term)))))
+    (funcall coqprint "Add")
     (send-coq-cmd (format "Set Printing Notations."))))
 
 (defvar tables-definitions nil)
@@ -186,5 +190,5 @@
   (do ((temp definitions-libraries (cdr temp))
        (temp2 variables-libraries (cdr temp2)))
       ((endp temp) nil)
-    (setf tables-definitions (append tables-definitions
-                     (list (build-table (extract-info (car temp) (car temp2))))))))
+    (append-to tables-definitions
+               (build-table (extract-info (car temp) (car temp2))))))

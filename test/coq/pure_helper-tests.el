@@ -154,9 +154,20 @@
     (should (not (any-which lst (compose 'not f))))))
 
 (test-with remove-whitespaces
-  "Can remove whitespace"
+  "Can remove redundant whitespace"
   (list-of (gen-string-without " ")
            (gen-string-without " "))
   (lambda (pre post)
     (should (equal (concat pre " " post)
                    (remove-whitespaces (concat pre "  " post))))))
+
+(test-with remove-whitepace
+  "Can remove all whitespace"
+  (list-of (gen-string))
+  (lambda (str)
+    (let ((result (remove-whitespace str)))
+      (should-not (search " "  result))
+      (should-not (search "\n" result))
+      (should-not (search nl   result))
+      (should-not (search "\t" result))
+      (should-not (search "\r" result)))))

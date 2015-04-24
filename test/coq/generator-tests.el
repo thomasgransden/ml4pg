@@ -110,3 +110,14 @@
   (list-of (gen-coq-name))
   (lambda (n)
     (should (coq-namep n))))
+
+(test-with gen-string-without
+  "Test that gen-string-without works"
+  (list-of (gen-list (gen-nonempty-string)))
+  (lambda (strs)
+    (message "TRYING WITH '%S'" strs)
+    (let ((result (funcall (apply 'gen-string-without strs))))
+      (message "GOT '%s'" result)
+      (should-not (equal "" result))
+      (dolist (str strs)
+        (should-not (search str result))))))

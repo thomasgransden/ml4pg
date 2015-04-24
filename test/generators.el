@@ -66,9 +66,14 @@
   `(lambda ()
      (funcall (random-elem ,gens))))
 
-(defun gen-string-without (str)
+(defun gen-string-without (&rest strs)
   "Generate a string which doesn't contain STR"
-  (gen-filtered (gen-nonempty-string) `(lambda (x) (not (search ,str x)))))
+  (dolist (str strs)
+    (when (equal str "")
+      (error "You can't generate string without an empty string!")))
+  (gen-filtered  (gen-nonempty-string)
+                `(lambda (x)
+                   (not (any (mapcar `(lambda (s) (search s ,x)) ',strs))))))
 
 (defun gen-elem (lst)
   "Generate an element of LST"
