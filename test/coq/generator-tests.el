@@ -131,3 +131,17 @@
   (list-of (gen-readable))
   (lambda (str)
     (read str)))
+
+(test-with gen-readable-no-question
+  "Ensure gen-readable doesn't end in ?"
+  (list-of (gen-readable))
+  (lambda (str)
+    (unless (equal "" str)
+      (should-not (equal "?" (subseq str (1- (length str))))))))
+
+(test-with gen-readable-no-slash
+  "Ensure gen-readable doesn't end in \\"
+  (list-of (gen-readable))
+  (lambda (str)
+    (unless (equal "" str)
+      (should-not (equal "\\" (subseq str (1- (length str))))))))
