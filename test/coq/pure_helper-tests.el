@@ -190,3 +190,61 @@
   (list-of (gen-string))
   (lambda (str)
     (should (equal str (string/reverse (string/reverse str))))))
+
+(test-with match-at-end-reflexive
+  "Strings match themselves"
+  (list-of (gen-string))
+  (lambda (str)
+    (should (match-at-end str str))))
+
+(test-with match-at-end-concat
+  "Concat yields a match"
+  (list-of (gen-string) (gen-string))
+  (lambda (str1 str2)
+    (should (match-at-end (concat str1 str2) str2))))
+
+(test-with match-at-end-too-short
+  "Can't get a match if it doesn't fit"
+  (compose (lambda (strs)
+             (let* ((str1 (car  strs))
+                    (str2 (cadr strs))
+                    ;; Ensure one string is shorter than the other
+                    (trimmed (if (= (length str1) (length str2))
+                                 (subseq str2 1)
+                               str2)))
+               ;; Return the longest then the shortest
+               (if (> (length str1) (length trimmed))
+                   (list str1    trimmed)
+                   (list trimmed str1))))
+           (list-of (gen-nonempty-string) (gen-nonempty-string)))
+  (lambda (big small)
+    (should (> (length big) (length small)))
+    (should-not (match-at-end small big))))
+
+(test-with strip-trailing
+  "Test stripping trailing strings"
+  (list-of (gen-string) (gen-list (gen-nonempty-string)))
+  (lambda (str strs)
+    (let* ((result (apply 'strip-trailing (cons str strs)))
+           (lenr   (length result)))
+      (dolist (end strs)
+        (let ((lene (length end)))
+          (if (> lenr lene)
+              (should-not (equal end (subseq result (- lenr lene))))
+              (should-not (equal end result))))))))
+
+(test-with can-strip-control-chars
+  "Strip control characters from strings"
+  (list-of (gen-string))
+  (lambda (str)
+    (dolist (char control-chars)
+      (should-not (search (string char) (strip-control-chars str))))))
+
+(test-with stripping-controls-leaves-rest
+  "Stripping control characters leaves the rest intact"
+  (list-of (gen-string))
+  (lambda (str)
+    (dolist (char (string-to-list str))
+      (unless (member char control-chars)
+        (should (search (string char)
+                        (strip-control-chars str)))))))

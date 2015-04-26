@@ -236,19 +236,29 @@
 
 (test-with transform-match
   "Test the behaviour of transform-match"
-  (list-of (gen-string))
+  (list-of (gen-readable))
   (lambda (str)
-    (transform-match str)))
+    (let* ((result  (transform-match str))
+           (printed (format "%S" result)))
+      (should (listp result))
+      (if (equal "" (remove-whitespace str))
+          (should (equal printed "nil"))
+          (should (equal printed (concat "("
+                                         (replace-regexp-in-string "[\n\t]"
+                                                                   " "
+                                                                   str)
+                                         ")")))))))
 
 (test-with add-parentheses-match0
   "Test behaviour of add-parentheses-match0"
-  (list-of (gen-string))
+  (list-of (gen-string-without "|"))
   (lambda (str)
     (let ((result (add-parentheses-match0 str)))
-      (should (equal "(" (subseq result 0 1)))
-      (should (equal ")" (subseq (reverse re))))
       (message "BEFORE: %S" str)
-      (message "AFTER: %S" ))))
+      (message "AFTER: %S" result)
+      (should (equal "(" (subseq                 result  0 1)))
+      (should (equal ")" (subseq (string/reverse result) 0 1)))
+      (should-not (search ">" result)))))
 
 (test-with take-30
   "Test we can take 30 elements from a list"
@@ -267,8 +277,8 @@
   (list-of (gen-list (gen-num)) (compose '1+ (gen-num)))
   (lambda (lst n)
     (should (> n 0))  ;; Due to 1+
-    (should (equal (take-30-from lst     n)
-                   (take-30-from lst (1- n))))))
+    (should (equal (take-30-from            lst      n)
+                   (take-30-from (drop-n 30 lst) (1- n))))))
 
 (test-with take-30-from
   "Test take-30-from"
@@ -278,3 +288,42 @@
       (should (<= (length result) 30))
       (dolist (elem result)
         (should (member elem lst))))))
+
+(test-with remove-bar-constraints
+  "Test what remove-bar does"
+  (list-of (compose (lambda (strs)
+                      (let ((len (length strs)))
+                        (if (< len 3)
+                            ;; Return as-is
+                            strs
+                            ;; Join last two with '=> ' and the rest with '|'
+                            (join-strings (append (take-n (- len 2) strs)
+                                                  (list (concat (nth (- len 2) strs)
+                                                                "=> "
+                                                                (nth (- len 1) strs))))
+                                          "|"))))
+                    (gen-list (gen-string-without "|" "=> "))))
+  (lambda (barred)
+    (let* ((result (remove-bar barred)))
+      (should-not (search "|" result))
+      (message "IN:\n\n\n%S\n\n\nOUT:\n\n\n%S\n" barred result))))
+
+(test-with remove-bar-slice
+  "Test slicing by remove-bar"
+  (list-of (gen-list (gen-list (gen-string-without "=> " "|")
+                               (gen-const 3))
+                     (compose '1+ (gen-num))))
+  (lambda (strss)
+    (let ((acc-in     "")
+          (acc-expect ""))
+      (dolist (strs strss)
+        (let* ((str1   (nth 0 strs))
+               (str2   (nth 1 strs))
+               (str3   (nth 2 strs))
+               (in     (concat str1 "|" str2 "=> " str3))
+               (expect (concat str1 ")> " str3))
+               (result ))
+          (setf acc-in     (concat acc-in     in))
+          (setf acc-expect (concat acc-expect expect))
+          (should (equal     expect (remove-bar     in)))
+          (should (equal acc-expect (remove-bar acc-in))))))))

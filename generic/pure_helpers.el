@@ -283,12 +283,52 @@
 
 (defun string/reverse (str)
   "Reverse the str where str is a string"
-  (message "GIVEN STRING %S" str)
   (if (equal str "")
-      (progn (message "EMPTY, returning it")
-             "")
-      (progn (message "NONEMPTY")
-             (message "AS LIST: %S" (string-to-list str))
-             (message "REVERSED: %S" (reverse (string-to-list str)))
-             (message "BACK TO STRING: %S" (apply 'string (reverse (string-to-list str))))
-             (apply 'string (reverse (string-to-list str))))))
+      ""
+      (apply 'string (reverse (string-to-list str)))))
+
+(defun count-occurences (regex string)
+  "Count how many times REGEX matches STRING"
+  (recursive-count regex string 0))
+
+(defun recursive-count (regex string start)
+  "Helper for count-occurences"
+  (if (string-match regex string start)
+      (+ 1 (recursive-count regex string (match-end 0)))
+      0))
+
+(defun balanced-parens (s)
+  "Check whether ( and ) are balanced. Doesn't check quotes or other bracket
+   types ([, ], {, }, <, >, etc.)"
+  (= (count-occurences (regexp-quote "(") s)
+     (count-occurences (regexp-quote ")") s)))
+
+(defun match-at-end (str end)
+  "Does STR end with END?"
+  (let ((lens (length str))
+        (lene (length end)))
+    (when (>= lens lene)
+      (equal end (subseq str (- lens lene))))))
+
+(defun strip-trailing (str &rest strs)
+  "Drop characters from the end of STR until it doesn't end in any of STRS"
+  (when (any (mapcar (lambda (s) (equal s "")) strs))
+    (error "Can't strip off empty strings"))
+  (do ((result str))
+      ((not (any (mapcar (lambda (s) (match-at-end result s)) strs)))
+       result)
+    (dolist (end strs)
+      (when (match-at-end result end)
+        (setf result (subseq result 0 (- (length result) (length end))))))))
+
+(defconst control-chars (append (number-sequence 0   31)
+                                ;(number-sequence 127 159)
+                                )
+  "ASCII control characters")
+
+(defun strip-control-chars (str)
+  (let ((result str))
+    (dolist (char control-chars result)
+      (setq result (replace-regexp-in-string (regexp-quote (string char))
+                                             ""
+                                             result)))))

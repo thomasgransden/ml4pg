@@ -125,3 +125,9 @@
       (should-not (equal "" result))
       (dolist (str strs)
         (should-not (search str result))))))
+
+(test-with gen-readable
+  "Output of gen-readable should be readable without error"
+  (list-of (gen-readable))
+  (lambda (str)
+    (read str)))

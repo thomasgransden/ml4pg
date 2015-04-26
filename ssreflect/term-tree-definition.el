@@ -68,14 +68,20 @@
     (setf ift (search ">" temp0))))
 
 (defun remove-bar (term)
-  (message "FIXME: is remove-bar just replace-regexp-in-string?")
-  (do ((temp0 term)
-       (ift (search "|" term))
-       (temp2 ""))
-      ((not ift) (concat temp2 temp0))
-    (setf temp2 (concat temp2 (subseq temp0 0 ift) ")"))
-    (setf temp0 (subseq temp0  (+ 1 (search "=> " temp0))))
-    (setf ift   (search "|" temp0))))
+  (if (search "|" term)
+      (let ((bar (search "|"   term :from-end))
+            (arr (search "=> " term :from-end)))
+        (when (or (not arr) (< arr bar))
+          (error "remove-bar requires '=> ' after '|' in '%s'" term))
+        ;; Start computation
+        (do ((post term)
+             (ift  (search "|" term))
+             (pre  ""))
+            ((not ift) (concat pre post))
+          (setf pre  (concat pre  (subseq post 0 ift) ")"))
+          (setf post (subseq post (1+ (search "=> " post))))
+          (setf ift  (search "|" post))))
+      term))
 
 (defun transform-length-1 (list)
   (do ((temp list (cdr temp))
@@ -108,7 +114,10 @@
           ")"))
 
 (defun transform-match (term)
-  (transform-length-1 (car (read-from-string (add-parentheses-match0 term)))))
+  (transform-length-1
+   (car
+    (read-from-string
+     (add-parentheses-match0 term)))))
 
 (defun ml4pg-string-to-list (str)
   (car (read-from-string str)))
