@@ -187,9 +187,22 @@
 
 (test-with normalize
   "Test what normalize does"
-  nil
-  (lambda ()
-    (normalize)))
+  (list-of (gen-list (gen-list (gen-num))))
+  (lambda (lst)
+    (let ((result (normalize lst)))
+      (message "IN: %S OUT: %S" lst result))))
+
+(test-with max-position
+  "Test what max-position does"
+  (list-of (gen-list (gen-list (gen-num))))
+  (lambda (lst)
+    (max-position lst)))
+
+(test-with min-position
+  "Test what min-position does"
+  (list-of (gen-list (gen-list (gen-num))))
+  (lambda (lst)
+    (min-position lst)))
 
 (test-with obtain-definition
   "Test that obtain-definition gets a definition from Coq"

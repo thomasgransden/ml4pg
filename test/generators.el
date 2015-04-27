@@ -201,22 +201,15 @@
 (defun gen-readable ()
   "Generate strings suitable for the 'read' function"
   (lambda ()
-    ;; Generate a string
-    (let* ((ctrls (apply 'string (number-sequence 0 32)))
-           (str   (funcall (gen-string-without "[" "]" "" "" "\f" ""
-                                               "" "" " " "" "," ""
-                                               "" "" "" "" "")))
-           ;; Remove trailing ? and /
-           (str2 (do ((str2 str (subseq str2 0 (1- (length str2)))))
-                     ((not (member (subseq str2 0 (1- (length str2))) '("?" "\\")))
-                      str2)))
-           ;; Prepend ( until balanced
-           (str3 (do ((str3 str2 (concat "(" str3)))
-                     ((>= (count-occurences (regexp-quote "(") str3)
-                          (count-occurences (regexp-quote ")") str3))
-                      str3)))
-           ;; Append ) until balanced
-           (str4 (do ((str4 str3 (concat str4 ")")))
-                     ((balanced-parens str4)
-                      str4))))
-      str4)))
+    (do* ((str    (strip-control-chars (funcall (gen-string-without
+                    "["  "]"  "" "" "\f" "" "" "" " " "" ","  ""
+                    "" "" "" "" "" "" "?"  "\\" ";"  "#"  "."))))
+          (opens  (count-occurences (regexp-quote "(") str))
+          (closes (count-occurences (regexp-quote ")") str)))
+        ((balanced-parens str) str)
+
+      (when (< opens closes)
+        (setq str (concat "(" str    )))
+
+      (when (> opens closes)
+        (setq str (concat     str ")"))))))
