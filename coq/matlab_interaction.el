@@ -73,34 +73,6 @@
 
 (defvar times 0)
 
-(defun print-clusters (res freq)
-  (interactive)
-  (setf times (1+ times))
-  (if (not (caar res))
-      (insert (format "Searching clusters...\n"))
-    (let* ((temp0 (unzip (quicksort-pair (zip res freq))))
-           (res1 (car temp0))
-           (freq1 (cadr  temp0)))
-      (insert (format "We have found the following clusters:\n" ))
-      (insert single-line)
-      (do ((temp res1 (cdr temp))
-           (temp-freq freq1 (cdr temp-freq))
-           (i 1 (1+ i)))
-          ((endp temp)
-           (insert single-line)
-           )
-        (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq)))
-
-               (do ((temp2 (car temp)
-                           (cdr temp2)))
-                   ((endp temp2)
-                    (insert (format "\n")))
-                 (progn (insert (format "Lemma "))
-                        (insert-button-lemma
-                         (remove_last_colon
-                          (car (nth (string-to-number (car temp2))
-                                    saved-theorems)))))))))))
-
 (defun print-clusters-weka (gra str)
   (print-clusters-weka-aux gra 'identity str))
 
@@ -244,26 +216,6 @@
     (send-coq-cmd "Unset Printing All")))
 
 (defvar saved-theorems-libs nil)
-
-(defun add-libraries ()
-  (do ((temp libs-menus (cdr temp)))
-      ((endp temp)
-       nil)
-    (cond ((string= level "g")
-           (progn
-             (shell-command  (concat "cat " home-dir "libs/coq/" (car temp)
-                                     ".csv >> " (expand-file-name "temp1.csv")))
-             (add-to-saved-theorems-libs (concat home-dir "libs/coq/" (car temp)
-                                                 ".csv"))))
-          ((string= level "t")
-           (shell-command  (concat "cat " home-dir "libs/coq/" (car temp)
-                                   "_tactics.csv >> " (expand-file-name "temp1.csv"))))
-          ((string= level "p")
-           (shell-command  (concat "cat " home-dir "libs/coq/" (car temp)
-                                   "_tree.csv >> " (expand-file-name "temp1.csv")))))))
-
-(defun add-libraries-temp ()
-  (add-libraries-temp-aux "coq" t))
 
 (defun add-libraries-notemp ()
   (add-libraries-temp-str "coq" t))

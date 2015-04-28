@@ -8,9 +8,6 @@
 
 (defvar clustercounter 0)
 
-(defun clusterofseveral (lol)
-  (clusterofseveral-pure lol tables-definitions number-of-defs))
-
 (defun show-diagram-clusters (text)
   "Render the given dot code into a HTML file and open it"
   (let ((path (make-temp-file "ml4pg-clusters" nil ".html")))
@@ -177,10 +174,6 @@
 
 (defun dependencygraph-proof ()
   (showclustergraph-proof (dependencygraph-proof-aux)))
-
-(defun dependencygraph-proof-writetmp ()
-  (with-temp-file (expand-file-name "temp.csv")
-    (insert (dependencygraph-proof-writetmp-aux))))
 
 (defun dependencygraph-proof-writetmp-aux ()
   (if libs-menus

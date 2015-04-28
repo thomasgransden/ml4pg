@@ -1,10 +1,5 @@
 (require 'cl)
 
-(defun export-up-to-here ()
-  (interactive)
-  (export-up-to-here-aux "definitions" listofdefinitions
-                         "variables"   listofvariables))
-
 (defvar libs-defs nil)
 
 (defun available-defs-libraries ()

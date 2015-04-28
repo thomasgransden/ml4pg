@@ -1,15 +1,5 @@
 (require 'cl)
 
-(defun export-up-to-here ()
-  (interactive)
-  (let ((name (name-from-buf)))
-    (with-temp-file (concat home-dir "definitions/" name)
-      (insert (format "%s" listofdefinitions)))
-    (with-temp-file (concat home-dir "variables/" name)
-      (insert (format "%s" listofvariables)))
-    )
-  t)
-
 (defvar libs-defs nil)
 
 (defun available-defs-libraries ()

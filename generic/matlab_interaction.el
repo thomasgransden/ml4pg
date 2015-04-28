@@ -66,12 +66,6 @@
       (when (and add (string= level "g"))
         (add-to-saved-theorems-libs (concat path elem post ".csv"))))))
 
-(defun add-libraries-temp-aux (type add)
-  (let ((str (add-libraries-temp-str type add)))
-    (with-temp-file (expand-file-name "temp.csv")
-      (goto-char (point-max))
-      (insert str))))
-
 (defun add-to-saved-theorems-libs (file)
   (add-to-saved-theorems-libs-aux (read-lines file)))
 
@@ -86,9 +80,6 @@
 
 (defun size-notemp (str)
   (length (split-string str "\n" t)))
-
-(defun size-temp ()
-  (length (read-lines (expand-file-name "temp.csv"))))
 
 (defun show-clusters-of-theorem-aux (func action)
   (interactive)

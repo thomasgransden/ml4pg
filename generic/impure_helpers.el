@@ -67,16 +67,6 @@
         (subseq buf 0 (search "." buf))
       buf)))
 
-(defun write-lisp-to-file (path value)
-  (with-temp-file path
-    (insert (format "%s" value))))
-
-(defun export-up-to-here-aux (dir1 val1 dir2 val2)
-  (let ((name (name-from-buf)))
-    (write-lisp-to-file (concat home-dir dir1 "/" name) val1)
-    (write-lisp-to-file (concat home-dir dir2 "/" name) val2)
-    t))
-
 (defun random-elem (list)
   (when list (nth (random (length list)) list)))
 

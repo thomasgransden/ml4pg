@@ -182,14 +182,6 @@
   "Remove [, ], { and } chars from a string"
   (strip-regexp x (regexp-opt (list "[" "]" "{" "}"))))
 
-(defun strip-spaces (x)
-  "Remove space characters from a string"
-  (strip-str x " "))
-
-(defun strip-quotes (x)
-  "Remove quote characters from a string"
-  (strip-str x "\""))
-
 (defun subnum (big small)
   "Check whether the digits of SMALL appear in those of BIG"
   (let ((bigs   (number-to-string big))
