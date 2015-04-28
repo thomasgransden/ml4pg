@@ -175,9 +175,9 @@
 
 (test-with addthm
   "Test what addthm does"
-  nil
-  (lambda ()
-    (addthm)))
+  (list-of (gen-string))
+  (lambda (str)
+    (addthm str)))
 
 (test-with split-feature-vector
   "Test what split-feature-vector does"
@@ -228,39 +228,50 @@
                               (list-of (gen-num) (gen-list (gen-string))))
                      (compose (lambda (x) (+ 2 x)) (gen-num))))
   (lambda (terms)
-    (let ((term (join-strings terms ":=")))
-      (message "TERMS: %S" terms)
-      (message "TERM: %S" term)
-      (definition-to-list term))))
+    (message "TERM: %S" terms)
+    (let* ((term   (join-strings terms ":="))
+           (foo    (message "TERMS: %S" term))
+           (result (definition-to-list term)))
+      (message "RESULT %S" result))))
 
 (test-with definition-to-list-aux
   "Test definition-to-list-aux"
-  ;; Semicolons make our life harder, since the strings go to "read"
-  (list-of (gen-string-without ";")
-           (gen-string-without ";"))
+  (list-of (gen-readable) (gen-readable))
   (lambda (pre post)
-    (definition-to-list-aux (concat pre "=" post))))
+    (message "PRE %S POST %S" pre post)
+    (let ((result (definition-to-list-aux (concat pre "=" post))))
+      (message "RESULT %S" result))))
 
 (test-with definition-to-list-fix
   "Test behaviour of definition-to-list-fix"
-  (list-of (gen-string) (gen-string))
+  (list-of (gen-readable) (gen-readable))
   (lambda (pre post)
-    (definition-to-list-fix (concat pre ":=" post))))
+    (message "PRE %S POST %S" pre post)
+    (let ((result (definition-to-list-fix (concat pre ":=" post))))
+      (message "RESULT %S" result))))
 
 (test-with transform-match
   "Test the behaviour of transform-match"
   (list-of (gen-readable))
   (lambda (str)
-    (let* ((result  (transform-match str))
-           (printed (format "%S" result)))
+    (let* ((result    (transform-match str))
+           (printed   (format "%S" result))
+           (condensed (replace-regexp-in-string (regexp-quote "()")
+                                                "nil"
+                                                (remove-whitespace str))))
       (should (listp result))
       (if (equal "" (remove-whitespace str))
           (should (equal printed "nil"))
-          (should (equal printed (concat "("
-                                         (replace-regexp-in-string "[\n\t]"
-                                                                   " "
-                                                                   str)
-                                         ")")))))))
+          (should (equal (remove-whitespace printed)
+                         (concat "(" condensed ")")))))))
+
+(test-with transform-match-barred
+  "Test how transform-match handles |"
+  (list-of (gen-readable) (gen-readable) (gen-readable))
+  (lambda (pre mid post)
+    (let ((str (concat pre "|" mid "=> " post)))
+      (message "INPUT: %S" str)
+      (message "OUTPUT: " (transform-match str)))))
 
 (test-with add-parentheses-match0
   "Test behaviour of add-parentheses-match0"

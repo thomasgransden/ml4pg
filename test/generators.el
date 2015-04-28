@@ -67,13 +67,12 @@
      (funcall (random-elem ,gens))))
 
 (defun gen-string-without (&rest strs)
-  "Generate a string which doesn't contain STR"
+  "Generate a string which doesn't contain any of the arguments"
   (dolist (str strs)
     (when (equal str "")
       (error "You can't generate string without an empty string!")))
-  (gen-filtered  (gen-nonempty-string)
-                `(lambda (x)
-                   (not (any (mapcar `(lambda (s) (search s ,x)) ',strs))))))
+  (compose `(lambda (s) (apply 'strip-str (cons s ',strs)))
+           (gen-nonempty-string)))
 
 (defun gen-elem (lst)
   "Generate an element of LST"
@@ -201,9 +200,11 @@
 (defun gen-readable ()
   "Generate strings suitable for the 'read' function"
   (lambda ()
-    (do* ((str    (strip-control-chars (funcall (gen-string-without
-                    "["  "]"  "" "" "\f" "" "" "" " " "" ","  ""
-                    "" "" "" "" "" "" "?"  "\\" ";"  "#"  "."))))
+    (do* ((str    (strip-str (strip-control-chars (funcall
+                                                     (gen-nonempty-string)))
+                             "["  "]"  "" "" "\f" "" "" "" " " ""
+                             ","  "" "" "" "" "" "" "" "?"  "\\"
+                             ";"  "#"  "."  "\"" " "  "'"  "`"))
           (opens  (count-occurences (regexp-quote "(") str))
           (closes (count-occurences (regexp-quote ")") str)))
         ((balanced-parens str) str)

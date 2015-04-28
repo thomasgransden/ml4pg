@@ -880,6 +880,12 @@
     (if tdl4 tdl4 (generate-zeros 13))
     (if tdl5 tdl5 (generate-zeros 13))))))
 
+(defvar proof-hypotheses nil
+  "Build up the hypotheses available at each steop in each proof")
+
+(defun get-hypotheses ()
+  (message "GETTING HYPOTHESES"))
+
 (defun export-theorem-aux (result name)
   (let* ((semis   (save-excursion
                     (skip-chars-backward " \t\n"
@@ -931,6 +937,7 @@
              (ignore-errors (addthm name)))
 
             (t
+             (get-hypotheses)
              (setf ts (get-top-symbol))
              (setf ng (get-number-of-goals))
              (proof-assert-next-command-interactive)

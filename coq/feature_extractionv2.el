@@ -281,12 +281,12 @@
         (apply process (gn-branch-case cmd)))
 
      ((string= tactic "simpl")
-        (apply process (list ((list 0 0 0 0 ts 0 0 1 0))
+        (apply process (list (list 0 0 0 0 ts 0 0 1 0)
                              no-tacinfo
                              (list 1 0 0))))
 
      ((string= tactic "trivial")
-        (apply process (list (append (list 0 0 0 0 0 0 ts 1 1))
+        (apply process (list (list 0 0 0 0 0 0 ts 1 1)
                              no-tacinfo
                              (list 1 0 0))))
 
@@ -455,6 +455,29 @@
                                    (list (list name (take-30-from fv i))))))))
 
 (defun export-theorem-aux (result name current-level dot-level i)
+  (message "EXPORTING THEOREM AUX")
+  (export-theorem-aux2 result name (list current-level dot-level i
+                                         ;; Goal count goes up
+                                         (lambda (current-level dot-level i up down same)
+                                           (list (1+ current-level)
+                                                 (1+ current-level)
+                                                 (1+ i)
+                                                 up down same))
+                                         ;; Goal count goes down
+                                         (lambda (current-level dot-level i up down same)
+                                           (list current-level
+                                                 dot-level
+                                                 (1+ i)
+                                                 up down same))
+                                         ;; Goal count stays the same
+                                         (lambda (current-level dot-level i up down same)
+                                           (list (1+ current-level)
+                                                 dot-level
+                                                 (1+ i)
+                                                 up down same)))))
+
+(defun export-theorem-aux2 (result name args)
+  (message "EXPORTING %s" name)
   (let* ((semis     (save-excursion
                       (skip-chars-backward " \t\n"
                                            (proof-queue-or-locked-end))
@@ -466,7 +489,7 @@
     (cond ((or (string= comment "comment")
                (is-in-search cmd))
              (proof-assert-next-command-interactive)
-             (export-theorem-aux result name current-level dot-level i))
+             (export-theorem-aux2 result name args))
 
           ((is-problematic cmd)
              (search-forward "Defined")
@@ -477,40 +500,32 @@
                (search "Fixpoint"   cmd))
              (proof-assert-next-command-interactive)
              (ignore-errors(adddefinition (between-spaces cmd)))
-             (export-theorem-aux result (between-spaces cmd) current-level dot-level i)
+             (export-theorem-aux2 result (between-spaces cmd) args)
              (proof-assert-next-command-interactive))
 
           ((search "Lemma" cmd)
              (proof-assert-next-command-interactive)
-             (export-theorem-aux result (rem-jumps cmd) current-level dot-level i))
+             (export-theorem-aux2 result (rem-jumps cmd) args))
 
           ((search "Proof" cmd)
              (proof-assert-next-command-interactive)
-             (export-theorem-aux result name current-level dot-level i))
+             (export-theorem-aux2 result name args))
 
           ((search "Instance" cmd)
              (proof-assert-next-command-interactive)
-             (export-theorem-aux result
-                                 (rem-jumps cmd)
-                                 current-level dot-level i))
+             (export-theorem-aux2 result (rem-jumps cmd) args))
 
           ((search "Theorem" cmd)
              (proof-assert-next-command-interactive)
-             (export-theorem-aux result
-                                 (rem-jumps cmd)
-                                 current-level dot-level i))
+             (export-theorem-aux2 result (rem-jumps cmd) args))
 
           ((search "Remark" cmd)
              (proof-assert-next-command-interactive)
-             (export-theorem-aux result
-                                 (rem-jumps cmd)
-                                 current-level dot-level i))
+             (export-theorem-aux2 result (rem-jumps cmd) args))
 
           ((search "Corollary" cmd)
              (proof-assert-next-command-interactive)
-             (export-theorem-aux result
-                                 (rem-jumps cmd)
-                                 current-level dot-level i))
+             (export-theorem-aux2 result (rem-jumps cmd) args))
 
           ((or (search "Qed." cmd)
                (search "Defined." cmd))
@@ -528,17 +543,17 @@
                (setf ng (get-number-of-goals))
                (proof-assert-next-command-interactive)
                (setf ng2 (get-number-of-goals))
-               (let ((arg (look-through-commands cmd result ts current-level))
+               (let ((arg (look-through-commands cmd result ts (nth 0 args)))
                      (j   (1+ i)))
                  (cond
                   ((< ng ng2)
-                   (export-theorem-aux arg name (1+ current-level) (1+ current-level) j))
+                   (export-theorem-aux2 arg name (apply (nth 3 args) args)))
 
                   ((< ng2 ng)
-                   (export-theorem-aux arg name current-level      dot-level          j))
+                   (export-theorem-aux2 arg name (apply (nth 4 args) args)))
 
                   (t
-                   (export-theorem-aux arg name (1+ current-level) dot-level          j))))))))))
+                   (export-theorem-aux2 arg name (apply (nth 5 args) args)))))))))))
 
 (defun look-through-commands (cmd start-result ts current-level)
   (do ((cmds       (list-of-commands cmd)
@@ -666,10 +681,11 @@
   (let ((final         (point))
         (current-level 1)
         (pre           (proof-queue-or-locked-end))
-        (export-theorem)
+        (foo           (export-theorem))
         (post          (proof-queue-or-locked-end)))
     (while (and (>  post   pre)
                 (< (point) final))
+      (message "LOOP")
       (export-theorem)
       (setq pre  post)
       (setq post (proof-queue-or-locked-end))))

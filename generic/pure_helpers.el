@@ -143,14 +143,11 @@
   (replace-regexp-in-string "  " " " string))
 
 (defun remove-whitespace (string)
-  (replace-regexp-in-string "[\s\n\r\t]" "" string))
+  (strip-regexp string "[\s\n\r\t]"))
 
 (defun extract-coq-names-from (str)
   (mapcar (lambda (s)
-            (replace-regexp-in-string (format "\\(%s\\)\\|[\s\n]+"
-                                              coq-declaration-re)
-                                      ""
-                                      s))
+            (strip-regexp s  (format "\\(%s\\)\\|[\s\n]+" coq-declaration-re)))
           (extract-coq-names-from-aux str)))
 
 (defconst coq-declaration-re
@@ -180,18 +177,15 @@
 
 (defun strip-parens (x)
   "Remove [, ], { and } chars from a string"
-  (replace-regexp-in-string
-   (regexp-opt (list "[" "]" "{" "}"))
-   ""
-   x))
+  (strip-regexp x (regexp-opt (list "[" "]" "{" "}"))))
 
 (defun strip-spaces (x)
   "Remove space characters from a string"
-  (replace-regexp-in-string " " "" x))
+  (strip-str x " "))
 
 (defun strip-quotes (x)
   "Remove quote characters from a string"
-  (replace-regexp-in-string (regexp-quote "\"") "" x))
+  (strip-str x "\""))
 
 (defun subnum (big small)
   "Check whether the digits of SMALL appear in those of BIG"
@@ -216,7 +210,7 @@
       (concat res string))))
 
 (defun remove-iterations (string)
-  (replace-regexp-in-string "[!?]" "" string))
+  (strip-regexp string "[!?]"))
 
 (defun extract-params2 (seq res)
   (extract-params-aux "." seq res))
@@ -321,14 +315,18 @@
       (when (match-at-end result end)
         (setf result (subseq result 0 (- (length result) (length end))))))))
 
+(defun strip-regexp (str &rest res)
+  (let ((result str))
+    (dolist (to-strip res result)
+      (setq result (replace-regexp-in-string to-strip "" result)))))
+
+(defun strip-str (str &rest strs)
+  (apply 'strip-regexp (cons str (mapcar 'regexp-quote strs))))
+
 (defconst control-chars (append (number-sequence 0   31)
                                 ;(number-sequence 127 159)
                                 )
   "ASCII control characters")
 
 (defun strip-control-chars (str)
-  (let ((result str))
-    (dolist (char control-chars result)
-      (setq result (replace-regexp-in-string (regexp-quote (string char))
-                                             ""
-                                             result)))))
+  (apply 'strip-str (cons str (mapcar 'string control-chars))))

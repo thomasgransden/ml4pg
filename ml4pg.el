@@ -31,7 +31,7 @@
 
 (defun ml4pg-load-ss ()
   (mapc (load-els "generic")
-        '("pure_helpers" "impure_helpers"))
+        (directory-files (concat home-dir "generic/") nil ".*\.el"))
   (mapc (load-els "ssreflect")
         '("auxiliary_files" "feature_extraction_2" "matlab_interaction"
           "shortcuts" "menus" "storage" "save_lemmas"
