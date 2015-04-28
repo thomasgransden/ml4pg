@@ -1,8 +1,5 @@
 ;; Pure functions taken from feature_extractionv2.el
 
-(defun rem-jumps (cmd)
-  (remove-jumps (between-spaces cmd)))
-
 (defun goal-str-aux (s)
   (if s (str-after s "============================\n   ")))
 

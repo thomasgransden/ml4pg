@@ -476,8 +476,8 @@
                                                  (1+ i)
                                                  up down same)))))
 
-(defun export-theorem-lemma (result cmd args)
-  (export-theorem-comment result (rem-jumps cmd) args))
+(defun export-theorem-lemma (result subcmd args)
+  (export-theorem-comment result (remove-jumps subcmd) args))
 
 (defun export-theorem-problematic ()
   (search-forward "Defined")
@@ -506,6 +506,7 @@
          (comment (caar  semis))
          (cmd     (cadar semis))
          (subcmd  (ignore-errors (between-spaces cmd)))
+         (subname (ignore-errors (between-spaces name)))
          (ts      nil))
 
     (cond ((or (string= comment "comment")
@@ -520,7 +521,7 @@
              (export-theorem-deffix result subcmd args))
 
           ((search "Lemma" cmd)
-             (export-theorem-lemma result cmd args))
+             (export-theorem-lemma result subcmd args))
 
           ((search "Proof" cmd)
              (export-theorem-comment result name args))
@@ -529,7 +530,7 @@
                (search "Theorem" cmd)
                (search "Remark" cmd)
                (search "Corollary" cmd))
-             (export-theorem-lemma result name args))
+             (export-theorem-lemma result subname args))
 
           ((or (search "Qed." cmd)
                (search "Defined." cmd))
