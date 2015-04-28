@@ -480,6 +480,9 @@
   (proof-assert-next-command-interactive)
   (export-theorem-aux2 result name args))
 
+(defun export-theorem-lemma (result cmd args)
+  (export-theorem-comment result (rem-jumps cmd) args))
+
 (defun export-theorem-problematic ()
   (search-forward "Defined")
   (proof-goto-point)
@@ -490,10 +493,6 @@
   (ignore-errors (adddefinition subcmd))
   (export-theorem-aux2 result subcmd args)
   (proof-assert-next-command-interactive))
-
-(defun export-theorem-lemma (result cmd args)
-  (proof-assert-next-command-interactive)
-  (export-theorem-aux2 result (rem-jumps cmd) args))
 
 (defun export-theorem-defined (name result)
   (proof-assert-next-command-interactive)

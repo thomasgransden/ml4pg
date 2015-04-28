@@ -889,6 +889,41 @@
 (defun export-theorem-aux (result name)
   (export-theorem-aux2 result name))
 
+(defun export-theorem-comment (result name)
+  (proof-assert-next-command-interactive)
+  (export-theorem-aux2 result name))
+
+(defun export-theorem-deffix (result subcmd)
+  (proof-assert-next-command-interactive)
+  (ignore-errors (adddefinition subcmd))
+  (export-theorem-aux2 result subcmd)
+  (proof-assert-next-command-interactive))
+
+(defun export-theorem-defined (name result)
+  (proof-assert-next-command-interactive)
+  (setf tactic-level     (append tactic-level
+                                 (list (compute-tactic-result     name))))
+  (setf proof-tree-level (append proof-tree-level
+                                 (list (compute-proof-tree-result name))))
+  (when name
+    (split-feature-vector name (flat (reverse result))))
+  (ignore-errors (addthm name)))
+
+(defun export-theorem-otherwise (cmd result name)
+  (get-hypotheses)
+  (setf ts  (get-top-symbol))
+  (setf ng  (get-number-of-goals))
+  (proof-assert-next-command-interactive)
+  (setf ng2 (get-number-of-goals))
+  (export-theorem-aux2 (cons (append (get-numbers cmd ts current-level)
+                                     (list ts)
+                                     (list ng2))
+                             result)
+                       name)
+  (add-info-to-level (list 0 0 0 0 0 0 0 0 0 0 0 ng2 (if (< ng2 ng) 1 0))
+                     current-level)
+  (setf current-level (1+ current-level)))
+
 (defun export-theorem-aux2 (result name)
   (let* ((semis   (save-excursion
                     (skip-chars-backward " \t\n"
@@ -902,54 +937,27 @@
     (when semis
       (cond ((or (string= comment "comment")
                  (is-in-search cmd))
-             ;; Skip comments and anything in useless-terms
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result name))
+             (export-theorem-comment result name))
 
             ((or (search "Definition" cmd)
-                 (search "Fixpoint" cmd))
-             (proof-assert-next-command-interactive)
-             (ignore-errors (adddefinition subcmd))
-             (export-theorem-aux2 result subcmd)
-             (proof-assert-next-command-interactive))
+                 (search "Fixpoint"   cmd))
+             (export-theorem-deffix  result subcmd))
 
             ((search "Lemma" cmd)
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result subcmd))
+             (export-theorem-comment result subcmd))
 
             ((search "Proof" cmd)
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result name))
+             (export-theorem-comment result name))
 
             ((search "Theorem" cmd)
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result subcmd))
+             (export-theorem-comment result subcmd))
 
             ((or (search "Qed."     cmd)
                  (search "Defined." cmd))
-             (proof-assert-next-command-interactive)
-             (setf tactic-level     (append tactic-level
-                                            (list (compute-tactic-result     name))))
-             (setf proof-tree-level (append proof-tree-level
-                                            (list (compute-proof-tree-result name))))
-             (when name
-               (split-feature-vector name (flat (reverse result))))
-             (ignore-errors (addthm name)))
+             (export-theorem-defined   name result))
 
             (t
-             (get-hypotheses)
-             (setf ts (get-top-symbol))
-             (setf ng (get-number-of-goals))
-             (proof-assert-next-command-interactive)
-             (setf ng2 (get-number-of-goals))
-             (export-theorem-aux2 (cons (append (get-numbers cmd ts current-level)
-                                                (list ts)
-                                                (list ng2))
-                                        result)
-                                  name)
-             (add-info-to-level (list 0 0 0 0 0 0 0 0 0 0 0 ng2 (if (< ng2 ng) 1 0))
-                                current-level)
-             (setf current-level (1+ current-level)))))))
+             (export-theorem-otherwise cmd  result name))))))
 
 (defun split-feature-vector (name fv)
   (let ((len (1+ (floor (length fv) 30))))
