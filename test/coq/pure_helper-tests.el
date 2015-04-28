@@ -248,3 +248,15 @@
       (unless (member char control-chars)
         (should (search (string char)
                         (strip-control-chars str)))))))
+
+(test-with between-spaces-equiv
+  "Test whether a particular use of search is equivalent to between-spaces"
+  (list-of (gen-string) (gen-string) (gen-string))
+  (lambda (str1 str2 str3)
+    (let* ((str     (concat str1 " " str2 " " str3))
+           (between (between-spaces str))
+           (bit1    (search " " str))
+           (bit2    (1+ (or bit1 0)))
+           (bit3    (search " " str :start2 bit2))
+           (substr  (subseq str bit2 bit3)))
+      (should (equal substr between)))))

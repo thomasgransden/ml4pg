@@ -13,8 +13,11 @@
   (subseq str (+ (length pattern) (search pattern str))))
 
 (defun between-spaces (txt)
-  (let ((space (after-space txt)))
-    (subseq txt space (search " " txt :start2 space))))
+  (let* ((fst (after-space txt))
+         (snd (search " " txt :start2 fst)))
+    (unless fst (error "No spaces in '%s'" txt))
+    (unless snd (error "Only one space in '%s'" txt))
+    (subseq txt fst snd)))
 
 (defun first-dot (txt)
   "Find the position of the first dot in a string"

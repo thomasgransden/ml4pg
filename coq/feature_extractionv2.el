@@ -476,84 +476,112 @@
                                                  (1+ i)
                                                  up down same)))))
 
+(defun export-theorem-comment (result name args)
+  (proof-assert-next-command-interactive)
+  (export-theorem-aux2 result name args))
+
+(defun export-theorem-problematic ()
+  (search-forward "Defined")
+  (proof-goto-point)
+  (proof-assert-next-command-interactive))
+
+(defun export-theorem-deffix (result subcmd args)
+  (proof-assert-next-command-interactive)
+  (ignore-errors (adddefinition subcmd))
+  (export-theorem-aux2 result subcmd args)
+  (proof-assert-next-command-interactive))
+
+(defun export-theorem-lemma (result cmd args)
+  (proof-assert-next-command-interactive)
+  (export-theorem-aux2 result (rem-jumps cmd) args))
+
+(defun export-theorem-proof (result name args)
+  (proof-assert-next-command-interactive)
+  (export-theorem-aux2 result name args))
+
+(defun export-theorem-instance (result cmd args)
+  (proof-assert-next-command-interactive)
+  (export-theorem-aux2 result (rem-jumps cmd) args))
+
+(defun export-theorem-theorem (result cmd args)
+  (proof-assert-next-command-interactive)
+  (export-theorem-aux2 result (rem-jumps cmd) args))
+
+(defun export-theorem-remark (result cmd args)
+  (proof-assert-next-command-interactive)
+  (export-theorem-aux2 result (rem-jumps cmd) args))
+
+(defun export-theorem-corollary (result cmd args)
+  (proof-assert-next-command-interactive)
+  (export-theorem-aux2 result (rem-jumps cmd) args))
+
+(defun export-theorem-defined (name result)
+  (proof-assert-next-command-interactive)
+  (setf proof-tree-level (append proof-tree-level (list (compute-proof-result))))
+  (setf tactic-level (append tactic-level (list (compute-tactic-result))))
+  (if name
+      (split-feature-vector name (flat (reverse result))))
+  (ignore-errors (addthm name)))
+
+(defun export-theorem-otherwise (cmd result args name)
+  (let ((try-ts (get-top-symbol (lambda (x) nil))))
+    (when try-ts
+      (setf ts try-ts)
+      (setf ng  (get-number-of-goals))
+      (proof-assert-next-command-interactive)
+      (setf ng2 (get-number-of-goals))
+      (let ((arg (look-through-commands cmd result ts (nth 0 args))))
+        (export-theorem-aux2 arg name (apply (nth (cond ((< ng  ng2) 3)
+                                                        ((< ng2 ng)  4)
+                                                        (t           5)) args)
+                                             args))))))
+
 (defun export-theorem-aux2 (result name args)
-  (message "EXPORTING %s" name)
-  (let* ((semis     (save-excursion
-                      (skip-chars-backward " \t\n"
-                                           (proof-queue-or-locked-end))
-                      (proof-segment-up-to-using-cache (point))))
-         (comment   (caar  semis))
-         (cmd       (cadar semis))
-         (ts        nil))
+  (message "EXPORTING %S" name)
+  (let* ((semis   (save-excursion
+                    (skip-chars-backward " \t\n"
+                                         (proof-queue-or-locked-end))
+                    (proof-segment-up-to-using-cache (point))))
+         (comment (caar  semis))
+         (cmd     (cadar semis))
+         (subcmd  (ignore-errors (between-spaces cmd)))
+         (ts      nil))
 
     (cond ((or (string= comment "comment")
                (is-in-search cmd))
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result name args))
+             (export-theorem-comment result name args))
 
           ((is-problematic cmd)
-             (search-forward "Defined")
-             (proof-goto-point)
-             (proof-assert-next-command-interactive))
+             (export-theorem-problematic))
 
           ((or (search "Definition" cmd)
                (search "Fixpoint"   cmd))
-             (proof-assert-next-command-interactive)
-             (ignore-errors(adddefinition (between-spaces cmd)))
-             (export-theorem-aux2 result (between-spaces cmd) args)
-             (proof-assert-next-command-interactive))
+             (export-theorem-deffix result subcmd args))
 
           ((search "Lemma" cmd)
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result (rem-jumps cmd) args))
+             (export-theorem-lemma result cmd args))
 
           ((search "Proof" cmd)
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result name args))
+             (export-theorem-proof result name args))
 
           ((search "Instance" cmd)
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result (rem-jumps cmd) args))
+             (export-theorem-instance result name args))
 
           ((search "Theorem" cmd)
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result (rem-jumps cmd) args))
+             (export-theorem-theorem result cmd args))
 
           ((search "Remark" cmd)
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result (rem-jumps cmd) args))
+             (export-theorem-remark result cmd args))
 
           ((search "Corollary" cmd)
-             (proof-assert-next-command-interactive)
-             (export-theorem-aux2 result (rem-jumps cmd) args))
+             (export-theorem-corollary result cmd args))
 
           ((or (search "Qed." cmd)
                (search "Defined." cmd))
-             (proof-assert-next-command-interactive)
-             (setf proof-tree-level (append proof-tree-level (list (compute-proof-result))))
-             (setf tactic-level (append tactic-level (list (compute-tactic-result))))
-             (if name
-                 (split-feature-vector name (flat (reverse result))))
-             (ignore-errors (addthm name)))
+             (export-theorem-defined name result))
 
           (t
-           (let ((try-ts (get-top-symbol (lambda (x) nil))))
-             (when try-ts
-               (setf ts try-ts)
-               (setf ng (get-number-of-goals))
-               (proof-assert-next-command-interactive)
-               (setf ng2 (get-number-of-goals))
-               (let ((arg (look-through-commands cmd result ts (nth 0 args)))
-                     (j   (1+ i)))
-                 (cond
-                  ((< ng ng2)
-                   (export-theorem-aux2 arg name (apply (nth 3 args) args)))
-
-                  ((< ng2 ng)
-                   (export-theorem-aux2 arg name (apply (nth 4 args) args)))
-
-                  (t
-                   (export-theorem-aux2 arg name (apply (nth 5 args) args)))))))))))
+           (export-theorem-otherwise cmd result args name)))))
 
 (defun look-through-commands (cmd start-result ts current-level)
   (do ((cmds       (list-of-commands cmd)
