@@ -495,26 +495,6 @@
   (proof-assert-next-command-interactive)
   (export-theorem-aux2 result (rem-jumps cmd) args))
 
-(defun export-theorem-proof (result name args)
-  (proof-assert-next-command-interactive)
-  (export-theorem-aux2 result name args))
-
-(defun export-theorem-instance (result cmd args)
-  (proof-assert-next-command-interactive)
-  (export-theorem-aux2 result (rem-jumps cmd) args))
-
-(defun export-theorem-theorem (result cmd args)
-  (proof-assert-next-command-interactive)
-  (export-theorem-aux2 result (rem-jumps cmd) args))
-
-(defun export-theorem-remark (result cmd args)
-  (proof-assert-next-command-interactive)
-  (export-theorem-aux2 result (rem-jumps cmd) args))
-
-(defun export-theorem-corollary (result cmd args)
-  (proof-assert-next-command-interactive)
-  (export-theorem-aux2 result (rem-jumps cmd) args))
-
 (defun export-theorem-defined (name result)
   (proof-assert-next-command-interactive)
   (setf proof-tree-level (append proof-tree-level (list (compute-proof-result))))
@@ -562,19 +542,13 @@
              (export-theorem-lemma result cmd args))
 
           ((search "Proof" cmd)
-             (export-theorem-proof result name args))
+             (export-theorem-comment result name args))
 
-          ((search "Instance" cmd)
-             (export-theorem-instance result name args))
-
-          ((search "Theorem" cmd)
-             (export-theorem-theorem result cmd args))
-
-          ((search "Remark" cmd)
-             (export-theorem-remark result cmd args))
-
-          ((search "Corollary" cmd)
-             (export-theorem-corollary result cmd args))
+          ((or (search "Instance" cmd)
+               (search "Theorem" cmd)
+               (search "Remark" cmd)
+               (search "Corollary" cmd))
+             (export-theorem-lemma result name args))
 
           ((or (search "Qed." cmd)
                (search "Defined." cmd))
