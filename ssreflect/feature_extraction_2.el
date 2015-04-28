@@ -887,29 +887,9 @@
   (message "GETTING HYPOTHESES"))
 
 (defun export-theorem-aux (result name)
-  (export-theorem-aux2 result name))
+  (export-theorem-aux2 result name nil))
 
-(defun export-theorem-comment (result name)
-  (proof-assert-next-command-interactive)
-  (export-theorem-aux2 result name))
-
-(defun export-theorem-deffix (result subcmd)
-  (proof-assert-next-command-interactive)
-  (ignore-errors (adddefinition subcmd))
-  (export-theorem-aux2 result subcmd)
-  (proof-assert-next-command-interactive))
-
-(defun export-theorem-defined (name result)
-  (proof-assert-next-command-interactive)
-  (setf tactic-level     (append tactic-level
-                                 (list (compute-tactic-result     name))))
-  (setf proof-tree-level (append proof-tree-level
-                                 (list (compute-proof-tree-result name))))
-  (when name
-    (split-feature-vector name (flat (reverse result))))
-  (ignore-errors (addthm name)))
-
-(defun export-theorem-otherwise (cmd result name)
+(defun export-theorem-otherwise (cmd result name args)
   (get-hypotheses)
   (setf ts  (get-top-symbol))
   (setf ng  (get-number-of-goals))
@@ -919,12 +899,13 @@
                                      (list ts)
                                      (list ng2))
                              result)
-                       name)
+                       name
+                       args)
   (add-info-to-level (list 0 0 0 0 0 0 0 0 0 0 0 ng2 (if (< ng2 ng) 1 0))
                      current-level)
   (setf current-level (1+ current-level)))
 
-(defun export-theorem-aux2 (result name)
+(defun export-theorem-aux2 (result name args)
   (let* ((semis   (save-excursion
                     (skip-chars-backward " \t\n"
                                          (proof-queue-or-locked-end))
@@ -937,27 +918,27 @@
     (when semis
       (cond ((or (string= comment "comment")
                  (is-in-search cmd))
-             (export-theorem-comment result name))
+             (export-theorem-comment result name   args))
 
             ((or (search "Definition" cmd)
                  (search "Fixpoint"   cmd))
-             (export-theorem-deffix  result subcmd))
+             (export-theorem-deffix  result subcmd args))
 
             ((search "Lemma" cmd)
-             (export-theorem-comment result subcmd))
+             (export-theorem-comment result subcmd args))
 
             ((search "Proof" cmd)
-             (export-theorem-comment result name))
+             (export-theorem-comment result name   args))
 
             ((search "Theorem" cmd)
-             (export-theorem-comment result subcmd))
+             (export-theorem-comment result subcmd args))
 
             ((or (search "Qed."     cmd)
                  (search "Defined." cmd))
-             (export-theorem-defined   name result))
+             (export-theorem-defined   name result args))
 
             (t
-             (export-theorem-otherwise cmd  result name))))))
+             (export-theorem-otherwise cmd  result name args))))))
 
 (defun split-feature-vector (name fv)
   (let ((len (1+ (floor (length fv) 30))))

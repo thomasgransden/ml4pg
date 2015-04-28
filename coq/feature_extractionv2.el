@@ -430,14 +430,14 @@
   (let ((r (do-show-proof)))
     (count-seq "?" r)))
 
-(defun compute-proof-result ()
+(defun compute-proof-tree-result (name)
   (append (obtain-level tdl1 1)
-      (obtain-level tdl2 2)
-      (obtain-level tdl3 3)
-      (obtain-level tdl4 4)
-      (obtain-level tdl5 5)))
+          (obtain-level tdl2 2)
+          (obtain-level tdl3 3)
+          (obtain-level tdl4 4)
+          (obtain-level tdl5 5)))
 
-(defun compute-tactic-result ()
+(defun compute-tactic-result (name)
   (append (obtain-tactic-result intro)
           (obtain-tactic-result case)
           (obtain-tactic-result simpltrivial)
@@ -476,10 +476,6 @@
                                                  (1+ i)
                                                  up down same)))))
 
-(defun export-theorem-comment (result name args)
-  (proof-assert-next-command-interactive)
-  (export-theorem-aux2 result name args))
-
 (defun export-theorem-lemma (result cmd args)
   (export-theorem-comment result (rem-jumps cmd) args))
 
@@ -487,20 +483,6 @@
   (search-forward "Defined")
   (proof-goto-point)
   (proof-assert-next-command-interactive))
-
-(defun export-theorem-deffix (result subcmd args)
-  (proof-assert-next-command-interactive)
-  (ignore-errors (adddefinition subcmd))
-  (export-theorem-aux2 result subcmd args)
-  (proof-assert-next-command-interactive))
-
-(defun export-theorem-defined (name result)
-  (proof-assert-next-command-interactive)
-  (setf proof-tree-level (append proof-tree-level (list (compute-proof-result))))
-  (setf tactic-level (append tactic-level (list (compute-tactic-result))))
-  (if name
-      (split-feature-vector name (flat (reverse result))))
-  (ignore-errors (addthm name)))
 
 (defun export-theorem-otherwise (cmd result args name)
   (let ((try-ts (get-top-symbol (lambda (x) nil))))
