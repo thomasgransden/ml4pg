@@ -15,7 +15,6 @@
                                     res)))
       res)))
 
-
 (defun split-frequencies (str res)
   (let ((init (search "[" str)))
     (if init
@@ -27,16 +26,15 @@
       res)))
 
 (defun remove-jumps (str)
-  (do ((temp str)
-       (temp2 "")
-       (i 0 (1+ i))
-       (jump (search "\n" str)))
-      ((not jump)
-       (if (= i 0)
-           str temp2))
-    (progn (setf temp2 (concatenate 'string temp2 (subseq temp 0 jump)))
-           (setf temp (subseq temp (1+ jump)))
-           (setf jump (search "\n" temp)))))
+  (let ((jump (search "\n" str)))
+    (if jump
+        (do ((temp   str)
+             (result ""))
+            ((not jump) result)
+          (setf result (concat result (subseq temp 0 jump)))
+          (setf temp   (subseq temp (1+ jump)))
+          (setf jump   (search "\n" temp)))
+        str)))
 
 (defun cluster-string-to-list (cluster)
   (do ((temp cluster)
@@ -54,9 +52,6 @@
     (if (not (equal (format "%s" n)
                     (car temp)))
         (setf temp2 (append temp2 (list (car temp)))))))
-
-(defun print-similarities (res)
-  (print-similarities-aux (lambda (&rest args)) res))
 
 (defun insert-button-lemma (lemma)
   (progn (insert-button lemma 'action (insert-button-lemma-macro lemma)
@@ -216,8 +211,6 @@
            (5 2)
            (t 8))))
 
-(defun show-clusters ())
-
 (defun show-clusters-bis ()
   (interactive)
   (setf saved-theorems (remove-nil-cases))
@@ -281,7 +274,3 @@
 (defvar names-values nil)
 
 (defvar granularity-dynamic 0)
-
-(defun show-clusters-dynamic ())
-
-(defun show-clusters-dynamic-b ())

@@ -1,20 +1,17 @@
 (require 'cl)
 
-;; Obtain definition and clean the term
-
 (defun obtain-definition (name)
+  "Obtain definition and clean the term"
   (send-coq-cmd (format "Print %s" name)))
 
 (defun remove-jumps (str)
-  (do ((temp str)
-       (jump (search "\n" str))
-       (temp2 ""))
-      ((not jump)
-       (concatenate 'string temp2 temp))
-
-    (progn (setf temp2 (concatenate 'string temp2 (subseq temp 0 jump) " "))
-           (setf temp (subseq temp (1+ jump)))
-           (setf jump (search "\n" temp)))))
+  (do ((temp   str)
+       (result "")
+       (jump   (search "\n" str)))
+      ((not jump) (concat result temp))
+    (setf result (concat result (subseq temp 0 jump) " "))
+    (setf temp   (subseq temp (1+ jump)))
+    (setf jump   (search "\n" temp))))
 
 (defun remove-argument (string)
   (subseq string 0 (search "Argument" string)))

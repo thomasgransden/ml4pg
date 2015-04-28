@@ -1,5 +1,3 @@
-(defun print-similarities-aux ())
-
 (defun print-similarities-weka-str (n str)
   (print-similarities-weka-aux n (extract-clusters-from-file-aux str)))
 

@@ -43,11 +43,6 @@
                     (car temp)))
         (setf temp2 (append temp2 (list (car temp)))))))
 
-(defun print-similarities (res)
-  (print-similarities-aux (lambda (temp2)
-                            (insert (format " (%s)\n" (which-patch (1- (car temp2)) 1))))
-                          res))
-
 (defun insert-button-lemma (lemma)
   (progn (insert-button lemma 'action (insert-button-lemma-macro lemma)
                         'face (list 'link)
@@ -209,8 +204,6 @@
   (show-clusters-of-theorem-aux (lambda (size gra) gra)
                                 (lambda ())))
 
-(defun show-clusters ())
-
 (defun show-clusters-bis ()
   (interactive)
   (let* ((alg  (if (string= "g" algorithm) "gaussian_clusters"
@@ -261,7 +254,3 @@
 (defvar names-values nil)
 
 (defvar granularity-dynamic 0)
-
-(defun show-clusters-dynamic ())
-
-(defun show-clusters-dynamic-b ())
