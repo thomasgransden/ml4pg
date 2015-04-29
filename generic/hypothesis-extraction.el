@@ -7,11 +7,13 @@
 (defun get-hypotheses ()
   ;; Die if there's no *goals* buffer
   (unless proof-goals-buffer
-    (error "No 'goals' buffer to get hypotheses from"))
+    (error "No 'goals' buffer to get hypotheses from: %S" (buffer-list)))
 
   ;; Switch to *goals* buffer
   (with-current-buffer proof-goals-buffer
-    (get-hypotheses-from (buffer-string))))
+    (let ((str (buffer-substring-no-properties (point-min) (point-max))))
+      (message "GOALS BUFFER:\n%s\n" str)
+      (get-hypotheses-from str))))
 
 (defun get-hypotheses-from (str)
   (let ((hypotheses  nil)

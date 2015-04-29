@@ -291,3 +291,17 @@
                                      :style toggle
                                      :help "Use the current library for clustering"]
                                     (select-libraries))))))
+
+(defun step-over-proof ()
+  "Step forward by one command; if it wasn't 'Proof.', step back again."
+  (let* ((start (proof-queue-or-locked-end))
+         (foo   (proof-assert-next-command-interactive))
+         (end   (proof-queue-or-locked-end))
+         (cmd   (remove-whitespace
+                 (buffer-substring-no-properties start end))))
+    (message "Stepped from %s to %s, over '%s'" start end cmd)
+    (unless (equal "Proof." cmd)
+      (message "Retreating from %s back to %s" end start)
+      (goto-char start)
+      (proof-goto-point)
+      (message "Reached %s" (proof-queue-or-locked-end)))))
