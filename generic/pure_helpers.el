@@ -325,3 +325,46 @@
 
 (defun strip-control-chars (str)
   (apply 'strip-str (cons str (mapcar 'string control-chars))))
+
+(defun zip-with (func list1 list2)
+  (let ((result nil))
+    (dotimes (n (min (length list1) (length list2)) result)
+      (append-to result (funcall func (nth n list1) (nth n list2))))))
+
+(defun max-two-lists (list1 list2)
+  (zip-with 'max (take-30 (append list1 (generate-zeros 24)))
+            (take-30 (append list2 (generate-zeros 24)))))
+
+
+(defun min-two-lists (list1 list2)
+  (zip-with 'min (take-30 (append list1 (generate-zeros 24)))
+            (take-30 (append list2 (generate-zeros 24)))))
+
+(defun max-position (list)
+  (let ((maxp (generate-zeros (length (car list)))))
+    (dolist (elem list maxp)
+      (setf maxp (max-two-lists maxp elem)))))
+
+(defun min-position (list)
+  (let ((minp (generate-zeros (length (car list)))))
+    (dolist (elem list minp)
+      (setf minp (min-two-lists minp elem)))))
+
+(defun normalize-list (list maxp minp)
+  (do ((temp     (take-30 (append list (generate-zeros 24))) (cdr temp))
+       (temp-max maxp (cdr temp-max))
+       (temp-min minp (cdr temp-min))
+       (temp2    nil))
+      ((endp temp) temp2)
+    (setf temp2 (append temp2 (list
+                               (cond ((= 0 (car temp)) 0)
+                                     ((< 0 (car temp))    (/ (+ (car temp) .0) (car temp-max)))
+                                     (t                (- (/ (+ (car temp) .0) (car temp-min))))))))))
+
+(defun normalize (list)
+  "Function to normalize the results"
+  (let ((maxp   (max-position list))
+        (minp   (min-position list))
+        (result nil))
+    (dolist (elem list result)
+      (append-to result (normalize-list elem maxp minp)))))
