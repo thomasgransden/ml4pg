@@ -485,6 +485,7 @@
   (proof-assert-next-command-interactive))
 
 (defun export-theorem-otherwise (cmd result args name)
+  (get-hypotheses)
   (let ((try-ts (get-top-symbol (lambda (x) nil))))
     (when try-ts
       (setf ts try-ts)
@@ -508,7 +509,8 @@
          (subcmd  (ignore-errors (between-spaces cmd)))
          (subname (ignore-errors (between-spaces name)))
          (ts      nil))
-
+    (message "SEMIS %S\n\nCOMMENT %S\n\nCMD %S\n\nSUBCMD %S\n\nSUBNAME %S\n\n"
+             semis comment cmd subcmd subname)
     (cond ((or (string= comment "comment")
                (is-in-search cmd))
              (export-theorem-comment result name args))

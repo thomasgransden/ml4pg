@@ -100,6 +100,6 @@
     (with-temp-file path
       (insert-file-contents-literally (concat home-dir "ml4pg.v")))
     (unwind-protect
-        (find-file path)
-      (funcall f)
+        (progn (find-file path)
+               (funcall f))
       (delete-file path))))

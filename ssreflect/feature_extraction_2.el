@@ -880,12 +880,6 @@
     (if tdl4 tdl4 (generate-zeros 13))
     (if tdl5 tdl5 (generate-zeros 13))))))
 
-(defvar proof-hypotheses nil
-  "Build up the hypotheses available at each steop in each proof")
-
-(defun get-hypotheses ()
-  (message "GETTING HYPOTHESES"))
-
 (defun export-theorem-aux (result name)
   (export-theorem-aux2 result name nil))
 
