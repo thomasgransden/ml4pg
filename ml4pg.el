@@ -42,7 +42,9 @@
 (defun select-mode ()
   (interactive)
   (let* ((msg   "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")
-         (smode (if noninteractive mode (read-string msg))))
+         (smode (if (or noninteractive mode)
+                    mode
+                    (read-string msg))))
     (unless (equal smode mode)
       (setq mode (case smode
                    ("s" "ssreflect")

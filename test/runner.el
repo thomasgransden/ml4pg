@@ -13,16 +13,16 @@
                                        nil
                                        ".*-tests\.el"))))
 
-(defun ml4pg-run-tests ()
+(defun ml4pg-run-tests (&optional test)
   (interactive)
   (let ((debug-on-error t))
-    (funcall (if noninteractive 'ert-run-tests-batch 'ert) "^ml4pg-")))
+    (funcall (if noninteractive 'ert-run-tests-batch 'ert) (or test "^ml4pg-"))))
 
-(defun ml4pg-reload-and-test (type)
+(defun ml4pg-reload-and-test (type &optional test)
   (interactive)
   (ml4pg-reload type)
   (ml4pg-load-tests type)
-  (ml4pg-run-tests))
+  (ml4pg-run-tests test))
 
 (setenv "ML4PG_TYPE" (or (getenv "ML4PG_TYPE") (getenv "TEST_SUITE") "coq"))
-(ml4pg-reload-and-test (getenv "ML4PG_TYPE"))
+(ml4pg-reload-and-test (getenv "ML4PG_TYPE") (getenv "ML4PG_TEST_PATTERN"))

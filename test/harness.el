@@ -102,4 +102,5 @@
     (unwind-protect
         (progn (find-file path)
                (funcall f))
-      (delete-file path))))
+      (delete-file path)
+      (proof-script-remove-all-spans-and-deactivate))))
