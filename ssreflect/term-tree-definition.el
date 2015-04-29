@@ -6,6 +6,7 @@
   (send-coq-cmd (format "Print %s" name)))
 
 (defun remove-jumps (string)
+  (message "WARNING: using the remove-jumps from ssreflect/term-tree-definition.el")
   (message "FIXME: is remove-jumps just replace-regexp-in-string?")
   (do ((temp0 string)
        (jump  (search "\n" string))

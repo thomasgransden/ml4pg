@@ -26,6 +26,7 @@
       res)))
 
 (defun remove-jumps (str)
+  (message "WARNING: using the remove-jumps from coq/matlab-interaction.el")
   (let ((jump (search "\n" str)))
     (if jump
         (do ((temp   str)

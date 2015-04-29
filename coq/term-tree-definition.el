@@ -5,6 +5,7 @@
   (send-coq-cmd (format "Print %s" name)))
 
 (defun remove-jumps (str)
+  (message "WARNING: using the remove-jumps from coq/term-tree-definition.el")
   (do ((temp   str)
        (result "")
        (jump   (search "\n" str)))

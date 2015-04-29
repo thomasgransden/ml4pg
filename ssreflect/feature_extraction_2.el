@@ -127,19 +127,18 @@
   (export-theorem-aux nil nil)
   (send-coq-cmd (format "Unset Printing All")))
 
-;; A function to obtain the type associated with an object
-
 (defun remove-jumps-aux (string res)
-  (let ((jump (search "
-" string)))
+  (let ((jump (search nl string)))
     (if jump
-    (remove-jumps-aux (subseq string (1+ jump)) (concat res (subseq string 0 jump)))
-      (concat res string))))
+        (remove-jumps-aux (subseq string (1+ jump)) (concat res (subseq string 0 jump)))
+        (concat res string))))
 
 (defun remove-jumps (string)
+  (message "WARNING: using the remove-jumps from ssreflect/feature_extraction_2.el")
   (remove-jumps-aux string ""))
 
 (defun get-type-id (object)
+  "A function to obtain the type associated with an object"
   (if (string= "(" (subseq object 0 1))
       -4
       (let* ((a         (remove-jumps (send-coq-cmd (concat "Check " object))))
