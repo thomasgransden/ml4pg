@@ -34,9 +34,11 @@
   "We go forwards by one commands iff it's 'Proof.'"
   (list-of (gen-num))
   (lambda (n)
+    (ignore-errors (proof-shell-exit t))
     (with-coq-example
      `(lambda ()
         ;; Choose the nth occurence of "Proof."
+        (proof-shell-start)
         (goto-char (point-min))
         (search-forward "Proof.")
         (let* ((matches (match-data t))
@@ -44,11 +46,11 @@
                (match   (nth index matches)))
 
           ;; Ensure we step over the "Proof."
-          (goto-char (1- match))
+          (goto-char (- match (length "Proof.")))
           (proof-goto-point)
+
           (let ((start (proof-queue-or-locked-end)))
             (step-over-proof)
-            (message "STEPPED OVER %s" (buffer-substring start (proof-queue-or-locked-end)))
             (should (> (proof-queue-or-locked-end) start)))
 
           ;; Move away from the "Proof." command and ensure we *don't* step over
@@ -56,5 +58,4 @@
           (proof-assert-next-command-interactive)
           (let ((start (proof-queue-or-locked-end)))
             (step-over-proof)
-            (message "SHOULD BE EMPTY '%s'" (buffer-substring start (proof-queue-or-locked-end)))
             (should (equal (proof-queue-or-locked-end) start))))))))

@@ -485,7 +485,7 @@
   (proof-assert-next-command-interactive))
 
 (defun export-theorem-otherwise (cmd result args name)
-  (get-hypotheses)
+  ;(get-hypotheses)
   (let ((try-ts (get-top-symbol (lambda (x) nil))))
     (when try-ts
       (setf ts try-ts)
@@ -498,19 +498,19 @@
                                                         (t           5)) args)
                                              args))))))
 
+(defun get-semis ()
+  (save-excursion
+    (skip-chars-backward " \t\n"
+                         (proof-queue-or-locked-end))
+    (proof-segment-up-to-using-cache (point))))
+
 (defun export-theorem-aux2 (result name args)
-  (message "EXPORTING %S" name)
-  (let* ((semis   (save-excursion
-                    (skip-chars-backward " \t\n"
-                                         (proof-queue-or-locked-end))
-                    (proof-segment-up-to-using-cache (point))))
+  (let* ((semis   (get-semis))
          (comment (caar  semis))
          (cmd     (cadar semis))
          (subcmd  (ignore-errors (between-spaces cmd)))
          (subname (ignore-errors (between-spaces name)))
          (ts      nil))
-    (message "SEMIS %S\n\nCOMMENT %S\n\nCMD %S\n\nSUBCMD %S\n\nSUBNAME %S\n\n"
-             semis comment cmd subcmd subname)
     (cond ((or (string= comment "comment")
                (is-in-search cmd))
              (export-theorem-comment result name args))
@@ -612,18 +612,19 @@
         simpl        nil
         rewrite      nil
         trivial      nil)
-  (let ((final         (point))
-        (result        nil)
-        (try-ts        t)
-        (current-level 1))
+  (let* ((final         (point))
+         (result        nil)
+         (last          final)
+         (try-ts        t)
+         (current-level 1))
     (when (search-backward "Proof." nil t)
       (proof-goto-point)
+      (setf last (1- (point)))
       (while (and (< (point) final)
+                  (> (point) last)
                   try-ts)
-        (let* ((semis     (save-excursion
-                            (skip-chars-backward " \t\n"
-                                                 (proof-queue-or-locked-end))
-                            (proof-segment-up-to-using-cache (point))))
+        (setf last (point))
+        (let* ((semis     (get-semis))
                (comment   (caar semis))
                (cmd       (cadar semis))
                (pos_dot   (first-dot cmd))
@@ -666,12 +667,10 @@
   (interactive)
   (let ((final         (point))
         (current-level 1)
-        (pre           (proof-queue-or-locked-end))
-        (foo           (export-theorem))
+        (pre           -1)
         (post          (proof-queue-or-locked-end)))
     (while (and (>  post   pre)
                 (< (point) final))
-      (message "LOOP")
       (export-theorem)
       (setq pre  post)
       (setq post (proof-queue-or-locked-end))))

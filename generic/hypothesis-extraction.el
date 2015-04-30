@@ -12,7 +12,6 @@
   ;; Switch to *goals* buffer
   (with-current-buffer proof-goals-buffer
     (let ((str (buffer-substring-no-properties (point-min) (point-max))))
-      (message "GOALS BUFFER:\n%s\n" str)
       (get-hypotheses-from str))))
 
 (defun get-hypotheses-from (str)

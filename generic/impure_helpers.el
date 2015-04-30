@@ -299,9 +299,8 @@
          (end   (proof-queue-or-locked-end))
          (cmd   (remove-whitespace
                  (buffer-substring-no-properties start end))))
-    (message "Stepped from %s to %s, over '%s'" start end cmd)
     (unless (equal "Proof." cmd)
-      (message "Retreating from %s back to %s" end start)
       (goto-char start)
+      (sit-for 0.5)
       (proof-goto-point)
-      (message "Reached %s" (proof-queue-or-locked-end)))))
+      (sit-for 0.5))))
