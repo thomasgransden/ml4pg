@@ -54,23 +54,24 @@
 
 (defun replacecluster (cluster1 cluster2)
   (if cluster2
-      (let ((elem (car cluster2)))
-        (if (listp elem)
-            (if (issubcluster cluster1 elem)
-                (cons (replacecluster cluster1 elem)
-                      (cdr cluster2))
-              (cons elem
-                    (replacecluster cluster1 (cdr cluster2))))
-          (if (member elem cluster1)
-              (replacecluster cluster1 (cdr cluster2))
-            (cons elem (replacecluster cluster1 (cdr cluster2))))))
-    (list cluster1)))
+      (let ((head (car cluster2))
+            (tail (cdr cluster2)))
+        (if (listp head)
+            (if (issubcluster cluster1 head)
+                (cons      (replacecluster cluster1 head) tail)
+                (cons head (replacecluster cluster1 tail)))
+            (let ((rec (replacecluster cluster1 tail)))
+              (if (member head cluster1)
+                             rec
+                  (cons head rec)))))
+      (list cluster1)))
 
 (defun replace-subclusters (cluster)
   `(lambda (elem)
      (if (issubcluster ',cluster elem)
-         (replacecluster ',cluster elem)
-       elem)))
+         (progn (message "FIXME: replacecluster uses a dangerous amount of stack!")
+                (replacecluster ',cluster elem))
+          elem)))
 
 (defun subclusters (cluster clusters)
   "Return a copy of CLUSTERS which contains CLUSTER as an element"
