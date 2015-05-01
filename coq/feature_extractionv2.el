@@ -485,7 +485,7 @@
   (proof-assert-next-command-interactive))
 
 (defun export-theorem-otherwise (cmd result args name)
-  ;(get-hypotheses)
+  (add-hypotheses name)
   (let ((try-ts (get-top-symbol (lambda (x) nil))))
     (when try-ts
       (setf ts try-ts)
@@ -528,13 +528,13 @@
           ((search "Proof" cmd)
              (export-theorem-comment result name args))
 
-          ((or (search "Instance" cmd)
-               (search "Theorem" cmd)
-               (search "Remark" cmd)
+          ((or (search "Instance"  cmd)
+               (search "Theorem"   cmd)
+               (search "Remark"    cmd)
                (search "Corollary" cmd))
              (export-theorem-lemma result subname args))
 
-          ((or (search "Qed." cmd)
+          ((or (search "Qed."     cmd)
                (search "Defined." cmd))
              (export-theorem-defined name result))
 
@@ -674,7 +674,8 @@
       (export-theorem)
       (setq pre  post)
       (setq post (proof-queue-or-locked-end))))
-  (setf saved-theorems (remove-nil-cases)))
+  (setf saved-theorems (remove-nil-cases))
+  (write-hypotheses))
 
 (defun remove-nil-cases ()
   (do ((all-theorems  saved-theorems (cdr all-theorems))
