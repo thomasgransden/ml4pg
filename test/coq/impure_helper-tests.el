@@ -59,3 +59,36 @@
           (let ((start (proof-queue-or-locked-end)))
             (step-over-proof)
             (should (equal (proof-queue-or-locked-end) start))))))))
+
+(test-with distinct-numbers-are-distinct
+  "No overlap when choosing distinct numbers"
+  (list-of (compose 'choose-distinct '1+ (gen-num)))
+  (lambda (nums)
+    (let ((found nil))
+      (dolist (num nums)
+        (should-not (member num found))
+        (append-to found num)))))
+
+(test-with distinct-numbers-limited
+  "Choosing distinct numbers doesn't go beyond the specified limit"
+  (lambda ()
+    (let ((n (1+ (funcall (gen-num)))))
+      (list n (choose-distinct n))))
+  (lambda (n nums)
+    (dolist (num nums)
+      (should (<= num n)))))
+
+(test-with partitions-sum-correctly
+  "Partitioning up to a number sums to that number"
+  (lambda ()
+    (let ((n (1+ (funcall (gen-num)))))
+      (list n (choose-partitions n))))
+  (lambda (n nums)
+    (should (equal n (apply '+ nums)))))
+
+(test-with no-empty-partitions
+  "Partitioning up to a number does't include 'empty' partitions"
+  (list-of (compose 'choose-partitions '1+ (gen-num)))
+  (lambda (nums)
+    (dolist (num nums)
+      (should (> num 0)))))

@@ -6,9 +6,9 @@
   "Generate t or nil"
   (lambda () (equal (random 2) 0)))
 
-(defun gen-num ()
+(defun gen-num (&optional max)
   "Generate positive random numbers"
-  (lambda () (random ml4pg-test-complexity)))
+  `(lambda () (random (or ,max ml4pg-test-complexity))))
 
 (defun gen-char (&optional source)
   "Generate a random ASCII character. If an optional SOURCE string is given, its
@@ -26,9 +26,9 @@
          (dotimes (i (funcall ,len) str)
            (setq str (concat str (funcall (gen-char)))))))))
 
-(defun gen-nonempty-string ()
+(defun gen-nonempty-string (&optional op-len)
   "Generate a random ASCII string of at least one char"
-  (gen-string (1+ (funcall (gen-num)))))
+  (gen-string (compose '1+ op-len)))
 
 (defun gen-list (elem-gen &optional op-len)
   "Generate a random list, using the given element-generating function, of the
@@ -214,3 +214,44 @@
 
       (when (> opens closes)
         (setq str (concat     str ")"))))))
+
+;; "Sized" generators take an explicit size limit, rather than using
+;; ml4pg-test-complexity, and distribute it amongst 'child' generators.
+;; This lets us generate recursive structures of an arbitrary, but finite,
+;; expected size.
+
+;; Consider 3 examples:
+;; 1) Lists of elements, with random length
+;; 2) Lists of lists (or lists...) of a fixed depth
+;; 3) Trees (lists of lists, of random depth)
+
+;; gen-sized-list, with size S, gives us a list with the guarantee that the
+;; sizes of the elements sum to S (or below). Hence:
+;; 1) We get long lists of small elements, short lists of large elements, or
+;; something in-between. Size is conserved.
+;; 2) Each sub-list gets a smaller size, so size is still conserved: it governs
+;; the total number of "leaf" elements.
+;; 3) Size is still conserved, so trees with a high branching factor will be
+;; shallow; trees with a low branching factor can be deep.
+
+;; Compare this to gen-list, which uses a fixed complexity C:
+;; 1) Each element has complexity C, so the overall complexity increases
+;; geometrically with the length of the list.
+;; 2) Since each sub-list has the same complexity as its parent, complexity
+;; increases exponentially with the depth of the nesting.
+;; 3) Since complexity doesn't decrease, the branching factor is the expected
+;; number of recursive calls at each point. A factor >= 1 generates trees of
+;; infinite expected size. A factor < 1 makes depth decay exponentially.
+
+;; Sized generators don't make much practical difference for case 1; for case 2
+;; they speed up generation considerably; for case 3, they're the only practical
+;; way to generate trees of a useful (not exponentially-shallow) size.
+
+(defun gen-sized-list (elem-gen &optional conserve)
+  "Generate a list using the sized generator ELEM-GEN. If CONSERVE is nil, size
+   may decrease; if non-nil it will be strictly conserved. It never increases!"
+  `(lambda (size)
+     (let ((len (if ,conserve size (random ,size))))
+       (if (= 0 len)
+           nil
+           (mapcar ,elem-gen (choose-partitions len))))))

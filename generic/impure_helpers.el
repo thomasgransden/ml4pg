@@ -305,3 +305,39 @@
       (sit-for 0.5)
       (proof-goto-point)
       (sit-for 0.5))))
+
+(defun choose-distinct (size)
+  "Generates a random number of distinct random numbers, up to SIZE, in order.
+   SIZE must be >= 1. Always returns at least one number. Never returns more
+   than SIZE numbers, since there wouldn't be enough distinct numbers <= SIZE!"
+  (when (< size 1)
+    (error "Can't choose from %s" size))
+  ;; Choose a random number of partitions; from between 1 partition of length
+  ;; SIZE, to SIZE partitions of length 1
+  (let ((n      (1+ (random size)))
+        (result nil))
+    (dotimes (i n result)
+      ;; Choose a random number from 1 to (SIZE - i), since i possibilities have
+      ;; already been taken
+      (let ((x (1+ (random (- size i)))))
+        (append-to result
+                   ;; Step over any preceding choices
+                   (dolist (prev result x)
+                     (when (<= prev x)
+                       (setq x (1+ x)))))
+        (sort result '<)))))
+
+(defun choose-partitions (size)
+  "Choose random positive numbers which sum to SIZE"
+  (let ((result nil)  ;; Resulting list of numbers
+        (prev   0))   ;; The previous number we saw
+    (dolist (elem
+             ;; Loop over some distinct random numbers, in order, less than SIZE
+             (sort (choose-distinct size) '<))
+      ;; Keep the distances between the random numbers
+      (append-to result (- elem prev))
+      (setq prev elem))
+    ;; Treat any remainder as another chunk
+    (when (< prev size)
+      (append-to result (- size prev)))
+    result))

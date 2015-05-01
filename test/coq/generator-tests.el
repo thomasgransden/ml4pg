@@ -143,3 +143,25 @@
   (lambda (str)
     (unless (equal "" str)
       (should-not (equal "\\" (subseq str (1- (length str))))))))
+
+(test-with gen-sized-list-conserves-size
+  "Generating a sized list distributes sizes among elements"
+  (lambda ()
+    (let* ((conserved (funcall (gen-bool)))
+           (size      (1+ (funcall (gen-num))))
+           (sizes     nil)
+           (elem-gen  (lambda (s)
+                        (append-to sizes s)
+                        s))
+           (lst       (funcall (gen-sized-list elem-gen conserved)
+                               size)))
+      (list conserved size sizes lst)))
+  (lambda (conserved size sizes lst)
+    ;; Sanity check
+    (should (equal sizes lst))
+
+    ;; Check size conservation, either strict or up-to
+    (let ((total (apply '+ sizes)))
+      (if conserved
+          (should (=  total size))
+          (should (<= total size))))))
