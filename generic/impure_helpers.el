@@ -300,6 +300,7 @@
          (cmd   (remove-whitespace
                  (buffer-substring-no-properties start end))))
     (unless (equal "Proof." cmd)
+      (message "FIXME: Can we avoid waiting for the prover?")
       (goto-char start)
       (sit-for 0.5)
       (proof-goto-point)

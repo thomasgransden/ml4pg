@@ -32,8 +32,6 @@
     (let* ((content (make-goal-string hypotheses goal n))
            (result  (get-hypotheses-from content))
            (names   (mapcar 'car hypotheses)))
-      (message "NAMES: %S\nRESULT: %S" names result)
-      (message "CONTENT\n\n%s\n\nEND CONTENT" content)
       ; All names should appear in the result list
       (dolist (name names)
         (should (member name result)))
@@ -89,3 +87,77 @@
             ;; Compare
             (proof-shell-exit t)
             (should (equal found ',hypotheses))))))))
+
+(test-with can-set-hypotheses-file
+  "Ensure we can set the file to write hypotheses to"
+  (list-of (gen-string))
+  (lambda (f)
+    (set-hypotheses-file f)
+    (let ((hf hypotheses-file))
+      (set-hypotheses-file nil)
+      (should (equal hf f)))))
+
+(test-with can-read-back-hypotheses
+  "Ensure we can read the hypotheses we've written"
+  (list-of (gen-list (list-of (gen-string) (gen-list (gen-string)))))
+  (lambda (hyps)
+    (let* ((formatted (format-hypotheses hyps))
+           (read-back (car (read-from-string formatted))))
+      (message "HYPS\n\n%S\n\nFORMATTED\n\n%s\n\nREAD BACK\n\n%S"
+               hyps formatted read-back)
+      (should (equal hyps read-back)))))
+
+(defun gen-proof-hypotheses ()
+  "Generate plausible values for proof-hypothesis"
+  (compose (lambda (hyps)
+             "Dedupe based on name"
+             (let ((names  nil)
+                   (result nil))
+               (dolist (def hyps result)
+                 (unless (member (car def) names)
+                   (append-to result def)
+                   (append-to names (car def))))))
+           (gen-list (list-of (gen-string)         ; Names
+                              (gen-hypotheses))))) ; Hypotheses
+
+(defun gen-hypotheses ()
+  "Generate plausible lists of hypotheses"
+  (gen-list (gen-list (gen-string))))
+
+(test-with append-to-hypotheses-name
+  "Appending hypotheses for a name will add that name, if necessary"
+  (list-of (gen-string)
+           (gen-hypotheses)
+           (gen-proof-hypotheses))
+  (lambda (new-name new-hyps hyps)
+    (let* ((result (append-to-hypotheses new-name new-hyps hyps))
+           (names  (mapcar 'car result)))
+      (should (member new-name names)))))
+
+(test-with appending-hypotheses-appends-hypotheses
+  "If we append hypotheses, they appear at the end"
+  (list-of (gen-string)
+           (gen-hypotheses)
+           (gen-proof-hypotheses))
+  (lambda (new-name new-hyps hyps)
+    (dolist (def (append-to-hypotheses new-name new-hyps hyps))
+      (when (equal new-name (car def))
+        (let ((these-hyps (cdr def)))
+          (should (equal new-hyps (car (last these-hyps)))))))))
+
+(test-with appended-hypotheses-remain-intact
+  "Appending hypotheses never removes anything"
+  (list-of (gen-string)
+           (gen-hypotheses)
+           (gen-proof-hypotheses))
+  (lambda (new-name new-hyps hyps)
+    (let* ((result    (append-to-hypotheses new-name new-hyps hyps))
+           (new-names (mapcar 'car result)))
+      (dolist (def hyps)
+        (let ((index (position (car def) new-names)))
+          ;; Each old name should be found in new-names
+          (should index)
+          ;; The hypotheses for each old step should be found in result
+          (dotimes (step (length (cdr def)))
+            (should (equal (nth step (cdr def))
+                           (nth step (cdr (nth index result)))))))))))
