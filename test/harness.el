@@ -39,15 +39,22 @@
 
 (defun write-to-messages (f)
   "Run F in the context of a writable *Messages* buffer"
-  (save-excursion
-    (set-buffer "*Messages*")
-    (goto-char (point-max))
-    (let ((buffer-read-only nil))
-      (funcall f))))
+  ;; FIXME: Make a LISP variable, which initialises to this env var, so we can
+  ;; override it from LISP without altering the environment
+  (if (equal "t" (getenv "SHOW_ARGS"))
+      ;; Regular message output, including to minibuffer/stdout
+      (message (with-temp-buffer
+                 (funcall f)
+                 (buffer-string)))
+      ;; Only write the *Messages*, not to minibuffer/stdout
+      (save-excursion
+        (set-buffer "*Messages*")
+        (goto-char (point-max))
+        (let ((buffer-read-only nil))
+          (funcall f)))))
 
 (defun ml4pg-record-args (args)
-  "Show a test's arguments (ARGS) in the *Messages* buffer, without echoing.
-   Returns the ARGS."
+  "Record a test's arguments (ARGS), to help reproduce failures. Returns ARGS."
   (write-to-messages
    `(lambda ()
       (insert (format "Arguments:\n%s\n"
