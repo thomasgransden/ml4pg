@@ -306,25 +306,27 @@
       (proof-goto-point)
       (sit-for 0.5))))
 
-(defun choose-distinct (size)
-  "Generates a random number of distinct random numbers, up to SIZE, in order.
-   SIZE must be >= 1. Always returns at least one number. Never returns more
-   than SIZE numbers, since there wouldn't be enough distinct numbers <= SIZE!"
-  (when (< size 1)
-    (error "Can't choose from %s" size))
-  ;; Choose a random number of partitions; from between 1 partition of length
-  ;; SIZE, to SIZE partitions of length 1
-  (let ((n      (1+ (random size)))
+(defun choose-distinct (size &optional num)
+  "Generate a sorted list of length NUM, containing distinct random numbers,
+   each less than SIZE.
+   SIZE must be >= 1. If non-nil, NUM must be >= 1 and <= SIZE. If nil, a random
+  number is used."
+  (let ((n      (or num (1+ (random size))))
         (result nil))
+    (when (< size 1)
+      (error "Can't choose from %s" size))
+    (when (or (< n 1) (> n size))
+      (error "Can't choose %s numbers less than %s" n size))
     (dotimes (i n result)
       ;; Choose a random number from 1 to (SIZE - i), since i possibilities have
       ;; already been taken
       (let ((x (1+ (random (- size i)))))
         (append-to result
-                   ;; Step over any preceding choices
+                   ;; Step over preceding choices (relies on the sorting)
                    (dolist (prev result x)
                      (when (<= prev x)
                        (setq x (1+ x)))))
+        ;; Keep result sorted
         (sort result '<)))))
 
 (defun choose-partitions (size)

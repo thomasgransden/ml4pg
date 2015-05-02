@@ -28,7 +28,7 @@
 
 (defun gen-nonempty-string (&optional op-len)
   "Generate a random ASCII string of at least one char"
-  (gen-string (compose '1+ op-len)))
+  (gen-string (compose '1+ (or op-len (gen-num)))))
 
 (defun gen-list (elem-gen &optional op-len)
   "Generate a random list, using the given element-generating function, of the
@@ -251,7 +251,7 @@
   "Generate a list using the sized generator ELEM-GEN. If CONSERVE is nil, size
    may decrease; if non-nil it will be strictly conserved. It never increases!"
   `(lambda (size)
-     (let ((len (if ,conserve size (random ,size))))
+     (let ((len (if ,conserve size (random size))))
        (if (= 0 len)
            nil
            (mapcar ,elem-gen (choose-partitions len))))))

@@ -32,6 +32,8 @@
     (let* ((content (make-goal-string hypotheses goal n))
            (result  (get-hypotheses-from content))
            (names   (mapcar 'car hypotheses)))
+      (test-msg (format "CONTENT\n%s\nEND CONTENT" content))
+      (test-msg (format "RESULT\n%S" result))
       ; All names should appear in the result list
       (dolist (name names)
         (should (member name result)))
@@ -117,17 +119,32 @@
                  (unless (member (car def) names)
                    (append-to result def)
                    (append-to names (car def))))))
-           (gen-list (list-of (gen-string)         ; Names
-                              (gen-hypotheses))))) ; Hypotheses
+           (unsize
+            (gen-sized-list
+             (list-of-sized (unsized (gen-string))  ; Names
+                            (gen-hypotheses))))))   ; Hypotheses
+
+(defun list-of-sized (&rest gens)
+  "Like list-of, but divides up a size between each generator"
+  `(lambda (size)
+     (choose-partitions (length ',gens))))
 
 (defun gen-hypotheses ()
   "Generate plausible lists of hypotheses"
-  (gen-list (gen-list (gen-string))))
+  (gen-sized-list (gen-sized-list (unsized (gen-string)))))
+
+(defmacro unsized (f)
+  `(lambda (size)
+     (funcall ,f)))
+
+(defmacro unsize (f)
+  `(lambda ()
+     (funcall ,f ml4pg-test-complexity)))
 
 (test-with append-to-hypotheses-name
   "Appending hypotheses for a name will add that name, if necessary"
   (list-of (gen-string)
-           (gen-hypotheses)
+           (unsize (gen-hypotheses))
            (gen-proof-hypotheses))
   (lambda (new-name new-hyps hyps)
     (let* ((result (append-to-hypotheses new-name new-hyps hyps))
@@ -137,7 +154,7 @@
 (test-with appending-hypotheses-appends-hypotheses
   "If we append hypotheses, they appear at the end"
   (list-of (gen-string)
-           (gen-hypotheses)
+           (unsize (gen-hypotheses))
            (gen-proof-hypotheses))
   (lambda (new-name new-hyps hyps)
     (dolist (def (append-to-hypotheses new-name new-hyps hyps))
@@ -148,7 +165,7 @@
 (test-with appended-hypotheses-remain-intact
   "Appending hypotheses never removes anything"
   (list-of (gen-string)
-           (gen-hypotheses)
+           (unsize (gen-hypotheses))
            (gen-proof-hypotheses))
   (lambda (new-name new-hyps hyps)
     (let* ((result    (append-to-hypotheses new-name new-hyps hyps))
