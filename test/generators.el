@@ -213,7 +213,12 @@
         (setq str (concat "(" str    )))
 
       (when (> opens closes)
-        (setq str (concat     str ")"))))))
+        (setq str (concat     str ")")))
+
+      ;; Last-ditch effort if we've stripped all characters
+      (if (equal str "")
+          (funcall (gen-readable))
+          str))))
 
 ;; "Sized" generators take an explicit size limit, rather than using
 ;; ml4pg-test-complexity, and distribute it amongst 'child' generators.
@@ -255,3 +260,23 @@
        (if (= 0 len)
            nil
            (mapcar ,elem-gen (choose-partitions len))))))
+
+(defun gen-nested-sized-list (elem-gen depth)
+  (if (= 0 depth)
+      elem-gen
+      (gen-sized-list (gen-nested-sized-list elem-gen (1- depth)))))
+
+(defun gen-nested-list (elem-gen depth)
+  `(lambda ()
+     (funcall (gen-nested-sized-list (unsized ,elem-gen) ,depth)
+              ml4pg-test-complexity)))
+
+(defmacro unsized (f)
+  "Treat a regular generator as sized (the size gets accepted, but ignored)"
+  `(lambda (size)
+     (funcall ,f)))
+
+(defmacro unsize (f)
+  "Provides a size to a sized generator"
+  `(lambda ()
+     (funcall ,f ml4pg-test-complexity)))

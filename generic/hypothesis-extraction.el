@@ -27,8 +27,10 @@
     (dolist (line (split-string str "\n" t) hypotheses)
 
       ;; When the line contains ":", keep the preceding text
-      (let ((colon (search ":" line)))
-        (when colon
+      (let ((colon   (search ":" line))
+            (subgoal (search "subgoal" line)))
+        (when (and colon (not subgoal))
+          (test-msg (format "HYP: %s" line))
           (append-to accumulator
                      (remove-whitespace (subseq line 0 colon)))))
 
@@ -37,20 +39,22 @@
         (setq hypotheses accumulator)))))
 
 (defun add-hypotheses (name)
-  (let (hyps (get-hypotheses))
+  (let ((hyps (get-hypotheses)))
     (setq proof-hypotheses (append-to-hypotheses name hyps proof-hypotheses))))
 
 (defun append-to-hypotheses (name new-hyps hypotheses)
-  (let ((result nil)
-        (found  nil))
-    (dolist (def hypotheses)
-      (if (equal name (car def))
-          (progn (setq found t)
-                 (append-to result (cons name (append (cdr def) (list new-hyps)))))
-          (append-to result def)))
-    (unless found
-      (append-to result (cons name (list new-hyps))))
-    result))
+  (if (equal name "")
+      hypotheses
+      (let ((result nil)
+            (found  nil))
+        (dolist (def hypotheses)
+          (if (equal name (car def))
+              (progn (setq found t)
+                     (append-to result (cons name (append (cdr def) (list new-hyps)))))
+            (append-to result def)))
+        (unless found
+          (append-to result (cons name (list new-hyps))))
+        result)))
 
 (defun write-hypotheses ()
   "Write the hypothesis usage we've discovered to hypotheses-file, if set"

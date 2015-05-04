@@ -105,8 +105,8 @@
   (lambda (hyps)
     (let* ((formatted (format-hypotheses hyps))
            (read-back (car (read-from-string formatted))))
-      (message "HYPS\n\n%S\n\nFORMATTED\n\n%s\n\nREAD BACK\n\n%S"
-               hyps formatted read-back)
+      (test-msg (format "HYPS\n\n%S\n\nFORMATTED\n\n%s\n\nREAD BACK\n\n%S"
+                        hyps formatted read-back))
       (should (equal hyps read-back)))))
 
 (defun gen-proof-hypotheses ()
@@ -133,17 +133,9 @@
   "Generate plausible lists of hypotheses"
   (gen-sized-list (gen-sized-list (unsized (gen-string)))))
 
-(defmacro unsized (f)
-  `(lambda (size)
-     (funcall ,f)))
-
-(defmacro unsize (f)
-  `(lambda ()
-     (funcall ,f ml4pg-test-complexity)))
-
 (test-with append-to-hypotheses-name
   "Appending hypotheses for a name will add that name, if necessary"
-  (list-of (gen-string)
+  (list-of (gen-nonempty-string)
            (unsize (gen-hypotheses))
            (gen-proof-hypotheses))
   (lambda (new-name new-hyps hyps)
@@ -151,9 +143,16 @@
            (names  (mapcar 'car result)))
       (should (member new-name names)))))
 
+(test-with empty-names-not-appended
+  "Appending an empty name doesn't do anything"
+  (list-of (unsize (gen-hypotheses))
+           (gen-proof-hypotheses))
+  (lambda (hyp hyps)
+    (should (equal hyps (append-to-hypotheses "" hyp hyps)))))
+
 (test-with appending-hypotheses-appends-hypotheses
   "If we append hypotheses, they appear at the end"
-  (list-of (gen-string)
+  (list-of (gen-nonempty-string)
            (unsize (gen-hypotheses))
            (gen-proof-hypotheses))
   (lambda (new-name new-hyps hyps)
@@ -178,3 +177,23 @@
           (dotimes (step (length (cdr def)))
             (should (equal (nth step (cdr def))
                            (nth step (cdr (nth index result)))))))))))
+
+(test-with exporting-theorem-appends-hypotheses
+  "Exporting the features of a theorem also exports its hypotheses"
+  (list-of (gen-num))
+  (lambda (n)
+    (with-coq-example
+     `(lambda ()
+        (let* ((names (extract-coq-names-from (buffer-string)))
+               (name  (nth (% n (length names)) names)))
+          (test-msg (format "NAME: %S" name))
+          (test-msg (format "PRE: %S" proof-hypotheses))
+          (search-forward name)
+          (test-msg (format "Up to: %s" (buffer-substring-no-properties
+                                         (point) (+ 20 (point)))))
+          (re-search-backward coq-declaration-re)
+          (proof-goto-point)
+          (test-msg (format "Now up to: %s" (buffer-substring-no-properties
+                                         (point) (+ 20 (point)))))
+          (export-theorem)
+          (test-msg (format "POST: %S" proof-hypotheses)))))))

@@ -883,7 +883,7 @@
   (export-theorem-aux2 result name nil))
 
 (defun export-theorem-otherwise (cmd result name args)
-  (get-hypotheses)
+  (add-hypotheses)
   (setf ts  (get-top-symbol))
   (setf ng  (get-number-of-goals))
   (proof-assert-next-command-interactive)
