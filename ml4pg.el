@@ -25,7 +25,7 @@
           "matlab_interaction" "shortcuts" "menus" "storage" "save_lemmas"
           "automaton"))
   (mapc (load-els "ssreflect")
-        '("term-tree-definition" "term-tree-theorem" "extraction"
+        '("term-tree-theorem" "extraction"
           "table-to-feature-vector" "weka-definitions" "storage-defs" "diagraph"
           "clusterdigraph" "graph_pure" "trees")))
 
@@ -35,7 +35,7 @@
   (mapc (load-els "ssreflect")
         '("auxiliary_files" "feature_extraction_2" "matlab_interaction"
           "shortcuts" "menus" "storage" "save_lemmas"
-          "term-tree-definition" "term-tree-theorem" "extraction"
+          "term-tree-theorem" "extraction"
           "table-to-feature-vector" "weka-definitions" "storage-defs"
           "automaton" "diagraph" "clusterdigraph" "graph_pure" "trees")))
 
