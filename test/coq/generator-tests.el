@@ -165,3 +165,14 @@
       (if conserved
           (should (=  total size))
           (should (<= total size))))))
+
+(test-with gen-nested-list
+  "Test generating nested lists"
+  (lambda ()
+    (let ((n (funcall (gen-num))))
+      (list n (funcall (gen-nested-list (gen-num) n)))))
+  (lambda (n lst)
+    (let ((pred (lambda (x) (numberp x))))
+      (dotimes (i n)
+        (setq pred (listofp pred)))
+      (should (funcall pred lst)))))

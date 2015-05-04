@@ -49,14 +49,15 @@
   "Test that subclusters doesn't append a cluster that's already present"
   (compose (lambda (args) (list (cons (cadr args) (car args))
                                 (cadr args)))
-           (list-of (gen-list (gen-list (gen-string))) (gen-list (gen-string))))
+           (list-of (gen-nested-list (gen-string) 2)
+                    (gen-list (gen-string))))
   (lambda (lst elem)
     (should (member elem lst))
     (should (equal lst (subclusters elem lst)))))
 
 (test-with subclusters-not-in
   "Test that subclusters appends a cluster when not already present"
-  (gen-filtered (list-of (gen-list (gen-list (gen-string)))
+  (gen-filtered (list-of (gen-nested-list (gen-string) 2)
                          (gen-list (gen-string)))
                 (lambda (args)
                   (not (or (member    (cadr args)               (car  args))
@@ -71,13 +72,11 @@
                            (list (cons (append (nth 1 args) (nth 2 args))
                                        (nth 0 args))
                                  (nth 1 args)))
-                         (list-of (gen-list (gen-list (gen-string)))
+                         (list-of (gen-nested-list (gen-string) 2)
                                   (gen-list (gen-string)
-                                            (compose '1+ (gen-num))
-                                            )
+                                            (compose '1+ (gen-num)))
                                   (gen-list (gen-string)
-                                            (compose '1+ (gen-num))
-                                            )))
+                                            (compose '1+ (gen-num)))))
                 (lambda (args) (and (not (member (cadr args) (car args)))
                                     (any-which (car  args)
                                                'issubcluster

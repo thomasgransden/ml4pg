@@ -368,3 +368,8 @@
         (result nil))
     (dolist (elem list result)
       (append-to result (normalize-list elem maxp minp)))))
+
+(defun listofp (pred)
+  "Predicate: does every element of a given list satisfy PRED?"
+  `(lambda (lst)
+     (all (mapcar ,pred lst))))

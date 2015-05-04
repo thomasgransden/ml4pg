@@ -151,11 +151,11 @@
   (unless (equal thm "")
     (let ((msg (obtain-theorem thm)))
       (if (search "Error" msg)
-          (message "Theorem %s is undefined" thm)
+          (test-msg (format "Theorem %s is undefined" thm))
           (let ((t2 (thm-for-tree thm)))
             (if t2
                 (showtreegraph t2)
-                (message "Theorem %s isn't defined (%S)" thm msg)))))))
+                (test-msg (format "Theorem %s isn't defined (%S)" thm msg))))))))
 
 (defun showtreegraphthm ()
   (interactive)

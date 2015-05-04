@@ -187,20 +187,20 @@
 
 (test-with normalize
   "Test what normalize does"
-  (list-of (gen-list (gen-list (gen-num))))
+  (list-of (gen-nested-list (gen-num) 2))
   (lambda (lst)
     (let ((result (normalize lst)))
       (message "IN: %S OUT: %S" lst result))))
 
 (test-with max-position
   "Test what max-position does"
-  (list-of (gen-list (gen-list (gen-num))))
+  (list-of (gen-nested-list (gen-num) 2))
   (lambda (lst)
     (max-position lst)))
 
 (test-with min-position
   "Test what min-position does"
-  (list-of (gen-list (gen-list (gen-num))))
+  (list-of (gen-nested-list (gen-num) 2))
   (lambda (lst)
     (min-position lst)))
 

@@ -455,7 +455,7 @@
                                    (list (list name (take-30-from fv i))))))))
 
 (defun export-theorem-aux (result name current-level dot-level i)
-  (message "EXPORTING THEOREM AUX")
+  (test-msg "EXPORTING THEOREM AUX")
   (export-theorem-aux2 result name (list current-level dot-level i
                                          ;; Goal count goes up
                                          (lambda (current-level dot-level i up down same)
@@ -477,6 +477,7 @@
                                                  up down same)))))
 
 (defun export-theorem-lemma (result subcmd args)
+  (test-msg (format "Exporting lemma %s" subcmd))
   (export-theorem-comment result (remove-jumps subcmd) args))
 
 (defun export-theorem-problematic ()
@@ -485,7 +486,9 @@
   (proof-assert-next-command-interactive))
 
 (defun export-theorem-otherwise (cmd result args name)
+  (test-msg (format "Adding hypotheses for %s" name))
   (add-hypotheses name)
+  (test-msg (format "Added hypotheses for %s" name))
   (let ((try-ts (get-top-symbol (lambda (x) nil))))
     (when try-ts
       (setf ts try-ts)
