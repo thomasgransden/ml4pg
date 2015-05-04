@@ -514,6 +514,8 @@
          (subcmd  (ignore-errors (between-spaces cmd)))
          (subname (ignore-errors (between-spaces name)))
          (ts      nil))
+    (test-msg (format "NAME %S\nSEMIS %S\nCOMMENT %S\nCMD %S\nSUBCMD %S\nSUBNAME %S"
+                      name semis comment cmd subcms subname))
     (cond ((or (string= comment "comment")
                (is-in-search cmd))
              (export-theorem-comment result name args))
