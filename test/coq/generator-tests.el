@@ -176,3 +176,17 @@
       (dotimes (i n)
         (setq pred (listofp pred)))
       (should (funcall pred lst)))))
+
+(test-with gen-sized-list-of
+  "Test generating sized products"
+  (lambda ()
+    (let* ((n    (1+    (funcall (gen-num))))
+           (size (+ 1 n (funcall (gen-num)))))
+      (list n
+            size
+            (funcall (apply 'gen-sized-list-of
+                            (make-list n 'identity))
+                     size))))
+  (lambda (n size elems)
+    (should (equal n    (length elems)))
+    (should (equal size (apply '+ elems)))))

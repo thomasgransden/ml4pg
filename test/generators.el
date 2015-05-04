@@ -280,3 +280,9 @@
   "Provides a size to a sized generator"
   `(lambda ()
      (funcall ,f ml4pg-test-complexity)))
+
+(defun gen-sized-list-of (&rest gens)
+  `(lambda (size)
+     (zip-with (lambda (gen s) (funcall gen s))
+               ',gens
+               (choose-partitions size (length ',gens)))))

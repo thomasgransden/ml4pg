@@ -321,25 +321,34 @@
       ;; Choose a random number from 1 to (SIZE - i), since i possibilities have
       ;; already been taken
       (let ((x (1+ (random (- size i)))))
-        (append-to result
-                   ;; Step over preceding choices (relies on the sorting)
-                   (dolist (prev result x)
-                     (when (<= prev x)
-                       (setq x (1+ x)))))
-        ;; Keep result sorted
-        (sort result '<)))))
+        ;; Step over preceding choices (relies on result being sorted)
+        (dolist (prev result)
+          (when (<= prev x) (setq x (1+ x))))
+        ;; Add the new value to result and re-sort
+        (append-to result x)
+        (setq result (sort result '<))))))
 
-(defun choose-partitions (size)
+(defun choose-partitions (size &optional num)
   "Choose random positive numbers which sum to SIZE"
   (let ((result nil)  ;; Resulting list of numbers
         (prev   0))   ;; The previous number we saw
     (dolist (elem
              ;; Loop over some distinct random numbers, in order, less than SIZE
-             (sort (choose-distinct size) '<))
+             (sort (choose-distinct size num) '<))
       ;; Keep the distances between the random numbers
       (append-to result (- elem prev))
       (setq prev elem))
     ;; Treat any remainder as another chunk
-    (when (< prev size)
-      (append-to result (- size prev)))
+    (let ((diff (- size prev)))
+      (when (> diff 0)
+        (if (and num (= num (length result)))
+            (setq result (append (take-n (1- num) result)
+                                 (list (+ diff (car (last result))))))
+          (append-to result diff))))
     result))
+
+(defun proof-to-def (name)
+  "Move the proof marker to the start of the named definition"
+  (search-forward name)
+  (re-search-backward coq-declaration-re)
+  (proof-goto-point))

@@ -101,7 +101,8 @@
 
 (test-with can-read-back-hypotheses
   "Ensure we can read the hypotheses we've written"
-  (list-of (gen-list (list-of (gen-string) (gen-list (gen-string)))))
+  (list-of (unsize (gen-sized-list (sized-list-of (unsized (gen-string))
+                                                  (gen-sized-list (unsized (gen-string)))))))
   (lambda (hyps)
     (let* ((formatted (format-hypotheses hyps))
            (read-back (car (read-from-string formatted))))
@@ -188,11 +189,7 @@
                (name  (nth (% n (length names)) names)))
           (test-msg (format "NAME: %S" name))
           (test-msg (format "PRE: %S" proof-hypotheses))
-          (search-forward name)
-          (test-msg (format "Up to: %s" (buffer-substring-no-properties
-                                         (point) (+ 20 (point)))))
-          (re-search-backward coq-declaration-re)
-          (proof-goto-point)
+          (proof-to-def name)
           (test-msg (format "Now up to: %s" (buffer-substring-no-properties
                                          (point) (+ 20 (point)))))
           (export-theorem)

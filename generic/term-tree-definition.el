@@ -7,24 +7,24 @@
   (message "FIXME: Stop trying to parse output intended for humans!")
   (send-coq-cmd (format "Print %s" name)))
 
+(defun coqprint (iftable action)
+  (unless (search "None" iftable)
+    (send-coq-cmd (format "%s Printing If %s."
+                          action
+                          (subseq iftable (1+ (search ":" iftable)))))))
+
 (defun adddefinition (name)
   (interactive)
   (send-coq-cmd (format "Unset Printing Notations."))
   (let* ((iftable  (send-coq-cmd (format "Print Table Printing If.")))
-         (coqprint `(lambda (action)
-                      (unless (search "None" ,iftable)
-                        (send-coq-cmd (format "%s Printing If %s."
-                                              action
-                                              (subseq ,iftable
-                                                      (1+ (search ":" ,iftable))))))))
          (term     nil))
-    (funcall coqprint "Remove")
+    (coqprint iftable "Remove")
     (setf term (obtain-definition name))
     (append-to listofdefinitions (list 'definition
                                        (make-symbol name)
                                        (car (definition-to-list (car (clean-term term))))))
     (append-to listofvariables (cadr (definition-to-list (car (clean-term term)))))
-    (funcall coqprint "Add")
+    (coqprint iftable "Add")
     (send-coq-cmd (format "Set Printing Notations."))))
 
 (defun transform-definitions ()

@@ -92,3 +92,21 @@
   (lambda (nums)
     (dolist (num nums)
       (should (> num 0)))))
+
+(test-with correct-number-of-distincts
+  "Ensure we can choose a specific number of distinct choices"
+  (lambda ()
+    (let* ((n    (1+    (funcall (gen-num))))
+           (size (+ 1 n (funcall (gen-num)))))
+      (list n (choose-distinct size n))))
+  (lambda (n nums)
+    (should (equal n (length nums)))))
+
+(test-with correct-number-of-partitions
+  "Ensure we can choose a specific number of partitions"
+  (lambda ()
+    (let* ((n    (1+    (funcall (gen-num))))
+           (size (+ 1 n (funcall (gen-num)))))
+      (list n (choose-partitions size n))))
+  (lambda (n nums)
+    (should (equal n (length nums)))))
