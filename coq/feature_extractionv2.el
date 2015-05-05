@@ -520,10 +520,9 @@
          (comment (caar  semis))
          (cmd     (cadar semis))
          (subcmd  (ignore-errors (between-spaces cmd)))
-         (subname (ignore-errors (between-spaces name)))
          (ts      nil))
-    (test-msg (format "NAME %S\nSEMIS %S\nCOMMENT %S\nCMD %S\nSUBCMD %S\nSUBNAME %S"
-                      name semis comment cmd subcmd subname))
+    (test-msg (format "NAME %S\nSEMIS %S\nCOMMENT %S\nCMD %S\nSUBCMD %S"
+                      name semis comment cmd subcmd))
     (cond ((or (string= comment "comment")
                (is-in-search cmd))
              (test-msg "Comment")
@@ -551,7 +550,7 @@
                (search "Remark"    cmd)
                (search "Corollary" cmd))
              (test-msg "I/T/R/C")
-             (export-theorem-lemma result subname args))
+             (export-theorem-lemma result subcmd args))
 
           ((or (search "Qed."     cmd)
                (search "Defined." cmd))
