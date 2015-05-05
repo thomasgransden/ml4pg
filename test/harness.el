@@ -37,27 +37,6 @@
 (defun ml4pg-increase-complexity (&rest args)
   (setq ml4pg-test-complexity (* 2 ml4pg-test-complexity)))
 
-(defun write-to-messages (f)
-  "Run F in the context of a writable *Messages* buffer"
-  ;; FIXME: Make a LISP variable, which initialises to this env var, so we can
-  ;; override it from LISP without altering the environment
-  (if (equal "t" (getenv "TEST_VERBOSE"))
-      ;; Regular message output, including to minibuffer/stdout
-      (message (with-temp-buffer
-                 (funcall f)
-                 (replace-regexp-in-string "%" "%%" (buffer-string))))
-      ;; Only write the *Messages*, not to minibuffer/stdout
-      (save-excursion
-        (set-buffer "*Messages*")
-        (goto-char (point-max))
-        (let ((buffer-read-only nil))
-          (funcall f)))))
-
-(defun test-msg (s)
-  "Writes a message, only displaying it when verbose"
-  (write-to-messages `(lambda ()
-                        (insert ,s))))
-
 (defun ml4pg-record-args (args)
   "Record a test's arguments (ARGS), to help reproduce failures. Returns ARGS."
   (write-to-messages
@@ -115,4 +94,5 @@
         (progn (find-file path)
                (funcall f))
       (delete-file path)
-      (proof-script-remove-all-spans-and-deactivate))))
+      (proof-script-remove-all-spans-and-deactivate)
+      (proof-shell-exit t))))

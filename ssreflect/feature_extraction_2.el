@@ -893,40 +893,43 @@
                      current-level)
   (setf current-level (1+ current-level)))
 
+(defconst problematic-terms nil)
+
 (defun export-theorem-aux2 (result name args)
-  (let* ((semis   (save-excursion
-                    (skip-chars-backward " \t\n"
-                                         (proof-queue-or-locked-end))
-                    (proof-segment-up-to-using-cache (point))))
+  (let* ((semis   (get-semis))
          (first   (car semis))
          (comment (nth 0 first))
          (cmd     (nth 1 first))
-         (subcmd  (ignore-errors (between-spaces cmd)))
+         (subcmd  (ignore-errors (remove-jumps (between-spaces cmd))))
          (ts      nil))
-    (when semis
-      (cond ((or (string= comment "comment")
-                 (is-in-search cmd))
-             (export-theorem-comment result name   args))
+    (unless semis
+      (error "Couldn't export theorem %s" name))
+    (cond ((or (string= comment "comment")
+               (is-in-search cmd)
+               (search "Proof" cmd))
+           (export-theorem-comment result name   args))
 
-            ((or (search "Definition" cmd)
-                 (search "Fixpoint"   cmd))
-             (export-theorem-deffix  result subcmd args))
+          ((is-problematic cmd)
+           (message "FIXME: Skipping 'problematic' step")
+           (export-theorem-problematic))
 
-            ((search "Lemma" cmd)
-             (export-theorem-comment result subcmd args))
+          ((or (search "Definition" cmd)
+               (search "Fixpoint"   cmd))
+           (export-theorem-deffix  result subcmd args))
 
-            ((search "Proof" cmd)
-             (export-theorem-comment result name   args))
+          ((or (search "Instance"  cmd)
+               (search "Theorem"   cmd)
+               (search "Remark"    cmd)
+               (search "Corollary" cmd)
+               (search "Lemma"     cmd))
+           (export-theorem-comment result subcmd args))
 
-            ((search "Theorem" cmd)
-             (export-theorem-comment result subcmd args))
+          ((or (search "Qed."     cmd)
+               (search "Defined." cmd))
+           (export-theorem-defined name result))
 
-            ((or (search "Qed."     cmd)
-                 (search "Defined." cmd))
-             (export-theorem-defined   name result args))
-
-            (t
-             (export-theorem-otherwise cmd  result name args))))))
+          (t
+           (export-theorem-otherwise cmd  result name args)))))
 
 (defun split-feature-vector (name fv)
   (let ((len (1+ (floor (length fv) 30))))

@@ -1,5 +1,9 @@
 (defun export-theorem-comment (result name args)
-  (proof-assert-next-command-interactive)
+  (let ((pos (proof-queue-or-locked-end)))
+    (proof-assert-next-command-interactive)
+    (test-msg (format "ETC %s %s" pos (proof-queue-or-locked-end)))
+    (when (equal pos (proof-queue-or-locked-end))
+      (error "Stuck at %s, after %s" pos name)))
   (export-theorem-aux2 result name args))
 
 (defun export-theorem-deffix (result subcmd args)
@@ -9,14 +13,14 @@
   (let ((pos (proof-queue-or-locked-end)))
     (adddefinition subcmd)
     (goto-char pos)
+    (proof-shell-wait)
     (proof-goto-point)
+    (proof-shell-wait)
     (proof-assert-next-command-interactive))
   (test-msg (format "B2 %s" (proof-queue-or-locked-end)))
-  (test-msg "C")
   ;(export-theorem-aux2 result subcmd args)
-  (test-msg "D")
   ;(proof-assert-next-command-interactive)
-  (test-msg "E"))
+  )
 
 (defun export-theorem-defined (name result)
   (proof-assert-next-command-interactive)
@@ -25,3 +29,10 @@
   (when name
     (split-feature-vector name (flat (reverse result))))
   (ignore-errors (addthm name)))
+
+(defun get-semis ()
+  (test-msg (format "GS POINT %s PROOF %s" (point) (proof-queue-or-locked-end)))
+  (save-excursion
+    (skip-chars-backward " \t\n"
+                         (proof-queue-or-locked-end))
+    (proof-segment-up-to-using-cache (point))))

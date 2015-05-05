@@ -200,20 +200,19 @@
 (defun gen-readable ()
   "Generate strings suitable for the 'read' function"
   (lambda ()
-    (do* ((str    (strip-str (strip-control-chars (funcall
-                                                     (gen-nonempty-string)))
+    (let ((str    (strip-str (strip-control-chars (funcall
+                                                   (gen-nonempty-string)))
                              "["  "]"  "" "" "\f" "" "" "" " " ""
                              ","  "" "" "" "" "" "" "" "?"  "\\"
                              ";"  "#"  "."  "\"" " "  "'"  "`"))
-          (opens  (count-occurences (regexp-quote "(") str))
-          (closes (count-occurences (regexp-quote ")") str)))
-        ((balanced-parens str) str)
+          (opens  nil)
+          (closes nil))
+      (while (not (balanced-parens str))
+        (setq opens  (count-occurences (regexp-quote "(") str))
+        (setq closes (count-occurences (regexp-quote ")") str))
+        (when (< opens closes) (setq str (concat "(" str    )))
 
-      (when (< opens closes)
-        (setq str (concat "(" str    )))
-
-      (when (> opens closes)
-        (setq str (concat     str ")")))
+        (when (> opens closes) (setq str (concat     str ")"))))
 
       ;; Last-ditch effort if we've stripped all characters
       (if (equal str "")

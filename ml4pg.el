@@ -61,7 +61,13 @@
     ;; Hack Proof General for noninteractive use
     (coq-build-prog-args)  ;; PG assumes coqtop will never run non-interactively
     (setq proof-shell-fiddle-frames nil)  ;; Don't alter non-existent windows
-    (setq proof-three-window-enable nil)))
+    (setq proof-three-window-enable nil)
+    (add-hook 'proof-shell-handle-error-or-interrupt-hook 'ml4pg-bail-out)))
+
+(defun ml4pg-bail-out (&rest args)
+  (when proof-shell-last-response-output
+    (message "Last Coq response: %s" proof-shell-last-response-output))
+  (error "Caught error from Coq process. Details: %S" args))
 
 (defun ml4pg-mode ()
   (ml4pg-mode-aux)
@@ -81,6 +87,29 @@
     (load "ProofGeneral/generic/proof-site")
     (with-temp-buffer
       (coq-mode))))
+
+;; For debugging, especially reproducing test failures
+
+(defun test-msg (s)
+  "Writes a message, only displaying it when verbose"
+  (write-to-messages `(lambda ()
+                        (insert ,s))))
+
+(defun write-to-messages (f)
+  "Run F in the context of a writable *Messages* buffer"
+  ;; FIXME: Make a LISP variable, which initialises to this env var, so we can
+  ;; override it from LISP without altering the environment
+  (if (equal "t" (getenv "TEST_VERBOSE"))
+      ;; Regular message output, including to minibuffer/stdout
+      (message (with-temp-buffer
+                 (funcall f)
+                 (replace-regexp-in-string "%" "%%" (buffer-string))))
+    ;; Only write the *Messages*, not to minibuffer/stdout
+    (save-excursion
+      (set-buffer "*Messages*")
+      (goto-char (point-max))
+      (let ((buffer-read-only nil))
+        (funcall f)))))
 
 (add-hook 'coq-mode-hook 'ml4pg-mode)
 (use-nix-if-present)

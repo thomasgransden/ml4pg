@@ -159,21 +159,16 @@
         ((= i (+ j 30))
          (reverse temp2)))))
 
+(defconst problematic-terms '("exists T; auto."
+                              "assert (Mem.perm m1 b i Max Nonempty)."
+                              "assert (UNCHANGED:" "destruct idg as"
+                              "eapply T.lub_right; eauto."
+                              "eapply T.glb_right; eauto."
+                              "+ subst e'; simpl in *."
+                              "eapply T.glb_left; eauto. "))
+
 (defun is-problematic (cmd)
-  (do ((problematic-lemmas '("exists T; auto."
-                             "assert (Mem.perm m1 b i Max Nonempty)."
-                             "assert (UNCHANGED:" "destruct idg as"
-                             "eapply T.lub_right; eauto."
-                             "eapply T.glb_right; eauto."
-                             "+ subst e'; simpl in *."
-                             "eapply T.glb_left; eauto. ")
-                           (cdr problematic-lemmas))
-       (is nil))
-      ((or (endp problematic-lemmas)
-           is)
-       is)
-    (if (search (car problematic-lemmas) cmd)
-        (setf is t))))
+  (contains-any cmd problematic-terms))
 
 (defun is-in-search (cmd)
   (contains-any cmd useless-terms))

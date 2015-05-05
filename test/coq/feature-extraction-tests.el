@@ -40,3 +40,25 @@
                                     'trivial      trivial
                                     'hypothesis   hypothesis
                                     'goal-level   goal-level)))))))))
+
+(test-with can-extract-info-up-to-point
+  "Ensure extract-info-up-to-point advances the proof marker"
+  (list-of (gen-num))
+  (lambda (n)
+    (with-coq-example
+     `(lambda ()
+        (should (equal 1 (proof-queue-or-locked-end)))
+        (goto-char (+ 50 (% ,n (point-max))))
+        (extract-info-up-to-here)
+        (should (> (proof-queue-or-locked-end) 1))))))
+
+(test-with can-extract-feature-theorems
+  "Ensure extract-feature-theorems advances the proof marker"
+  (list-of (gen-num))
+  (lambda (n)
+    (with-coq-example
+     `(lambda ()
+        (should (equal 1 (proof-queue-or-locked-end)))
+        (goto-char (+ 50 (% ,n (point-max))))
+        (extract-feature-theorems)
+        (should (> (proof-queue-or-locked-end) 1))))))
