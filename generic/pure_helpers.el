@@ -163,10 +163,13 @@
   "An unreliable, conservative way to extract some of the names defined in a
    string of Coq vernacular. Note that this does *not* respect Sections and
    Modules, so the names you get back might not be defined globally."
-  (let* ((ws "[\s\n]+")
-         (re (format "\\(%s\\)%s[a-zA-Z0-9_]+%s"
-                     coq-declaration-re ws ws)))
-    (re-seq re str)))
+  (re-seq (coq-declaration-re-with-name "[a-zA-Z0-9_]+")
+          str))
+
+(defun coq-declaration-re-with-name (name)
+  "Produce a regular expression which matches a Coq declaration of NAME"
+  (let ((ws "[\s\n]+"))
+    (format "\\(%s\\)%s%s%s" coq-declaration-re ws name ws)))
 
 (defun re-seq (regexp string)
   "Get a list of all regexp matches in a string"
@@ -373,3 +376,7 @@
   "Predicate: does every element of a given list satisfy PRED?"
   `(lambda (lst)
      (all (mapcar ,pred lst))))
+
+(defun contains-any (txt snippets)
+  "Does the string TXT contain any of the strings in SNIPPETS?"
+  (any (mapcar `(lambda (snippet) (search snippet ,txt)) snippets)))

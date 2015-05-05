@@ -101,8 +101,11 @@
 
 (test-with can-read-back-hypotheses
   "Ensure we can read the hypotheses we've written"
-  (list-of (unsize (gen-sized-list (sized-list-of (unsized (gen-string))
-                                                  (gen-sized-list (unsized (gen-string)))))))
+  (list-of
+   (unsize
+    (gen-sized-list
+     (gen-sized-list-of (unsized (gen-string))
+                        (gen-sized-list (unsized (gen-string)))))))
   (lambda (hyps)
     (let* ((formatted (format-hypotheses hyps))
            (read-back (car (read-from-string formatted))))
@@ -181,16 +184,31 @@
 
 (test-with exporting-theorem-appends-hypotheses
   "Exporting the features of a theorem also exports its hypotheses"
-  (list-of (gen-num))
-  (lambda (n)
-    (with-coq-example
-     `(lambda ()
-        (let* ((names (extract-coq-names-from (buffer-string)))
-               (name  (nth (% n (length names)) names)))
-          (test-msg (format "NAME: %S" name))
-          (test-msg (format "PRE: %S" proof-hypotheses))
-          (proof-to-def name)
-          (test-msg (format "Now up to: %s" (buffer-substring-no-properties
-                                         (point) (+ 20 (point)))))
-          (export-theorem)
-          (test-msg (format "POST: %S" proof-hypotheses)))))))
+  nil
+  (lambda ()
+    (let ((proof-hypotheses nil)
+          (names            (coq-example-names))
+          (type             nil))
+      (dolist (this-name names)
+        (test-msg (format "STARTING TO RUN %s" this-name))
+        (with-coq-example
+         `(lambda ()
+            (let ((name ,this-name))
+              (test-msg (format "NAME: %S" name))
+              (test-msg (format "PRE: %S" proof-hypotheses))
+              (proof-to-def name)
+              (save-excursion
+                (setq type (thing-at-point 'word)))
+              (test-msg (format "Now up to: %s" (buffer-substring-no-properties
+                                                 (point) (+ 20 (point)))))
+              (export-theorem)
+              (test-msg (format "POST: %S" proof-hypotheses)))))
+        (test-msg (format "STARTING TO TEST %s" this-name))
+        (let ((saved (member this-name (mapcar 'car proof-hypotheses))))
+          ;; FIXME: I'm sure this is wrong. I can do:
+          ;; Fixpoint func (a b c : nat) : d. Proof. foo. Qed.
+          (test-msg (format "TYPE %s\nNAME %s\nSAVED %S\nHYPS %S"
+                            type this-name saved proof-hypotheses))
+          (if (member type '("Definition" "Fixpoint"))
+              (should-not saved)
+              (should saved)))))))

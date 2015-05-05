@@ -285,4 +285,5 @@
   `(lambda (size)
      (zip-with (lambda (gen s) (funcall gen s))
                ',gens
-               (choose-partitions size (length ',gens)))))
+               (choose-partitions (max size (length ',gens))
+                                  (length ',gens)))))

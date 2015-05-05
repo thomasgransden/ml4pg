@@ -42,6 +42,14 @@
                    ("A"    . -1)
                    ("list" . -5)))
 
+(defvar useless-terms '("Structure" "Section" "Add Ring" "Hypothesis"
+                        "Hypotheses" "Include" "Export" "Parameter" "Axiom"
+                        "End" "Notation" "Hint" "Inductive" "Variable"
+                        "Implicit" "Import" "Canonical" "Coercion" "Next"
+                        "Local" "Set" "Instance" "Module" "Ltac" "Let" "Opaque"
+                        "Bind" "Scope" "Require" "Infix" "Record" "Fact" "Print"
+                        "Arguments" "Function"))
+
 ;; Impure functions and macros for building up results
 
 (defun append-hyp (x)
@@ -515,35 +523,43 @@
          (subname (ignore-errors (between-spaces name)))
          (ts      nil))
     (test-msg (format "NAME %S\nSEMIS %S\nCOMMENT %S\nCMD %S\nSUBCMD %S\nSUBNAME %S"
-                      name semis comment cmd subcms subname))
+                      name semis comment cmd subcmd subname))
     (cond ((or (string= comment "comment")
                (is-in-search cmd))
+             (test-msg "Comment")
              (export-theorem-comment result name args))
 
           ((is-problematic cmd)
+             (test-msg "Problematic")
              (export-theorem-problematic))
 
           ((or (search "Definition" cmd)
                (search "Fixpoint"   cmd))
+             (test-msg "Def/Fix")
              (export-theorem-deffix result subcmd args))
 
           ((search "Lemma" cmd)
+             (test-msg "Lemma")
              (export-theorem-lemma result subcmd args))
 
           ((search "Proof" cmd)
+             (test-msg "Proof")
              (export-theorem-comment result name args))
 
           ((or (search "Instance"  cmd)
                (search "Theorem"   cmd)
                (search "Remark"    cmd)
                (search "Corollary" cmd))
+             (test-msg "I/T/R/C")
              (export-theorem-lemma result subname args))
 
           ((or (search "Qed."     cmd)
                (search "Defined." cmd))
+             (test-msg "Q/D")
              (export-theorem-defined name result))
 
           (t
+           (test-msg "Otherwise")
            (export-theorem-otherwise cmd result args name)))))
 
 (defun look-through-commands (cmd start-result ts current-level)

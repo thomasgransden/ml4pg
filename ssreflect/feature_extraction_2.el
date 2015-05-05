@@ -832,11 +832,6 @@
                         "Ltac" "Let" "Opaque" "Bind" "Scope" "Require" "Infix"
                         "Record" "Fact" "Print"))
 
-(defun is-in-search (cmd)
-  (let ((is nil))
-    (dolist (elem useless-terms is)
-            (setf is (or is (search elem cmd))))))
-
 (defun compute-tactic-value (lst)
   "Concatenate the numbers in LST"
   (if lst

@@ -349,6 +349,9 @@
 
 (defun proof-to-def (name)
   "Move the proof marker to the start of the named definition"
-  (search-forward name)
-  (re-search-backward coq-declaration-re)
+  ;; FIXME: Doesn't take comments or strings into account
+  (goto-char (point-min))
+  (re-search-forward (coq-declaration-re-with-name name))
+  ;; FIXME: Won't work for names like "MyLemma"
+  (re-search-backward coq-declaration-re)  ;; Move to start
   (proof-goto-point))

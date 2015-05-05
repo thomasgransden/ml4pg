@@ -176,20 +176,7 @@
         (setf is t))))
 
 (defun is-in-search (cmd)
-  (do ((useless-terms '("Structure" "Section" "Add Ring" "Hypothesis"
-                        "Hypotheses" "Include" "Export" "Parameter" "Axiom"
-                        "End" "Notation" "Hint" "Inductive" "Variable"
-                        "Implicit" "Import" "Canonical" "Coercion" "Next"
-                        "Local" "Set" "Instance" "Module" "Ltac" "Let" "Opaque"
-                        "Bind" "Scope" "Require" "Infix" "Record" "Fact" "Print"
-                        "Arguments" "Function")
-                      (cdr useless-terms))
-       (is nil))
-      ((or (endp useless-terms)
-           is)
-       is)
-    (if (search (car useless-terms) cmd)
-        (setf is t))))
+  (contains-any cmd useless-terms))
 
 (defun obtain-tactic-result (tactic)
   "Computes the result of the tactic"
