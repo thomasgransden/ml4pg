@@ -3,12 +3,13 @@
 (defun goal-str-aux (s)
   (if s (str-after s "============================\n   ")))
 
+(defun txt-pos (txt begin end)
+  (search begin txt :start2 (+ 2 (search end txt))))
+
 (defun get-type-id-aux (txt)
-  (let ((txt-pos `(lambda (begin end)
-                    (search begin ,txt :start2 (+ 2 (search end ,txt))))))
-    (subseq txt (+ 2 (search ": " txt))
-            (or (funcall txt-pos " " ": ")
-                (funcall txt-pos nl  " ")))))
+  (subseq txt (+ 2 (search ": " txt))
+          (or (txt-pos txt " " ": ")
+              (txt-pos txt nl  " "))))
 
 (defun get-top-symbol-aux (goal)
   (if goal

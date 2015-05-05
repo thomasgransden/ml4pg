@@ -32,6 +32,7 @@
 
 (defun get-semis ()
   (test-msg (format "GS POINT %s PROOF %s" (point) (proof-queue-or-locked-end)))
+  (goto-char (proof-queue-or-locked-end))
   (save-excursion
     (skip-chars-backward " \t\n"
                          (proof-queue-or-locked-end))
@@ -44,6 +45,7 @@
          (cmd     (nth 1 first))
          (subcmd  (ignore-errors (remove-jumps (between-spaces cmd))))
          (ts      nil))
+    (test-msg (format "SEMIS %s" semis))
     (when semis
       (cond ((or (string= comment "comment")
                  (is-in-search cmd)
@@ -71,3 +73,10 @@
 
             (t
              (export-theorem-otherwise cmd  result name args))))))
+
+(defun get-number-of-goals ()
+  ;; FIXME: Make this more specific, rather than treating all errors as 0
+  (condition-case nil
+      (let ((r (do-show-proof)))
+        (count-seq "?" r))
+    (error 0)))

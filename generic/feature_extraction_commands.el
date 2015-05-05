@@ -32,13 +32,16 @@
   (send-coq-cmd "intro"))
 
 (defun do-intro-of (name)
+  "Introduce the given name"
   (send-coq-cmd (concat "intro " name)))
 
 (defun do-show-intros ()
   (send-coq-cmd "Show Intros"))
 
 (defun do-undo ()
-  (send-coq-cmd "Undo"))
+  (condition-case err
+      (send-coq-cmd "Undo")
+    (error (test-msg (format "Error during undo: %S" err)))))
 
 (defun do-induction-on (name)
   (send-coq-cmd (concat "induction " name)))

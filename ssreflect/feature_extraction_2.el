@@ -789,10 +789,6 @@
         (1+ (count-seq item (subseq seq (1+ is?))))
         0)))
 
-(defun get-number-of-goals ()
-  (let ((r (send-coq-cmd (format "Show Proof"))))
-    (count-seq "?" r)))
-
 (defun flat (ll)
   (unless (endp ll)
     (append (car ll) (flat (cdr ll)))))
@@ -878,7 +874,7 @@
   (export-theorem-aux2 result name nil))
 
 (defun export-theorem-otherwise (cmd result name args)
-  (add-hypotheses)
+  (add-hypotheses name)
   (setf ts  (get-top-symbol))
   (setf ng  (get-number-of-goals))
   (proof-assert-next-command-interactive)

@@ -39,6 +39,7 @@
         (setq hypotheses accumulator)))))
 
 (defun add-hypotheses (name)
+  (test-msg (format "ADDING HYPOTHESES FOR %s" name))
   (let ((hyps (get-hypotheses)))
     (setq proof-hypotheses (append-to-hypotheses name hyps proof-hypotheses))))
 

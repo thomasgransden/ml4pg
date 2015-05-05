@@ -274,14 +274,21 @@
       (delete-directory dir t nil))))
 
 (defun send-coq-cmd (str)
-  (save-excursion
-    (test-msg (format "SENDING: %s" str))
-    (let ((marker (proof-queue-or-locked-end))
-          (result (proof-shell-invisible-cmd-get-result str)))
-      (test-msg (format "GOT: %s" result))
-      (goto-char marker)
-      (proof-goto-point)
-      result)))
+  (condition-case nil
+      (save-excursion
+        (test-msg (format "SENDING: %s" str))
+        (let* ((marker          (proof-queue-or-locked-end))
+               (coq-recoverable t)
+               (result          (proof-shell-invisible-cmd-get-result str)))
+          (test-msg (format "GOT: %s" result))
+          (when (and result
+                     (> (length result) 7)
+                     (equal "Error: " (subseq result 0 7)))
+            (error result))
+          (goto-char marker)
+          (proof-goto-point)
+          result))
+    (end-of-buffer)))
 
 (defun exported-libraries ()
   (interactive)

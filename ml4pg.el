@@ -21,7 +21,7 @@
         (directory-files (concat home-dir "generic/") nil ".*\.el"))
   (mapc (load-els "coq")
         '("auxiliary_files" "feature_extraction_pure"
-          "feature_extraction_commands" "feature_extractionv2"
+          "feature_extractionv2"
           "matlab_interaction" "shortcuts" "menus" "storage" "save_lemmas"
           "automaton"))
   (mapc (load-els "ssreflect")
@@ -64,10 +64,14 @@
     (setq proof-three-window-enable nil)
     (add-hook 'proof-shell-handle-error-or-interrupt-hook 'ml4pg-bail-out)))
 
+(defconst coq-recoverable nil
+  "If we've encountered a Coq error, are we in a position to handle it?")
+
 (defun ml4pg-bail-out (&rest args)
-  (when proof-shell-last-response-output
-    (message "Last Coq response: %s" proof-shell-last-response-output))
-  (error "Caught error from Coq process. Details: %S" args))
+  (unless coq-recoverable
+    (when proof-shell-last-response-output
+      (message "Last Coq response: %s" proof-shell-last-response-output))
+    (error "Caught error from Coq process. Details: %S" args)))
 
 (defun ml4pg-mode ()
   (ml4pg-mode-aux)

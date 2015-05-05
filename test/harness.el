@@ -95,4 +95,5 @@
                (funcall f))
       (delete-file path)
       (proof-script-remove-all-spans-and-deactivate)
-      (proof-shell-exit t))))
+      (let ((coq-recoverable t))
+        (ignore-errors (proof-shell-exit t))))))

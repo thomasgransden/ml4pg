@@ -10,7 +10,9 @@
         (t (mapcan #'flatten structure))))
 
 (defun str-after (str pattern)
-  (subseq str (+ (length pattern) (search pattern str))))
+  (let ((pos (search pattern str)))
+    (when pos
+      (subseq str (+ (length pattern) pos)))))
 
 (defun between-spaces (txt)
   (let* ((fst (after-space txt))

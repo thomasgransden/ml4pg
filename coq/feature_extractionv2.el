@@ -100,7 +100,10 @@
 
 (defun get-type-id (object)
   "A function to obtain the type associated with an object"
-  (lookup-type-id types_id (get-type-id-aux (do-check-object object))))
+  (let ((check (do-check-object object)))
+    (unless check
+      (error "No such object %S" object))
+    (lookup-type-id types_id (get-type-id-aux check))))
 
 (defun lookup-type-id (types id)
   (cdr (or (assoc id types)
@@ -176,14 +179,25 @@
     (arg-induction-aux res)))
 
 (defun get-type-id-induction (object arg-ind)
-  (let ((check (equal arg-ind 1))
+  (let ((check (and (equal arg-ind 1)
+                    (condition-case nil
+                       (progn (get-type-id object)
+                              t)
+                     (error))))
         gt)
     (do-undo)
+    (test-msg (format "CHECK %S" check))
     (unless check (do-intro-of object))
     (setf gt (get-type-id object))
     (unless check (do-undo))
     (do-induction-on object)
     gt))
+
+(defun with-name-introduced (name f)
+  (do-intro-of name)
+  (let ((result (funcall f)))
+    (do-undo)
+    result))
 
 (defun add-info-to-tree (info level)
   "Add the information to the corresponding tree depth level"
@@ -237,6 +251,7 @@
           (list 1 type 1))))
 
 (defun gn-branch-induction (cmd)
+  (test-msg (format "GNBI %s %s" (proof-queue-or-locked-end) (point)))
   (let* ((object  (get-numbers-get-object cmd))
          (arg-ind (arg-induction object))
          (type    (get-type-id-induction object arg-ind)))
@@ -268,6 +283,7 @@
    the third one is the argument type, the fourth one is if the
    argument is a hypothesis of a theorem, the fifth one is the top-symbol
    and the last one the number of subgoals"
+  (test-msg (format "GN %S %S" (point) (proof-queue-or-locked-end)))
   (let ((process (get-numbers-apply tactic cmd ts ngs)))
     (cond
      ((search "- inv H" cmd)
@@ -436,10 +452,6 @@
      ((string= cmd "simpl; trivial.")
         (gn2-simpltrivial cmd ts ngs)))))
 
-(defun get-number-of-goals ()
-  (let ((r (do-show-proof)))
-    (count-seq "?" r)))
-
 (defun compute-proof-tree-result (name)
   (append (obtain-level tdl1 1)
           (obtain-level tdl2 2)
@@ -492,6 +504,7 @@
   (proof-assert-next-command-interactive))
 
 (defun export-theorem-otherwise (cmd result name args)
+  (test-msg (format "ETO %S %S" (point) (proof-queue-or-locked-end)))
   (add-hypotheses name)
   (let ((try-ts (get-top-symbol (lambda (x) nil))))
     (when try-ts
@@ -506,17 +519,15 @@
                                              args))))))
 
 (defun look-through-commands (cmd start-result ts current-level)
-  (do ((cmds       (list-of-commands cmd)
-                   (cdr cmds))
-       (end-result start-result))
-      ((endp cmds)
-       end-result)
-    (cons-prepend end-result (get-numbers cmd (subseq (car cmds)
-                                                      0
-                                                      (or (first-space (car cmds))
-                                                          (length      (car cmds))))
-                                          (get-number-of-goals)
-                                          ts current-level 1))))
+  (let ((end-result start-result))
+    (dolist (elem (list-of-commands cmd) end-result)
+      (cons-prepend end-result
+                    (get-numbers cmd (subseq elem 0 (or (first-space elem)
+                                                        (length      elem)))
+                                 (get-number-of-goals)
+                                 ts
+                                 current-level
+                                 1)))))
 
 (defun save-file-conventions1 ()
   "Save the files"
@@ -635,15 +646,20 @@
         (post          (proof-queue-or-locked-end)))
     (goto-char post)
     (test-msg (format "FINAL %s\nPOST %s\nPOINT %s" final post (point)))
-    (while (and (>  post   pre)
-                (< (point) final))
-      (export-theorem)
-      (setq pre  post)
-      (setq post (proof-queue-or-locked-end))
-      (test-msg (format "PREAFTER %s\nPOSTAFTER %s\nPROOFAFTER %s\nPOINTAFTER %s"
-                        pre post (proof-queue-or-locked-end) (point)))))
+    (condition-case nil
+        (while (and (>  post   pre)
+                    (< (point) final)
+                    (not (equal 0 proof-shell-proof-completed)))
+          (export-theorem)
+          (setq pre  post)
+          (setq post (proof-queue-or-locked-end))
+          (test-msg (format "PREAFTER %s\nPOSTAFTER %s\nPROOFAFTER %s\nPOINTAFTER %s"
+                            pre post (proof-queue-or-locked-end) (point))))
+      (end-of-buffer)))
   (setf saved-theorems (remove-nil-cases))
-  (write-hypotheses))
+  (test-msg (format "Writing hypotheses %S" proof-hypotheses))
+  (write-hypotheses)
+  (test-msg (format "Written hypotheses to %S" hypotheses-file)))
 
 (defun remove-nil-cases ()
   (do ((all-theorems  saved-theorems (cdr all-theorems))
