@@ -505,42 +505,6 @@
                                                         (t           5)) args)
                                              args))))))
 
-(defun export-theorem-aux2 (result name args)
-  (let* ((semis   (get-semis))
-         (first   (car semis))
-         (comment (nth 0 first))
-         (cmd     (nth 1 first))
-         (subcmd  (ignore-errors (remove-jumps (between-spaces cmd))))
-         (ts      nil))
-    (test-msg (format "AFTER SEMIS %s AT %s\n%S" name (proof-queue-or-locked-end) semis))
-    (when semis
-      (cond ((or (string= comment "comment")
-                 (is-in-search cmd)
-                 (search "Proof" cmd))
-             (export-theorem-comment result name args))
-
-            ((is-problematic cmd)
-             (message "FIXME: Skipping 'problematic' step")
-             (export-theorem-problematic))
-
-            ((or (search "Definition" cmd)
-                 (search "Fixpoint"   cmd))
-             (export-theorem-deffix result subcmd args))
-
-            ((or (search "Instance"  cmd)
-                 (search "Theorem"   cmd)
-                 (search "Remark"    cmd)
-                 (search "Corollary" cmd)
-                 (search "Lemma"     cmd))
-             (export-theorem-comment result subcmd args))
-
-            ((or (search "Qed."     cmd)
-                 (search "Defined." cmd))
-             (export-theorem-defined name result))
-
-            (t
-             (export-theorem-otherwise cmd result name args))))))
-
 (defun look-through-commands (cmd start-result ts current-level)
   (do ((cmds       (list-of-commands cmd)
                    (cdr cmds))
