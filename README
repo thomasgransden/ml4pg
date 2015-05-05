@@ -6,8 +6,8 @@ ml4pg_manual.pdf
 
 ## Quick Start ##
 
-ML4PG is maintained at https://gitorious.org/ml4pg where you can check out the
-latest version using git.
+ML4PG is maintained at http://chriswarbo.net/essays/repos/ml4pg.html where you
+can check out the latest version using git.
 
 Once you've downloaded ML4PG, the easiest way to use it is via the Nix package
 manager. If your operating system doesn't provide Nix, you can get it manually
@@ -49,12 +49,33 @@ Graphviz is used to generate the output.
 
 ### Environment ###
 
-ML4PG uses the environment variable `ML4PG_HOME` to find its code.
+ML4PG can be controlled using several environment variables. If these aren't
+provided, you will either be prompted to choose a value, or a default will be
+used:
+
+ - `ML4PG_HOME` is required, and should be the top-level directory of ML4PG,
+   ending in a "/". This is used to load Emacs Lisp files and cache intermediate
+   results. This will be set automatically by `nix-shell`.
+ - `ML4PG_TYPE` should be either `"coq"` or `"ssreflect"`, and determines which
+   implementation of ML4PG should be used. There is effort to bring these
+   together into a common "generic" version, but that's not complete yet.
+   Default is `"coq"`.
+ - `HYPOTHESES_FILE`, if provided, should be a file name. During feature
+   extraction, the hypotheses available at each proof step will be written to
+   this file. Useful for distinguishing between tactic arguments and fresh
+   variables.
+ - `TEST_VERBOSE`, if provided and set to `"t"`, will output extra debug
+   information. Mainly useful when running tests.
+ - `TEST_SUITE` determines which test suite to run, either `"coq"` or
+   `"ssreflect"`. Defaults to `ML4PG_TYPE`.
+ - `ML4PG_TEST_PATTERN`, if provided, should be a regular expression matching
+   the names of tests to run. All tests start with `"ml4pg-"`, so that's the
+   default value.
 
 ## Running ML4PG ##
 
-Once you have a shell with the dependencies available and ML4PG_HOME set,
-whether by Nix or otherwise, you can start ML4PG. There are several ways to do
+Once you have a shell with the dependencies available and ML4PG_HOME set
+(whether by Nix or otherwise) you can start ML4PG. There are several ways to do
 this:
 
 ### Testing ###
@@ -62,7 +83,7 @@ this:
 ML4PG comes with an automated test suite, which you can use to verify that it's
 installed and working. The following command will run all tests:
 
-    emacs --script test/runner.el
+    ./tests/runner.sh
 
 ### Interactive usage ###
 
@@ -84,13 +105,32 @@ You can also specify your Coq file via the commandline:
 
 ### Non-interactive usage ###
 
-ML4PG can be run from the commandline non-interactively. To do this, use Emacs
-in "batch mode":
+ML4PG can be run non-interactively from the commandline or from a shell script.
+To do this, use Emacs in "batch mode":
 
     emacs --batch -l ml4pg.el
 
-That command will launch Emacs, load ML4PG, then exit. You probably want to do
-something else after it's loaded, which should be provided as Emacs Lisp.
+That command will exit immediately after loading ML4PG; to do run something more
+interesing you can provide some extra Emacs Lisp code in several ways. You can
+provide an in-line snippet of ELisp on the command line:
 
-You can do this with the `--eval` option for an in-line snippet, or with the
-`-l` or `--script` options for a file containing Emacs Lisp.
+    emacs --batch -l ml4pg.el --eval '(my-function)'
+
+You can provide an Emacs Lisp file as a script (`--script` implies `--batch`):
+
+    emacs -l ml4pg.el --script my-script.el
+
+If your ELisp script loads ML4PG, via `(load-file "ml4pg.el")`, then you only
+need to provide your script:
+
+    emacs --script my-script.el
+
+You can also give your script a "shebang" for executing Emacs automatically from
+the shell, eg.
+
+    $ cat my-script.el
+    #!emacs --script
+    (load-file "ml4pg.el")
+    (your elisp goes here)
+
+    $ ./my-script.el
