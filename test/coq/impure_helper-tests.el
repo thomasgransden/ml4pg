@@ -110,3 +110,22 @@
       (list n (choose-partitions size n))))
   (lambda (n nums)
     (should (equal n (length nums)))))
+
+(test-with proof-to-def
+  "Ensure proof-to-def finds definitions"
+  nil
+  (lambda ()
+    (dolist (this-name (coq-example-names))
+      (test-msg (format "Looking for %s" this-name))
+      (with-coq-example
+       `(lambda ()
+          (should (equal 1 (point)))
+          (proof-to-def ,this-name)
+          (let* ((old (point))
+                 (new (1+ (search-forward ,this-name)))  ;; Increment for space
+                 (str (buffer-substring-no-properties old new)))
+            (test-msg (format "MOVED TO '%s'" str))
+            (test-msg (format "MATCHING '%s'" (coq-declaration-re-with-name ,this-name)))
+            (should (equal 0
+                           (string-match (coq-declaration-re-with-name ,this-name)
+                                         str)))))))))

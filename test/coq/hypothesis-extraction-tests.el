@@ -212,3 +212,38 @@
           (if (member type '("Definition" "Fixpoint"))
               (should-not saved)
               (should saved)))))))
+
+(test-with example-has-hypotheses
+  "Ensure our hypotheses aren't nil after processing ml4pg.v"
+  nil
+  (lambda ()
+    (should-not proof-hypotheses)  ;; Has anyone forgotten to clean up?
+    (with-coq-example
+     `(lambda ()
+        (should-not proof-hypotheses)
+        (goto-char (point-max))
+        (extract-feature-theorems)
+        (should proof-hypotheses)))
+    (should proof-hypotheses)
+    (setq proof-hypotheses nil)))
+
+(test-with extracting-features-writes-hyps-file
+  "Ensure our hypotheses get written out after feature extraction"
+  (lambda ()
+    (list (make-temp-file "ml4pg_hyps" nil "")))
+  (lambda (hyp-file)
+    (delete-file hyp-file)
+    (with-coq-example
+     `(lambda ()
+        (message "HYPFILE %S" ,hyp-file)
+        (setq hypotheses-file ,hyp-file)
+        (setq proof-hypotheses nil)
+        (goto-char (point-max))
+        (extract-feature-theorems)
+        (setq hypotheses-file nil)))
+    (should (file-exists-p hyp-file))
+    (with-temp-buffer
+      (insert-file-contents hyp-file)
+      (delete-file hyp-file)
+      (should (equal (buffer-string)
+                     (format-hypotheses proof-hypotheses))))))
