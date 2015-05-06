@@ -9,13 +9,11 @@
                         (extract-feature-theorems)))))
 
 (defun coq-example-names ()
-  (let ((names nil))
+  (let ((coq-names nil))
     (with-coq-example (lambda ()
-                        (setq names (extract-coq-names-from (buffer-string)))))
-    names))
-
-(defun show-pos (msg)
-  (test-msg (format "%s %s %s" msg (point) (proof-queue-or-locked-end))))
+                        (setq coq-names
+                              (extract-coq-names-from (buffer-string)))))
+    coq-names))
 
 (test-with can-export-theorem
   "Can export the theorems from ml4pg.v"

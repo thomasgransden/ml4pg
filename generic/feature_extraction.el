@@ -75,8 +75,8 @@
              (export-theorem-otherwise cmd  result name args))))))
 
 (defun get-number-of-goals ()
-  ;; FIXME: Make this more specific, rather than treating all errors as 0
+  (show-pos "Getting goal at")
   (condition-case nil
-      (let ((r (do-show-proof)))
-        (count-seq "?" r))
+      (save-proof-point
+       (count-seq "?" (do-show-proof)))
     (error 0)))

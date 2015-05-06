@@ -274,21 +274,28 @@
       (delete-directory dir t nil))))
 
 (defun send-coq-cmd (str)
-  (condition-case nil
-      (save-excursion
-        (test-msg (format "SENDING: %s" str))
-        (let* ((marker          (proof-queue-or-locked-end))
-               (coq-recoverable t)
-               (result          (proof-shell-invisible-cmd-get-result str)))
-          (test-msg (format "GOT: %s" result))
-          (when (and result
-                     (> (length result) 7)
-                     (equal "Error: " (subseq result 0 7)))
-            (error result))
-          (goto-char marker)
-          (proof-goto-point)
-          result))
-    (end-of-buffer)))
+  (proof-shell-wait)
+  (save-excursion
+    (test-msg (format "SENDING: %s" str))
+    (let* ((marker          (proof-queue-or-locked-end))
+           (coq-recoverable t)
+           (result          (proof-shell-invisible-cmd-get-result str)))
+      (test-msg (format "GOT: %s" result))
+      (goto-char marker)
+      (proof-goto-point)
+      (when (and result
+                 (> (length result) 7)
+                 (equal "Error: " (subseq result 0 7)))
+        (test-msg (format "COQ BUFFER:\n%s\nEND COQ BUFFER"
+                          (coq-buffer-contents)))
+        (error result))
+      result)))
+
+(defun coq-buffer-contents ()
+  (let ((coq-buf (get-buffer "*coq*")))
+    (when coq-buf
+      (with-current-buffer coq-buf
+        (buffer-string)))))
 
 (defun exported-libraries ()
   (interactive)
@@ -366,3 +373,30 @@
   ;; FIXME: Won't work for names like "MyLemma"
   (re-search-backward coq-declaration-re)  ;; Move to start
   (proof-goto-point))
+
+(defun show-pos (msg)
+  (test-msg (format "%s (POINT %s) (PROOF %s)"
+                    msg
+                    (point)
+                    (proof-queue-or-locked-end))))
+
+(defmacro save-proof-point (&rest actions)
+  `(let ((old-point (point))
+         (old-pos   (proof-queue-or-locked-end)))
+     (unwind-protect
+         (progn ,@actions)
+       (proof-to-char old-pos)
+       (goto-char old-point))
+     ;(assert (equal old-point (point))                     t)
+     ;(assert (equal old-pos   (proof-queue-or-locked-end)) t)
+     ))
+
+(defun proof-to-char (pos)
+  "Move the proof cursor to POS"
+  (save-excursion
+    (proof-shell-wait)
+    (goto-char pos)
+    (proof-goto-point)
+    (proof-shell-wait)
+    ;(assert (equal pos (proof-queue-or-locked-end)) t)
+    ))

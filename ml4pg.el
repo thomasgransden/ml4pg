@@ -71,6 +71,7 @@
   (unless coq-recoverable
     (when proof-shell-last-response-output
       (message "Last Coq response: %s" proof-shell-last-response-output))
+    (message "COQ BUFFER\n%s\nEND COQ BUFFER" (coq-buffer-contents))
     (error "Caught error from Coq process. Details: %S" args)))
 
 (defun ml4pg-mode ()

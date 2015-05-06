@@ -180,24 +180,18 @@
 
 (defun get-type-id-induction (object arg-ind)
   (let ((check (and (equal arg-ind 1)
-                    (condition-case nil
-                       (progn (get-type-id object)
-                              t)
-                     (error))))
+                    (proof-save-point
+                     (condition-case nil
+                         (progn (get-type-id object)
+                                t)
+                       (error)))))
         gt)
-    (do-undo)
     (test-msg (format "CHECK %S" check))
     (unless check (do-intro-of object))
     (setf gt (get-type-id object))
     (unless check (do-undo))
     (do-induction-on object)
     gt))
-
-(defun with-name-introduced (name f)
-  (do-intro-of name)
-  (let ((result (funcall f)))
-    (do-undo)
-    result))
 
 (defun add-info-to-tree (info level)
   "Add the information to the corresponding tree depth level"
@@ -504,15 +498,23 @@
   (proof-assert-next-command-interactive))
 
 (defun export-theorem-otherwise (cmd result name args)
-  (test-msg (format "ETO %S %S" (point) (proof-queue-or-locked-end)))
+  (show-pos "ETO1")
   (add-hypotheses name)
+  (show-pos "ETO2")
   (let ((try-ts (get-top-symbol (lambda (x) nil))))
+    (show-pos "ETO3")
     (when try-ts
+      (show-pos "ETO4")
       (setf ts try-ts)
       (setf ng  (get-number-of-goals))
+      (show-pos "ETO5")
       (proof-assert-next-command-interactive)
+      (show-pos "ETO6")
       (setf ng2 (get-number-of-goals))
-      (let ((arg (look-through-commands cmd result ts (nth 0 args))))
+      (show-pos "ETO7")
+      (let ((arg (save-proof-point
+                  (look-through-commands cmd result ts (nth 0 args)))))
+        (show-pos "ETO8")
         (export-theorem-aux2 arg name (apply (nth (cond ((< ng  ng2) 3)
                                                         ((< ng2 ng)  4)
                                                         (t           5)) args)
@@ -648,8 +650,7 @@
     (test-msg (format "FINAL %s\nPOST %s\nPOINT %s" final post (point)))
     (condition-case nil
         (while (and (>  post   pre)
-                    (< (point) final)
-                    (not (equal 0 proof-shell-proof-completed)))
+                    (< (point) final))
           (export-theorem)
           (setq pre  post)
           (setq post (proof-queue-or-locked-end))

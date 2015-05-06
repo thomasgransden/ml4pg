@@ -217,7 +217,8 @@
   "Ensure our hypotheses aren't nil after processing ml4pg.v"
   nil
   (lambda ()
-    (should-not proof-hypotheses)  ;; Has anyone forgotten to clean up?
+    (setq proof-hypotheses nil)
+    (setq hypotheses-file nil)
     (with-coq-example
      `(lambda ()
         (should-not proof-hypotheses)

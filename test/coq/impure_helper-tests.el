@@ -129,3 +129,26 @@
             (should (equal 0
                            (string-match (coq-declaration-re-with-name ,this-name)
                                          str)))))))))
+
+(defun proof-steps-in-buffer ()
+  "Return a list of the positions that PG steps between in the current buffer"
+  (goto-char (point-min))
+  (proof-goto-point)
+  (let ((points (list (proof-queue-or-locked-end))))
+    (while (equal (length (remove-duplicates points))
+                  (length points))
+      (ignore-errors (proof-assert-next-command-interactive))
+      (setq points (cons (proof-queue-or-locked-end) points)))
+    points))
+
+(defconst example-points (with-coq-example 'proof-steps-in-buffer)
+  "The points between proof steps in the ml4pg.v example file")
+
+(test-with proof-to-char
+  "Test that proof-to-char moves proof point"
+  (list-of (gen-elem example-points))
+  (lambda (pt)
+    (with-coq-example
+     `(lambda ()
+        (proof-to-char ,pt)
+        (should (equal ,pt (proof-queue-or-locked-end)))))))

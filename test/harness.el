@@ -85,15 +85,26 @@
              (gen-coq-correct-theorem))))
 
 (defun with-coq-example (f)
+  "Make a copy of the ml4pg.v example file, open it, execute F, then delete the
+   copy and kill Coq. Useful for testing with real(istic) Coq code."
+  ;; ProofGeneral only allows one active file, so deactivate any existing file
   (when proof-script-buffer
     (proof-deactivate-scripting 'retract))
+  ;; Copy and load ml4pg.v
   (let ((path (make-temp-file "ml4pg" nil ".v")))
-    (with-temp-file path
-      (insert-file-contents-literally (concat home-dir "ml4pg.v")))
-    (unwind-protect
-        (progn (find-file path)
-               (funcall f))
-      (delete-file path)
-      (proof-script-remove-all-spans-and-deactivate)
-      (let ((coq-recoverable t))
-        (ignore-errors (proof-shell-exit t))))))
+    (kill-buffer
+     (with-temp-file path
+       (insert-file-contents-literally (concat home-dir "ml4pg.v"))
+       (current-buffer)))
+    (let ((buf nil))
+      (unwind-protect
+          (progn (find-file path)
+                 (setq buf (current-buffer))
+                 ;; Run f
+                 (funcall f))
+        ;; Cleanup
+        (when buf (kill-buffer buf))
+        (delete-file path)
+        (proof-script-remove-all-spans-and-deactivate)
+        (let ((coq-recoverable t))
+          (ignore-errors (proof-shell-exit t)))))))
