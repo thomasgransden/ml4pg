@@ -61,12 +61,12 @@
    ACTION"
   (let ((path (make-temp-file "ml4pg-test" nil ".v")))
     (unwind-protect
-        (with-temp-file path
+        (progn
+          (with-temp-file path
+            (insert str))
+          (find-file path)
           (let ((noninteractive t))
-            (insert str)
-            ;(select-mode)
-            ;(normal-mode)
-            (coq-mode)
+            ;(coq-mode)
             (test-msg (format "Using mode '%s'" major-mode))
             (funcall action)))
       (delete-file path))))
@@ -80,11 +80,6 @@
                              (extract-feature-theorems)
                              (test-msg "LOADED!")
                              (funcall ,action))))
-
-(defmacro generate-and-run (func)
-  `(compose (lambda (str)
-              (list str (ml4pg-load-and-extract-info str ,func)))
-            (gen-coq-correct-theorem)))
 
 (defun with-coq-example (f)
   "Make a copy of the ml4pg.v example file, open it, execute F, then delete the

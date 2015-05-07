@@ -61,11 +61,13 @@
   (list-of (gen-coq-name)
            (gen-coq-name)
            (gen-num)
-           (gen-num))
-  (lambda (pre post top level)
+           (gen-num)
+           (gen-coq-correct-theorem))
+  (lambda (pre post top level thm)
     (let* ((cmd  (concat pre "=>" post)))
-      (generate-and-run `(lambda ()
-                           (numbers-move=> ,cmd ,top ,level))))))
+      (ml4pg-load-and-extract-info thm
+                                   `(lambda ()
+                                      (numbers-move=> ,cmd ,top ,level))))))
 
 (test-with remove-arrow
   "Test what remove=> does"
@@ -99,11 +101,12 @@
 
 (test-with get-type-id
   "Test calling convention of get-type-id"
-  nil
-  ;; (generate-and-run (lambda ()
-  ;;                     (get-type-id (funcall (gen-coq-name)))))
-  (lambda ()
-     (should t)))
+  (list-of (gen-coq-correct-theorem)
+           (gen-coq-name))
+  (lambda (thm name)
+    (ml4pg-load-and-extract-info thm
+                                 `(lambda ()
+                                    (get-type-id ,name)))))
 
 (test-with export-theorem-aux
   "Test what export-theorem-aux does"
