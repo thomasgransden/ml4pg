@@ -64,25 +64,27 @@
         (with-temp-file path
           (let ((noninteractive t))
             (insert str)
-            (select-mode)
-            (goto-char (point-max))
+            ;(select-mode)
+            ;(normal-mode)
+            (coq-mode)
+            (test-msg (format "Using mode '%s'" major-mode))
             (funcall action)))
       (delete-file path))))
 
-(defun ml4pg-load-and-extract-info (str action)
+(defmacro ml4pg-load-and-extract-info (str action)
   "Insert STR into a temporary buffer, load ML4PG, extract features then run
    ACTION"
-  (let ((f (indirect-function action)))
-    (ml4pg-load-and-execute str
-                            `(lambda ()
-                               (extract-feature-theorems)
-                               (funcall ,f)))))
+  `(ml4pg-load-and-execute str
+                           (lambda ()
+                             (goto-char (point-max))
+                             (extract-feature-theorems)
+                             (test-msg "LOADED!")
+                             (funcall ,action))))
 
-(defun generate-and-run (func)
-  (let ((f (indirect-function func)))
-    (compose `(lambda (str)
-                (list str (ml4pg-load-and-extract-info str ,f)))
-             (gen-coq-correct-theorem))))
+(defmacro generate-and-run (func)
+  `(compose (lambda (str)
+              (list str (ml4pg-load-and-extract-info str ,func)))
+            (gen-coq-correct-theorem)))
 
 (defun with-coq-example (f)
   "Make a copy of the ml4pg.v example file, open it, execute F, then delete the

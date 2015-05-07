@@ -1,9 +1,13 @@
 (defun export-theorem-comment (result name args)
+  "Not just for comments! Steps over Coq commands we don't want to extract from,
+   eg. imports, notations, or even theorem declarations."
   (let ((pos (proof-queue-or-locked-end)))
     (proof-assert-next-command-interactive)
     (test-msg (format "ETC %s %s" pos (proof-queue-or-locked-end)))
     (when (equal pos (proof-queue-or-locked-end))
+      (test-msg (format "SCRIPT\n%s\nEND SCRIPT" (buffer-string)))
       (test-msg (format "COQ\n%s\nEND COQ" (coq-buffer-contents)))
+      (assert (not (equal pos (proof-queue-or-locked-end))) t)
       (error "Stuck at %s, after %s" pos name)))
   (export-theorem-aux2 result name args))
 
@@ -65,7 +69,8 @@
                  (search "Theorem"   cmd)
                  (search "Remark"    cmd)
                  (search "Corollary" cmd)
-                 (search "Lemma"     cmd))
+                 (search "Lemma"     cmd)
+                 (search "Fact"      cmd))
              (export-theorem-comment result subcmd args))
 
             ((or (search "Qed."     cmd)

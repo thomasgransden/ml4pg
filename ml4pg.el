@@ -41,18 +41,15 @@
 
 (defun select-mode ()
   (interactive)
-  (let* ((msg   "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")
-         (smode (if (or noninteractive mode)
-                    mode
-                    (read-string msg))))
-    (unless (equal smode mode)
-      (setq mode (case smode
-                   ("s" "ssreflect")
-                   ("n" nil)
-                   (t   "coq"))))
-    (cond ((string= mode "ssreflect") (ml4pg-load-ss))
-          ((string= mode "n")         nil)
-          (t                          (ml4pg-load-coq)))))
+  (unless (or noninteractive mode)
+    (setq mode (case (read-string "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n) : ")
+                 ("s" "ssreflect")
+                 ("n" nil)
+                 (t   "coq"))))
+  (test-msg (format "Loading for '%s'" mode))
+  (cond ((string= mode "ssreflect") (ml4pg-load-ss))
+        ((string= mode "n")         nil)
+        (t                          (ml4pg-load-coq))))
 
 (require 'cl)
 

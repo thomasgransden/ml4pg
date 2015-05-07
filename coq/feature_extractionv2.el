@@ -47,7 +47,7 @@
                         "End" "Notation" "Hint" "Inductive" "Variable"
                         "Implicit" "Import" "Canonical" "Coercion" "Next"
                         "Local" "Set" "Instance" "Module" "Ltac" "Let" "Opaque"
-                        "Bind" "Scope" "Require" "Infix" "Record" "Fact" "Print"
+                        "Bind" "Scope" "Require" "Infix" "Record" "Print"
                         "Arguments" "Function"))
 
 ;; Impure functions and macros for building up results
@@ -481,7 +481,7 @@
                                    (list (list name (take-30-from fv i))))))))
 
 (defun export-theorem-aux (result name current-level dot-level i)
-  (test-msg "EXPORTING THEOREM AUX")
+  (test-msg (format "EXPORTING THEOREM AUX %s" name))
   (export-theorem-aux2 result name (list current-level dot-level i
                                          ;; Goal count goes up
                                          (lambda (current-level dot-level i up down same)

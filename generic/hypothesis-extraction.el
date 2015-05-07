@@ -40,8 +40,10 @@
 
 (defun add-hypotheses (name)
   (test-msg (format "ADDING HYPOTHESES FOR %s" name))
-  (let ((hyps (get-hypotheses)))
-    (setq proof-hypotheses (append-to-hypotheses name hyps proof-hypotheses))))
+  (unless (equal "" name)
+    (setq proof-hypotheses (append-to-hypotheses name
+                                                 (get-hypotheses)
+                                                 proof-hypotheses))))
 
 (defun append-to-hypotheses (name new-hyps hypotheses)
   (if (equal name "")
