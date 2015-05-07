@@ -3,6 +3,7 @@
     (proof-assert-next-command-interactive)
     (test-msg (format "ETC %s %s" pos (proof-queue-or-locked-end)))
     (when (equal pos (proof-queue-or-locked-end))
+      (test-msg (format "COQ\n%s\nEND COQ" (coq-buffer-contents)))
       (error "Stuck at %s, after %s" pos name)))
   (export-theorem-aux2 result name args))
 

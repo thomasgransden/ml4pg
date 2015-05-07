@@ -274,6 +274,8 @@
       (delete-directory dir t nil))))
 
 (defun send-coq-cmd (str)
+  ;; We're going off script
+  (setq coq-is-on-script nil)
   (save-proof-point
    (show-pos (format "SENDING: %s" str))
    (let* ((coq-recoverable t)
@@ -385,7 +387,16 @@
      ;(assert (equal old-pos   (proof-queue-or-locked-end)) t)
      ))
 
+(defvar coq-is-on-script t
+  "Should be t when all of the active Coq commands have come from our .v script,
+   and nil whenever we've sent an ad-hoc Coq command via ProofGeneral.")
+
 (defun proof-to-char (pos)
+  (unless (and coq-is-on-script
+               (equal pos (proof-queue-or-locked-end)))
+    (proof-to-char-fallback pos)))
+
+(defun proof-to-char-fallback (pos)
   "Move the proof cursor to the step at or after POS. Waits for Coq to finish
    processing, to make sure we really got there."
   (save-excursion
@@ -395,7 +406,9 @@
     (unless (equal pos 1)
       (goto-char pos)
       (proof-goto-point)
-      (proof-shell-wait))))
+      (proof-shell-wait)))
+  ;; We're back on script
+  (setq coq-is-on-script t))
 
 (defun shuffle-list (lst)
   (if lst

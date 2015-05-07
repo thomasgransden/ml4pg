@@ -9,11 +9,20 @@
                         (extract-feature-theorems)))))
 
 (test-with can-export-theorem
-  "Can export the theorems from ml4pg.v"
+  "Can export a theorem from ml4pg.v"
   (lambda ()
-    (list (shuffle-list example-names)))
-  (lambda (ex-ns)
-    (dolist (this-name ex-ns)
+    (list (funcall (gen-elem example-names))))
+  (lambda (name)
+    (with-coq-example
+     `(lambda ()
+        (proof-to-def ,name)
+        (export-theorem)))))
+
+(test-with can-export-all-theorems
+  "Can export the theorems from ml4pg.v"
+  nil
+  (lambda ()
+    (dolist (this-name example-names)
       (test-msg (format "CAN EXPORT %s?" this-name))
       (with-coq-example
        `(lambda ()
