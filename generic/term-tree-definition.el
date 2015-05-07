@@ -17,7 +17,7 @@
   (interactive)
   (send-coq-cmd (format "Unset Printing Notations."))
   (test-msg "AD1")
-  (let* ((iftable  (send-coq-cmd (format "Print Table Printing If.")))
+  (let* ((iftable  (send-coq-cmd "Print Table Printing If."))
          (term     nil))
     (test-msg "AD2")
     (coqprint iftable "Remove")

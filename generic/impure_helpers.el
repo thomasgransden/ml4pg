@@ -377,24 +377,35 @@
                     (proof-queue-or-locked-end))))
 
 (defmacro save-proof-point (&rest actions)
-  `(let ((old-point (point))
-         (old-pos   (proof-queue-or-locked-end)))
-     (unwind-protect
-         (progn ,@actions)
-       (proof-to-char old-pos)
-       (goto-char old-point))
-     ;(assert (equal old-point (point))                     t)
-     ;(assert (equal old-pos   (proof-queue-or-locked-end)) t)
-     ))
+  `(let* ((old-point (point))
+          (old-pos   (proof-queue-or-locked-end))
+          (result    (unwind-protect
+                         (progn ,@actions)
+                       (proof-to-char old-pos)
+                       (goto-char old-point))))
+     (assert (equal old-point (point)) t)
+     (assert-proof-at old-pos)
+     result))
 
 (defvar coq-is-on-script t
   "Should be t when all of the active Coq commands have come from our .v script,
    and nil whenever we've sent an ad-hoc Coq command via ProofGeneral.")
 
 (defun proof-to-char (pos)
-  (unless (and coq-is-on-script
-               (equal pos (proof-queue-or-locked-end)))
-    (proof-to-char-fallback pos)))
+  ;; Do we have an appreciable proof region?
+  (if (or (proof-locked-region-empty-p)
+          (< (proof-queue-or-locked-end) 100))
+      ;; No. Just re-do from the beginning.
+      (proof-to-char-fallback pos)
+      ;; Yes. Go backwards one step, then go to POS
+      (save-excursion
+        (goto-char (proof-queue-or-locked-end))
+        (proof-backward-command 5)
+        (proof-goto-point)
+        (proof-shell-wait)
+        (goto-char pos)
+        (proof-goto-point)
+        (proof-shell-wait))))
 
 (defun proof-to-char-fallback (pos)
   "Move the proof cursor to the step at or after POS. Waits for Coq to finish
