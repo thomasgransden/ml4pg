@@ -49,12 +49,7 @@
 (defun do-show-proof ()
   (send-coq-cmd "Show Proof"))
 
-(defun do-unfocus ()
-  (send-coq-cmd "Unfocus"))
-
 (defun do-goal-str (&optional handler)
-  (do-set-printing)
-  (let ((result (goal-str-aux (do-focus handler))))
-    ;(ignore-errors (do-unfocus))
-    ;(ignore-errors (do-unset-printing))
-    result))
+  (save-proof-point
+   (do-set-printing)
+   (goal-str-aux (do-focus handler))))

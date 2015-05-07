@@ -274,22 +274,18 @@
       (delete-directory dir t nil))))
 
 (defun send-coq-cmd (str)
-  (proof-shell-wait)
-  (save-excursion
-    (test-msg (format "SENDING: %s" str))
-    (let* ((marker          (proof-queue-or-locked-end))
-           (coq-recoverable t)
-           (result          (proof-shell-invisible-cmd-get-result str)))
-      (test-msg (format "GOT: %s" result))
-      (goto-char marker)
-      (proof-goto-point)
-      (when (and result
-                 (> (length result) 7)
-                 (equal "Error: " (subseq result 0 7)))
-        (test-msg (format "COQ BUFFER:\n%s\nEND COQ BUFFER"
-                          (coq-buffer-contents)))
-        (error result))
-      result)))
+  (save-proof-point
+   (show-pos (format "SENDING: %s" str))
+   (let* ((coq-recoverable t)
+          (result          (proof-shell-invisible-cmd-get-result str)))
+     (show-pos (format "GOT: %s" result))
+     (when (and result
+                (> (length result) 7)
+                (equal "Error: " (subseq result 0 7)))
+       (test-msg (format "COQ BUFFER:\n%s\nEND COQ BUFFER"
+                         (coq-buffer-contents)))
+       (error result))
+     result)))
 
 (defun coq-buffer-contents ()
   (let ((coq-buf (get-buffer "*coq*")))
@@ -325,8 +321,8 @@
       (sit-for 0.5))))
 
 (defun choose-distinct (size &optional num)
-  "Generate a sorted list of length NUM, containing distinct random numbers,
-   each less than SIZE.
+  "Generate a list of length NUM, containing distinct random numbers, each less
+   than SIZE.
    SIZE must be >= 1. If non-nil, NUM must be >= 1 and <= SIZE. If nil, a random
   number is used."
   (let ((n      (or num (1+ (random size))))
@@ -339,12 +335,10 @@
       ;; Choose a random number from 1 to (SIZE - i), since i possibilities have
       ;; already been taken
       (let ((x (1+ (random (- size i)))))
-        ;; Step over preceding choices (relies on result being sorted)
-        (dolist (prev result)
-          (when (<= prev x) (setq x (1+ x))))
-        ;; Add the new value to result and re-sort
-        (append-to result x)
-        (setq result (sort result '<))))))
+        ;; Step over preceding choices
+        (setq x (bump-to-above x 0 result))
+        ;; Add the new value to result
+        (append-to result x)))))
 
 (defun choose-partitions (size &optional num)
   "Choose random positive numbers which sum to SIZE"
@@ -392,11 +386,23 @@
      ))
 
 (defun proof-to-char (pos)
-  "Move the proof cursor to POS"
+  "Move the proof cursor to the step at or after POS. Waits for Coq to finish
+   processing, to make sure we really got there."
   (save-excursion
-    (proof-shell-wait)
-    (goto-char pos)
-    (proof-goto-point)
-    (proof-shell-wait)
-    ;(assert (equal pos (proof-queue-or-locked-end)) t)
-    ))
+    (unless (proof-locked-region-empty-p)
+      (proof-retract-buffer)
+      (proof-shell-wait))
+    (unless (equal pos 1)
+      (goto-char pos)
+      (proof-goto-point)
+      (proof-shell-wait))))
+
+(defun shuffle-list (lst)
+  (if lst
+      (let ((result nil))
+        (dolist (index (choose-distinct (length lst) (length lst)) result)
+          (append-to result (nth (1- index) lst))))
+      nil))
+
+(defmacro assert-proof-at (pos)
+  `(assert (equal ,pos (proof-queue-or-locked-end)) t))

@@ -260,3 +260,9 @@
            (bit3    (search " " str :start2 bit2))
            (substr  (subseq str bit2 bit3)))
       (should (equal substr between)))))
+
+(test-with bump-to-above
+  "Test bumping up numbers works"
+  nil
+  (lambda ()
+    (should (equal 5 (bump-to-above 1 0 '(1 2 3 4 7 8 9))))))

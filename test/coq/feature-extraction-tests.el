@@ -8,25 +8,18 @@
                         (test-msg "RUNNING extract-feature-theorems")
                         (extract-feature-theorems)))))
 
-(defun coq-example-names ()
-  (let ((coq-names nil))
-    (with-coq-example (lambda ()
-                        (setq coq-names
-                              (extract-coq-names-from (buffer-string)))))
-    coq-names))
-
 (test-with can-export-theorem
   "Can export the theorems from ml4pg.v"
-  nil
   (lambda ()
-    (dolist (this-name (coq-example-names))
+    (list (shuffle-list example-names)))
+  (lambda (ex-ns)
+    (dolist (this-name ex-ns)
       (test-msg (format "CAN EXPORT %s?" this-name))
       (with-coq-example
        `(lambda ()
           (let ((name ,this-name))
             (proof-to-def name)
-            (test-msg (format "RUNNING export-theorem '%s'" name))
-            (test-msg (format "AT %s %s" (point) (proof-queue-or-locked-end)))
+            (show-pos (format "RUNNING export-theorem '%s'" name))
             (export-theorem)
             (test-msg (format "VARIABLES: %S"
                               (list 'tdl1         tdl1

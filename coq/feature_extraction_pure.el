@@ -72,7 +72,9 @@
       (search-in-hyp obj (cdr hyp)))))
 
 (defun arg-induction-aux (res)
-  (if (search "Error" res) -1 1))
+  (if (or (not res) (search "Error" res))
+      -1
+      1))
 
 (defun remove-dots (str)
   (replace-regexp-in-string (regexp-quote ".") "" str))

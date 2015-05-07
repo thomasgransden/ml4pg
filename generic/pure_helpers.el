@@ -382,3 +382,20 @@
 (defun contains-any (txt snippets)
   "Does the string TXT contain any of the strings in SNIPPETS?"
   (any (mapcar `(lambda (snippet) (search snippet ,txt)) snippets)))
+
+(defun filter-list (pred lst)
+  (let ((result nil))
+    (dolist (elem lst result)
+      (when (funcall pred elem)
+        (append-to result elem)))))
+
+(defun elems-lesseq-than (x lst)
+  (filter-list `(lambda (elem) (<= elem x)) lst))
+
+(defun bump-to-above (x n lst)
+  "If there are more than N elements in LST which are <= X, iteratively
+   increment X."
+  (let ((below (length (elems-lesseq-than x lst))))
+    (if (equal n below)
+        x
+        (bump-to-above (+ x (- below n)) below lst))))

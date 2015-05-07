@@ -145,8 +145,8 @@
 (defun get-obj-intros ()
   "Obtain the values associated with intros both for the case when parameters
    are given and the case intros."
-  (let* ((undo    (proof-undo-last-successful-command))
-         (objects (do-show-intros)))
+  (proof-undo-last-successful-command)
+  (let ((objects (do-show-intros)))
     (proof-assert-next-command-interactive)
     (get-obj-intros-aux objects 'extract-params 'get-top-symbols-list 'length)))
 
@@ -173,25 +173,35 @@
     start)))
 
 (defun arg-induction (object)
-  (do-undo)
-  (let ((res (do-check-object object)))
-    (do-induction-on object)
-    (arg-induction-aux res)))
+  "Try to recover the argument used by a previous 'induction x' call. Note that
+   'x' might be a variable, or it might be a fresh name!"
+  (let ((marker (proof-queue-or-locked-end))
+        (result nil))
+    (save-proof-point
+     ;; Undo the induction step
+     ;; FIXME: This makes a massive assumption about preconditions!
+     (proof-undo-last-successful-command)
+     (let* ((check  (ignore-errors (do-check-object object))))
+       (setq result (arg-induction-aux check))))
+    (assert-proof-at marker)
+    result))
 
 (defun get-type-id-induction (object arg-ind)
-  (let ((check (and (equal arg-ind 1)
-                    (proof-save-point
-                     (condition-case nil
-                         (progn (get-type-id object)
-                                t)
-                       (error)))))
-        gt)
-    (test-msg (format "CHECK %S" check))
-    (unless check (do-intro-of object))
-    (setf gt (get-type-id object))
-    (unless check (do-undo))
-    (do-induction-on object)
-    gt))
+  "Try to get type of an inductive argument, even if it's a fresh name"
+  (let* ((marker     (proof-queue-or-locked-end))
+         (result     nil)
+         (need-intro (not (and (equal arg-ind 1)
+                               (save-proof-point
+                                (condition-case nil
+                                    (progn (get-type-id object)
+                                           t)
+                                  (error)))))))
+    (save-proof-point
+     (when need-intro (do-intro-of object))
+     (setq result (get-type-id object))
+     (when need-intro (do-undo)))
+    (assert-proof-at marker)
+    result))
 
 (defun add-info-to-tree (info level)
   "Add the information to the corresponding tree depth level"
@@ -498,38 +508,40 @@
   (proof-assert-next-command-interactive))
 
 (defun export-theorem-otherwise (cmd result name args)
-  (show-pos "ETO1")
-  (add-hypotheses name)
-  (show-pos "ETO2")
-  (let ((try-ts (get-top-symbol (lambda (x) nil))))
-    (show-pos "ETO3")
-    (when try-ts
-      (show-pos "ETO4")
-      (setf ts try-ts)
-      (setf ng  (get-number-of-goals))
-      (show-pos "ETO5")
-      (proof-assert-next-command-interactive)
-      (show-pos "ETO6")
-      (setf ng2 (get-number-of-goals))
-      (show-pos "ETO7")
-      (let ((arg (save-proof-point
-                  (look-through-commands cmd result ts (nth 0 args)))))
-        (show-pos "ETO8")
-        (export-theorem-aux2 arg name (apply (nth (cond ((< ng  ng2) 3)
-                                                        ((< ng2 ng)  4)
-                                                        (t           5)) args)
-                                             args))))))
+  (let ((marker (proof-queue-or-locked-end)))
+    (show-pos "ETO1")
+    (add-hypotheses name)
+    (assert-proof-at marker)
+    (let ((try-ts (get-top-symbol (lambda (x) nil))))
+      (assert-proof-at marker)
+      (when try-ts
+        (setf ts try-ts)
+        (setf ng  (get-number-of-goals))
+        (assert-proof-at marker)
+        (proof-assert-next-command-interactive)
+        (setf marker (proof-queue-or-locked-end))
+        (show-pos "ETO2")
+        (setf ng2 (get-number-of-goals))
+        (assert-proof-at marker)
+        (let ((arg (save-proof-point
+                    (look-through-commands cmd result ts (nth 0 args)))))
+          (assert-proof-at marker)
+          (export-theorem-aux2 arg name (apply (nth (cond ((< ng  ng2) 3)
+                                                          ((< ng2 ng)  4)
+                                                          (t           5)) args)
+                                               args)))))))
 
 (defun look-through-commands (cmd start-result ts current-level)
   (let ((end-result start-result))
     (dolist (elem (list-of-commands cmd) end-result)
       (cons-prepend end-result
-                    (get-numbers cmd (subseq elem 0 (or (first-space elem)
-                                                        (length      elem)))
-                                 (get-number-of-goals)
-                                 ts
-                                 current-level
-                                 1)))))
+                    (save-proof-point
+                     (get-numbers cmd (subseq elem 0 (or (first-space elem)
+                                                         (length      elem)))
+                                  (get-number-of-goals)
+                                  ts
+                                  current-level
+                                  1))))))
 
 (defun save-file-conventions1 ()
   "Save the files"
