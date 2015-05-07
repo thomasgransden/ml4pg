@@ -60,16 +60,9 @@
   "Insert STR into a temporary buffer, load ML4PG in that buffer then run
    ACTION"
   (let ((path (make-temp-file "ml4pg-test" nil ".v")))
-    (unwind-protect
-        (progn
-          (with-temp-file path
-            (insert str))
-          (find-file path)
-          (let ((noninteractive t))
-            ;(coq-mode)
-            (test-msg (format "Using mode '%s'" major-mode))
-            (funcall action)))
-      (delete-file path))))
+    (with-temp-file path
+      (insert str))
+    (run-with-temp-coq-file path action)))
 
 (defmacro ml4pg-load-and-extract-info (str action)
   "Insert STR into a temporary buffer, load ML4PG, extract features then run
@@ -81,27 +74,31 @@
                              (test-msg "LOADED!")
                              (funcall ,action))))
 
-(defun with-coq-example (f)
-  "Make a copy of the ml4pg.v example file, open it, execute F, then delete the
-   copy and kill Coq. Useful for testing with real(istic) Coq code."
+(defun run-with-temp-coq-file (path func)
   ;; ProofGeneral only allows one active file, so deactivate any existing file
   (when proof-script-buffer
     (proof-deactivate-scripting 'retract))
+  (let ((buf            nil)
+        (noninteractive t))
+    (unwind-protect
+        (progn (find-file path)
+               (setq buf (current-buffer))
+               ;; Run func
+               (funcall func))
+      ;; Cleanup
+      (when buf (kill-buffer buf))
+      (delete-file path)
+      (proof-script-remove-all-spans-and-deactivate)
+      (let ((coq-recoverable t))
+        (ignore-errors (proof-shell-exit t))))))
+
+(defun with-coq-example (f)
+  "Make a copy of the ml4pg.v example file, open it, execute F, then delete the
+   copy and kill Coq. Useful for testing with real(istic) Coq code."
   ;; Copy and load ml4pg.v
   (let ((path (make-temp-file "ml4pg" nil ".v")))
     (kill-buffer
      (with-temp-file path
        (insert-file-contents-literally (concat home-dir "ml4pg.v"))
        (current-buffer)))
-    (let ((buf nil))
-      (unwind-protect
-          (progn (find-file path)
-                 (setq buf (current-buffer))
-                 ;; Run f
-                 (funcall f))
-        ;; Cleanup
-        (when buf (kill-buffer buf))
-        (delete-file path)
-        (proof-script-remove-all-spans-and-deactivate)
-        (let ((coq-recoverable t))
-          (ignore-errors (proof-shell-exit t)))))))
+    (run-with-temp-coq-file path f)))

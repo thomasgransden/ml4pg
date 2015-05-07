@@ -514,6 +514,7 @@
     (assert-proof-at marker)
     (let ((try-ts (get-top-symbol (lambda (x) nil))))
       (assert-proof-at marker)
+      (assert try-ts)
       (when try-ts
         (setf ts try-ts)
         (setf ng  (get-number-of-goals))

@@ -2,8 +2,12 @@
   "Not just for comments! Steps over Coq commands we don't want to extract from,
    eg. imports, notations, or even theorem declarations."
   (let ((pos (proof-queue-or-locked-end)))
+    (show-pos (format "ETC %s\nX\n%s\nY\n%s\nZ\n"
+                      name
+                      (buffer-string)
+                      (coq-buffer-contents)))
     (proof-assert-next-command-interactive)
-    (test-msg (format "ETC %s %s" pos (proof-queue-or-locked-end)))
+    (show-pos "ETC2")
     (when (equal pos (proof-queue-or-locked-end))
       (test-msg (format "SCRIPT\n%s\nEND SCRIPT" (buffer-string)))
       (test-msg (format "COQ\n%s\nEND COQ" (coq-buffer-contents)))
@@ -65,12 +69,13 @@
                  (search "Fixpoint"   cmd))
              (export-theorem-deffix  result subcmd args))
 
-            ((or (search "Instance"  cmd)
-                 (search "Theorem"   cmd)
-                 (search "Remark"    cmd)
-                 (search "Corollary" cmd)
-                 (search "Lemma"     cmd)
-                 (search "Fact"      cmd))
+            ((or (search "Instance"    cmd)
+                 (search "Theorem"     cmd)
+                 (search "Remark"      cmd)
+                 (search "Corollary"   cmd)
+                 (search "Lemma"       cmd)
+                 (search "Proposition" cmd)
+                 (search "Fact"        cmd))
              (export-theorem-comment result subcmd args))
 
             ((or (search "Qed."     cmd)
