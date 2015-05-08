@@ -67,6 +67,21 @@
 	))
 	  )))
 
+(defun use-nix-if-present ()
+  (dolist (path '("~/.nix-profile/share/emacs/site-lisp"
+                  "/run/current-system/sw/share/emacs/site-lisp"))
+    (when (and (file-exists-p path)
+               (not (member path load-path)))
+      (message "Adding %s to load path" path)
+      (setq load-path (append load-path (list path))))))
+
+(defun load-proof-general ()
+  (unless (fboundp 'coq-build-prog-args)
+    (message "Loading Proof General")
+    (load "ProofGeneral/generic/proof-site")
+    (with-temp-buffer
+      (coq-mode))))
+
 (require 'cl)
 
 (add-to-list 'auto-mode-alist
@@ -74,8 +89,5 @@
 			     (progn (coq-mode) (select-mode) (delete-other-windows) (previous-buffer) (previous-buffer))
                                )))
 
-
-
-
-
-
+(use-nix-if-present)
+(load-proof-general)
