@@ -384,10 +384,12 @@
   "Show similar theorems"
   nil
   (lambda ()
+    ;; FIXME: The feature itself seems to be broken :(
     (should nil)))
 
 (test-with top-level-show-cluster-libraries
   "Show cluster libraries"
   nil
   (lambda ()
+    ;; FIXME: The feature itself seems to be broken :(
     (should nil)))
