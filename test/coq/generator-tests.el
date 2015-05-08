@@ -120,7 +120,6 @@
                               (gen-num))))
   (lambda (strs)
     (let ((result (funcall (apply 'gen-string-without strs))))
-      (should-not (equal "" result))
       (dolist (str strs)
         (should-not (search str result))))))
 
