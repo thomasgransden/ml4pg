@@ -1,2 +1,17 @@
-Coq is unresponsive when noninteractive
-Most tests fail when run graphically
+Most tests fail
+
+Generators don't work:
+
+ml4pg-gen-char-nonempty
+ml4pg-gen-coq-correct-theorem
+ml4pg-gen-coq-name
+ml4pg-gen-list
+ml4pg-gen-list-of-callable
+ml4pg-gen-nested-list
+ml4pg-gen-readable
+ml4pg-gen-readable-no-question
+ml4pg-gen-readable-no-slash
+ml4pg-gen-sized-list-conserves-size
+ml4pg-gen-sized-list-of
+ml4pg-gen-string
+ml4pg-gen-string-without
