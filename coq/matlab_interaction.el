@@ -6,10 +6,6 @@
   (require 'comint)  
    (apply 'make-comint "matlab" *matlab-program* nil 
 		(list "-nodesktop -r 0")))
-  ;(apply 'make-comint "matlab" *matlab-program* nil (list "-nodesktop -r")))
- ; (shell-command "/home/jonathan/Matlab/bin/matlab -nodesktop -r 
-  ;              \"load /home/jonathan/Desktop/Research/Matlab/expt1_complete_goals.csv; kmeans_clusters_and_frequencies(expt1_complete_goals,3,1000)\"")
-  
 (defvar my-buffer "")
 
 (defun my-config-display ()

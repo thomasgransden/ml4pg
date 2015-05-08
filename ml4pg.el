@@ -1,4 +1,11 @@
-(defvar home-dir "/home/jonathan/Desktop/ML4PG_distribution/ML4PG-weka-new/")
+(unless (getenv "ML4PG_HOME")
+  (error "ML4PG_HOME environment variable must be set"))
+
+(defconst home-dir (let ((raw (getenv "ML4PG_HOME")))
+                     (if (string= "/" (substring raw (1- (length raw))))
+                         raw
+                       (concat raw "/"))))
+
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 (defvar *matlab-program* nil)
 
