@@ -62,7 +62,7 @@ B=$(expr $(wc -l %strace1.txt | cut -d\" \" -f 1) - $(grep -rne digraph %strace1
 tail -$B %strace1.txt > %strace2.txt
 E=$(grep -rne \"}\" %strace2.txt | cut -d: -f 1);
 head -$E %strace2.txt > %strace.gv;
-dot -Tpng %strace.gv -o %strace.png;  eog %strace.png &"
+dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 (concat home-dir "automaton/")
 (concat home-dir "automaton/")
 (concat home-dir "automaton/")
@@ -134,7 +134,7 @@ B=$(expr $(wc -l %strace1.txt | cut -d\" \" -f 1) - $(grep -rne digraph %strace1
 tail -$B %strace1.txt > %strace2.txt
 E=$(grep -rne \"}\" %strace2.txt | cut -d: -f 1);
 head -$E %strace2.txt > %strace.gv;
-dot -Tpng %strace.gv -o %strace.png;  eog %strace.png &"
+dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 (concat home-dir "automaton/")
 (do ((i 0 (1+ i))
      (res ""))

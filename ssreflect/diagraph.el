@@ -60,7 +60,7 @@ G%s [shape=plaintext,label=\"\"];" n (1+ n) ar n gs0 (1+ n) ))))
 (defun show-diagram (text)
   (with-temp-file "temp.gv"
     (insert text))
-  (shell-command "dot -Tpng temp.gv -o temp.png; eog temp.png"))
+  (shell-command "dot -Tpng temp.gv -o temp.png; xdg-open temp.png"))
 
 
 
