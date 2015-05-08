@@ -52,6 +52,11 @@
     (dotimes (n (min (length list1) (length list2)) result)
       (append-to result (funcall func (nth n list1) (nth n list2))))))
 
+(defun listofp (pred)
+  "Predicate: does every element of a given list satisfy PRED?"
+  `(lambda (lst)
+     (all (mapcar ,pred lst))))
+
 (defun filter-list (pred lst)
   (let ((result nil))
     (dolist (elem lst result)
