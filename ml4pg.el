@@ -96,6 +96,11 @@
     (with-temp-buffer
       (coq-mode))))
 
+(defun test-msg (s)
+  "Writes a message, only displaying it when verbose"
+  (write-to-messages `(lambda ()
+                        (insert ,s))))
+
 (defun write-to-messages (f)
   "Run F in the context of a writable *Messages* buffer"
   ;; FIXME: Make a LISP variable, which initialises to this env var, so we can
