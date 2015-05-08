@@ -105,6 +105,7 @@
 
 (defun coq-example-names ()
   (unless example-names
+    (message "Getting names from ml4pg.v")
     (with-coq-example (lambda ()
                         (setq example-names
                               (extract-coq-names-from (buffer-string))))))

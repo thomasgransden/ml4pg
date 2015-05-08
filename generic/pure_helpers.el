@@ -27,6 +27,39 @@
   "Nil iff any element of LST is nil"
   (apply 'f-and lst))
 
+(defun extract-coq-names-from (str)
+  (mapcar (lambda (s)
+            (strip-regexp s  (format "\\(%s\\)\\|[\s\n]+" coq-declaration-re)))
+          (extract-coq-names-from-aux str)))
+
+(defconst coq-declaration-re
+  (join-strings '("Theorem" "Lemma" "Fact" "Remark" "Corollary" "Definition"
+                  "Fixpoint" "CoFixpoint" "Example" "Proposition")
+                "\\|")
+  "A regexp matching Coq declaration keywords")
+
+(defun extract-coq-names-from-aux (str)
+  "An unreliable, conservative way to extract some of the names defined in a
+   string of Coq vernacular. Note that this does *not* respect Sections and
+   Modules, so the names you get back might not be defined globally."
+  (re-seq (coq-declaration-re-with-name "[a-zA-Z0-9_]+")
+          str))
+
+(defun coq-declaration-re-with-name (name)
+  "Produce a regular expression which matches a Coq declaration of NAME"
+  (let ((ws "[\s\n]+"))
+    (format "\\(%s\\)%s%s%s" coq-declaration-re ws name ws)))
+
+(defun re-seq (regexp string)
+  "Get a list of all regexp matches in a string"
+  (save-match-data
+    (let ((pos 0)
+          matches)
+      (while (string-match regexp string pos)
+        (push (match-string 0 string) matches)
+        (setq pos (match-end 0)))
+      matches)))
+
 (defun count-occurences (regex string)
   "Count how many times REGEX matches STRING"
   (recursive-count regex string 0))

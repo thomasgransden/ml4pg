@@ -10,13 +10,14 @@
 
 (test-with can-export-theorem
   "Can export a theorem from ml4pg.v"
-  (lambda ()
-    (funcall (list-of (gen-elem (coq-example-names)))))
-  (lambda (name)
-    (with-coq-example
-     `(lambda ()
-        (proof-to-def ,name)
-        (export-theorem)))))
+  (list-of (gen-num))
+  (lambda (n)
+    (let ((name (nth (% n (length (coq-example-names)))
+                     (coq-example-names))))
+      (with-coq-example
+       `(lambda ()
+          (proof-to-def ,name)
+          (export-theorem))))))
 
 (test-with can-export-all-theorems
   "Can export the theorems from ml4pg.v"
