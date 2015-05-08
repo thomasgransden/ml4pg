@@ -96,10 +96,7 @@
              '("\\.v\\'" . (lambda ()
                              (ml4pg-mode-aux)
                              (coq-mode)
-                             (select-mode)
-                             (delete-other-windows)
-                             (previous-buffer)
-                             (previous-buffer))))
+                             (select-mode))))
 
 (use-nix-if-present)
 (load-proof-general)
