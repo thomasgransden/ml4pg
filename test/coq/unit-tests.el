@@ -285,3 +285,85 @@
   (lambda ()
     (with-coq-example (lambda ()
                         (exported-libraries)))))
+
+(test-with top-level-graph-of-defs
+  "Generate similarity graph of definitions"
+  nil
+  (lambda ()
+    (should nil)))
+
+(test-with top-level-graph-of-lemmas
+  "Generate similarity graph of lemma statements"
+  nil
+  (lambda ()
+    (should nil)))
+
+(test-with top-level-graph-of-proofs
+  "Generate similarity graph of proofs"
+  nil
+  (lambda ()
+    (should nil)))
+
+(test-with top-level-term-tree
+  "Generate term tree of a lemma statement"
+  nil
+  (lambda ()
+    (should nil)))
+
+(test-with top-level-show-clusters
+  "Show clusters"
+  nil
+  (lambda ()
+    (let ((names (coq-example-names)))
+      (with-coq-example
+       `(lambda ()
+          (goto-char (point-max))
+          ;; FIXME: We shouldn't, but that's how the UI behaves!
+          (ignore-errors (extract-feature-theorems))
+          (show-clusters-bis)
+          (let ((result (get-and-kill-display)))
+            (test-msg (format "DISPLAY:\n%s\n" result))
+            ;; Header text should appear
+            (should (search "We have found the following clusters"
+                            result))
+            ;; We should always have a few clusters (7 is arbitrary)
+            (dotimes (n 7)
+              (should (search (format "Cluster %s: (automaton)" (1+ n))
+                              result)))
+            ;; A few lemmas should appear (10 is arbitrary)
+            (let ((found nil))
+              (dolist (name ',names)
+                (when (string-match (format "Lemma %s (.*patch.*)" name)
+                                    result)
+                  (append-to found name)))
+              (should (> (length found) 10))
+              ;; No name should be found twice
+              (should (equal (length found)
+                             (length (remove-duplicates found)))))))))))
+
+(defun get-and-kill-display ()
+  "Kill the '*display*' buffer, returning its contents"
+  (let ((disp (get-buffer "*display*")))
+    (assert disp)
+    (unwind-protect
+        (with-current-buffer disp
+          (buffer-substring-no-properties (point-min) (point-max)))
+      (kill-buffer disp))))
+
+(test-with top-level-show-clusters-definitions
+  "Show clusters definitions"
+  nil
+  (lambda ()
+    (should nil)))
+
+(test-with top-level-show-similar-theorems
+  "Show similar theorems"
+  nil
+  (lambda ()
+    (should nil)))
+
+(test-with top-level-show-cluster-libraries
+  "Show cluster libraries"
+  nil
+  (lambda ()
+    (should nil)))
