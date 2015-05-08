@@ -75,6 +75,10 @@
     (setq proof-three-window-enable nil)
     (add-hook 'proof-shell-handle-error-or-interrupt-hook 'ml4pg-bail-out)))
 
+(defun ml4pg-mode ()
+  (ml4pg-mode-aux)
+  (select-mode))
+
 (defun use-nix-if-present ()
   (dolist (path '("~/.nix-profile/share/emacs/site-lisp"
                   "/run/current-system/sw/share/emacs/site-lisp"))
@@ -92,11 +96,7 @@
 
 (require 'cl)
 
-(add-to-list 'auto-mode-alist
-             '("\\.v\\'" . (lambda ()
-                             (ml4pg-mode-aux)
-                             (coq-mode)
-                             (select-mode))))
+(add-hook 'coq-mode-hook 'ml4pg-mode)
 
 (use-nix-if-present)
 (load-proof-general)
