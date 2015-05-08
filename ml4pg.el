@@ -67,6 +67,14 @@
         ((string= mode "n")         nil)
         (t                          (ml4pg-load-coq))))
 
+(defun ml4pg-mode-aux ()
+  (when noninteractive
+    ;; Hack Proof General for noninteractive use
+    (coq-build-prog-args)  ;; PG assumes coqtop will never run non-interactively
+    (setq proof-shell-fiddle-frames nil)  ;; Don't alter non-existent windows
+    (setq proof-three-window-enable nil)
+    (add-hook 'proof-shell-handle-error-or-interrupt-hook 'ml4pg-bail-out)))
+
 (defun use-nix-if-present ()
   (dolist (path '("~/.nix-profile/share/emacs/site-lisp"
                   "/run/current-system/sw/share/emacs/site-lisp"))
@@ -86,8 +94,12 @@
 
 (add-to-list 'auto-mode-alist
              '("\\.v\\'" . (lambda ()
-			     (progn (coq-mode) (select-mode) (delete-other-windows) (previous-buffer) (previous-buffer))
-                               )))
+                             (ml4pg-mode-aux)
+                             (coq-mode)
+                             (select-mode)
+                             (delete-other-windows)
+                             (previous-buffer)
+                             (previous-buffer))))
 
 (use-nix-if-present)
 (load-proof-general)
