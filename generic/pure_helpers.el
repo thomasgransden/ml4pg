@@ -47,6 +47,11 @@
 (defun strip-control-chars (str)
   (apply 'strip-str (cons str (mapcar 'string control-chars))))
 
+(defun zip-with (func list1 list2)
+  (let ((result nil))
+    (dotimes (n (min (length list1) (length list2)) result)
+      (append-to result (funcall func (nth n list1) (nth n list2))))))
+
 (defun filter-list (pred lst)
   (let ((result nil))
     (dolist (elem lst result)
