@@ -76,7 +76,7 @@
 (defun thm-to-list (term) 
   (if (search "match" term)
       (transform-match (subseq term (+ 2 (search "=>" term))))
-  (string-to-list (concatenate 'string "("  term ")"))))
+  (ml4pg-string-to-list (concatenate 'string "("  term ")"))))
 
 
 (defvar listofstatements nil)

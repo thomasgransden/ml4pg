@@ -125,14 +125,14 @@
 ;(transform-match "match n with | O => m | S _ => match leq (S (S (S O))) n with | true => muln (addn n m) m | false => match m with | O => S O | S _ => S (S O) end end end")
 
 
-(defun string-to-list (str)
+(defun ml4pg-string-to-list (str)
   (car (read-from-string str)))
 
-(defun definition-to-list-aux (term) 
-  (string-to-list (concatenate 'string "(" (subseq term (1+ (search "=" term))) ")")))
+(defun definition-to-list-aux (term)
+  (ml4pg-string-to-list (concatenate 'string "(" (subseq term (1+ (search "=" term))) ")")))
 
-(defun definition-to-list-let (term) 
-  (string-to-list (concatenate 'string "(nosimpl " (subseq term (+ 3 (search "in" term))) ")"))) 
+(defun definition-to-list-let (term)
+  (ml4pg-string-to-list (concatenate 'string "(nosimpl " (subseq term (+ 3 (search "in" term))) ")")))
 
 
 (defun  definition-to-list-fix (term) 
@@ -142,7 +142,7 @@
 (defun  definition-to-list-fun (term) 
   (if (search "match" term)
       (transform-match (subseq term (+ 2 (search "=>" term))))
-  (string-to-list (concatenate 'string "("  (subseq term (+ 2 (search "=>" term))) ")"))))
+  (ml4pg-string-to-list (concatenate 'string "("  (subseq term (+ 2 (search "=>" term))) ")"))))
 
 
 
