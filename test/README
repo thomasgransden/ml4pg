@@ -1,0 +1,148 @@
+Testing ML4PG
+=============
+
+ML4PG is written in Emacs Lisp, and is tested using a small framework built on
+the Emacs Regression Testing (ERT) system.
+
+Running Tests
+-------------
+
+ML4PG's tests all use ERT, and their names all start with "ml4pg-", so we can
+run them all using (ert "^ml4pg-")
+
+Alternatively, we can run all tests (whether ML4PG or not) using (ert)
+
+The file 'runner.el' provides some convenience functions for running tests, in
+particular the (ml4pg-reload-and-test) function. This is the recommended way to
+test ML4PG, as it will reload all of ML4PG's code then run all of the "ml4pg-"
+tests. This ensures that new or changed definitions will be picked up and used
+by the tests.
+
+To bind these tests to a key, evaluate something like:
+
+(global-set-key (kbd "<f5>") 'ml4pg-reload-and-test)
+
+Alternatively, you can launch tests in a new emacs process by running
+test/runner.sh or using a command like:
+
+  emacs --quick --script test/runner.el
+
+ML4PG has 2 "modes", coq and ssreflect, which at the moment are incompatible due
+to name clashes. Each has a test suite, which you can select by setting the
+"TEST_SUITE" environment variable to "coq" or "ssreflect". Shared code is only
+tested as part of the "coq" suite, to save time as runner.sh invokes both.
+
+Debugging
+---------
+
+Emacs Lisp can be debugged on-the-fly using "debug", or we can instrument our
+source code using "edebug". To remove instrumentation from a function, we just
+reload it. This applies to core ML4PG code and test code.
+
+Unfortunately, this means that (ml4pg-reload-and-test) will throw away any
+instrumentation we've set, since it reloads everything. To prevent this, we can
+run (ml4pg-run-tests) instead which doesn't reload anything.
+
+Of course, if we're not automatically reloading anything, it is our
+responsibility to make sure new/changed definitions are being used. To reload
+the tests but not ML4PG, use (ml4pg-load-tests). To reload ML4PG but not the
+tests, use (ml4pg-reload).
+
+Note that if we delete or rename something, reloading will *not* get rid of the
+old definition. We must do that manually on a case-by-case basis. Alternatively,
+we can run the tests in fresh Emacs instances, eg. using the runner.sh script
+mentioned above.
+
+ERT provides many convenience functions for debugging tests, showing backtraces,
+etc. In particular, pressing "m" in the ERT output window will show the messages
+sent by a test. ML4PG's tests use this to record the values of their arguments,
+since they're often generated randomly and hence difficult to reproduce.
+
+Defining Tests
+--------------
+
+All tests should be kept in files matching "test/SUITE/*-tests.el", where SUITE
+is one of "coq", "ssreflect" or "generic", since these files are automatically
+loaded by the test framework.
+
+ERT tests are defined using the 'ert-deftest' macro. ML4PG's tests use a custom
+macro built on top of 'ert-deftest', called 'test-with'. We use it like this:
+
+(test-with test-name
+  "Docstring"
+  generator-function
+  test-function)
+
+There are two possible results. If we supply 'nil' as the generator-function, we
+get a simple unit test like this:
+
+(ert-deftest ml4pg-test-name ()
+  "Docstring"
+  (funcall test-function))
+
+If we supply a function as the generator-function, we get a more complex
+property checker like this:
+
+(ert-deftest ml4pg-test-name ()
+  "Docstring"
+  (dotimes (i test-iterations)
+    (let ((args (funcall generator-function)))
+      (message "Arguments:\n%S" args)
+      (apply test-function args))))
+
+This is a slight simplification, but we can see the main elements:
+
+ - The whole test is repeated 'test-iterations' times. This gives the generator
+   more opportunities to find edge-cases.
+ - 'generator-function' is called with no arguments, once per iteration. It
+   returns 'args'.
+ - We display 'args', in case it helps us to reproduce a problem later (in fact
+   we write it straight to *Messages*, to avoid echoing it to the user).
+ - We run 'test-function', supplying its arguments from 'args'
+
+Generators
+----------
+
+Many common data generators are defined in 'generators.el', to avoid repeating
+the same code over and over. For example:
+
+ - (gen-const x) returns a generator which always produces the value 'x'.
+ - (gen-string (gen-const n)) returns a generator for strings, where the length
+   of each is 'n' characters.
+ - (gen-list (gen-bool) (gen-num)) returns a generator for lists, each with a
+   random length, containing randomly-chosen booleans (nil or t).
+ - (gen-pair (gen-string) (gen-bool)) returns a generator for 2-element lists,
+   where the first element is a random string and the second is a random
+   boolean.
+ - (gen-any gen1 gen2 ...) returns a generator which randomly chooses which
+   argument to use to generate its return values.
+ - (gen-filtered gen filter) generates values using 'gen', as long as they
+   satisfy the predicate 'filter'. WARNING: This is easy to set up, but can take
+   a long time to generate any output if your predicate is too strong.
+ - (list-of gen1 gen2 ...) returns a generator which will generate a list of
+   values, with the first element generated with 'gen1', the second with 'gen2',
+   and so on.
+
+Generators can use the global variable 'ml4pg-test-complexity' to adjust their
+output. This is set to 1 before each test and doubles after each iteration. For
+example, 'gen-string' and 'gen-list' use it to choose their default length.
+
+Examples
+--------
+
+To check that "Hello world" has length 11, we can use the following unit test:
+
+(test-with hello-world-length
+  "Check the length of 'Hello world'"
+  nil
+  (lambda ()
+    (should (equal 11 (length "Hello world")))))
+
+To check that string lengths are never negative, we can use the following
+property check:
+
+(test-with string-length-nonneg
+  "Check that string lengths aren't negative"
+  (list-of (gen-string))
+  (lambda (str)
+    (should (>= (length str) 0))))
