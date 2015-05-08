@@ -1,10 +1,12 @@
+(require 'cl)
+
 (unless (getenv "ML4PG_HOME")
   (error "ML4PG_HOME environment variable must be set"))
 
 (defconst home-dir (let ((raw (getenv "ML4PG_HOME")))
                      (if (string= "/" (substring raw (1- (length raw))))
                          raw
-                       (concat raw "/"))))
+                         (concat raw "/"))))
 
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 (defvar *matlab-program* nil)
@@ -94,9 +96,22 @@
     (with-temp-buffer
       (coq-mode))))
 
-(require 'cl)
+(defun write-to-messages (f)
+  "Run F in the context of a writable *Messages* buffer"
+  ;; FIXME: Make a LISP variable, which initialises to this env var, so we can
+  ;; override it from LISP without altering the environment
+  (if (equal "t" (getenv "TEST_VERBOSE"))
+      ;; Regular message output, including to minibuffer/stdout
+      (message (with-temp-buffer
+                 (funcall f)
+                 (replace-regexp-in-string "%" "%%" (buffer-string))))
+    ;; Only write the *Messages*, not to minibuffer/stdout
+    (save-excursion
+      (set-buffer "*Messages*")
+      (goto-char (point-max))
+      (let ((buffer-read-only nil))
+        (funcall f)))))
 
 (add-hook 'coq-mode-hook 'ml4pg-mode)
-
 (use-nix-if-present)
 (load-proof-general)
