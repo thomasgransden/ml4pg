@@ -188,7 +188,7 @@
   (lambda ()
     (let ((proof-hypotheses nil)
           (type             nil))
-      (dolist (this-name example-names)
+      (dolist (this-name (coq-example-names))
         (test-msg (format "STARTING TO RUN %s" this-name))
         (with-coq-example
          `(lambda ()

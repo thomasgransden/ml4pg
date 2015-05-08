@@ -115,7 +115,7 @@
   "Ensure proof-to-def finds definitions"
   nil
   (lambda ()
-    (dolist (this-name example-names)
+    (dolist (this-name (coq-example-names))
       (test-msg (format "Looking for %s" this-name))
       (with-coq-example
        `(lambda ()
@@ -143,16 +143,6 @@
 
 (defconst example-points (with-coq-example 'proof-steps-in-buffer)
   "The points between proof steps in the ml4pg.v example file")
-
-(defun coq-example-names ()
-  (let ((coq-names nil))
-    (with-coq-example (lambda ()
-                        (setq coq-names
-                              (extract-coq-names-from (buffer-string)))))
-    coq-names))
-
-(defconst example-names (coq-example-names)
-  "The names used in ml4pg.v")
 
 (test-with proof-to-char
   "Test that proof-to-char moves proof point"

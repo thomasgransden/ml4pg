@@ -11,7 +11,7 @@
 (test-with can-export-theorem
   "Can export a theorem from ml4pg.v"
   (lambda ()
-    (list (funcall (gen-elem example-names))))
+    (funcall (list-of (gen-elem (coq-example-names)))))
   (lambda (name)
     (with-coq-example
      `(lambda ()
@@ -22,7 +22,7 @@
   "Can export the theorems from ml4pg.v"
   nil
   (lambda ()
-    (dolist (this-name example-names)
+    (dolist (this-name (coq-example-names))
       (test-msg (format "CAN EXPORT %s?" this-name))
       (with-coq-example
        `(lambda ()

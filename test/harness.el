@@ -67,7 +67,7 @@
 (defmacro ml4pg-load-and-extract-info (str action)
   "Insert STR into a temporary buffer, load ML4PG, extract features then run
    ACTION"
-  `(ml4pg-load-and-execute str
+  `(ml4pg-load-and-execute ,str
                            (lambda ()
                              (goto-char (point-max))
                              (extract-feature-theorems)
@@ -102,3 +102,13 @@
        (insert-file-contents-literally (concat home-dir "ml4pg.v"))
        (current-buffer)))
     (run-with-temp-coq-file path f)))
+
+(defun coq-example-names ()
+  (unless example-names
+    (with-coq-example (lambda ()
+                        (setq example-names
+                              (extract-coq-names-from (buffer-string))))))
+  example-names)
+
+(defconst example-names nil
+  "The names used in ml4pg.v (access via coq-example-names)")

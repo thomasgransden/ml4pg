@@ -132,6 +132,11 @@
   "Generate a Coq type which is trivially inhabited; ie. a trivially-provable
    theorem."
   (compose (lambda (nums)
+             ;; Unary numbers are SLOW, so only use a few
+             (setq nums (take-n 10 nums))
+             ;; + is recursive in its first argument, so make them the smallest
+             (setq nums (sort nums '>))
+             ;; Return the string "num1 + num2 + ... = total"
              (concat (join-strings (mapcar 'any-to-string nums) " + ")
                      " = " (any-to-string (apply '+ nums))))
            (gen-list (gen-num) (compose '1+ (gen-num)))))
