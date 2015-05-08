@@ -9,10 +9,16 @@
 (defconst *weka-dir* (concat home-dir "weka.jar"))
 (defvar *matlab-program* nil)
 
+(defun load-els (dir)
+  `(lambda (f)
+     (load-file (concat home-dir ,dir "/" f (if (search ".el" f) "" ".el")))))
+
 (defvar mode nil)
 
 (defun select-mode ()
   (interactive)
+  (mapc (load-els "generic")
+        (directory-files (concat home-dir "generic/") nil ".*\.el"))
   (let ((smode (read-string "What mode do you want to use (Coq -> c (default), SSReflect -> s, None -> n): ")))
     (setq mode smode)
     (cond ((string= mode "s") 
