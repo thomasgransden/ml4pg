@@ -17,6 +17,16 @@
        (dolist (func (reverse ',funcs) (car result))
          (setq result (list (apply func result)))))))
 
+(defun f-and (&rest args)
+  "Boolean AND, implemented as a proper function"
+  (let ((result t))
+    (dolist (elem args result)
+      (setf result (and result elem)))))
+
+(defun all (lst)
+  "Nil iff any element of LST is nil"
+  (apply 'f-and lst))
+
 (defun count-occurences (regex string)
   "Count how many times REGEX matches STRING"
   (recursive-count regex string 0))
