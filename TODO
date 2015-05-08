@@ -1,1 +1,2 @@
-Running tests asks "which mode"?
+Coq is unresponsive when noninteractive
+Most tests fail when run graphically
