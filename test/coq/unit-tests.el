@@ -2,6 +2,17 @@
 ;; As much as possible, these functions should be broken down into simple,
 ;; pure functions, with separate tests.
 
+(defun get-and-kill-display ()
+  "Kill the '*display*' buffer, returning its contents"
+  (let ((disp (get-buffer "*display*")))
+    (assert disp)
+    (let ((content (unwind-protect
+                       (with-current-buffer disp
+                         (buffer-substring-no-properties (point-min) (point-max)))
+                     (kill-buffer disp))))
+      (test-msg (format "DISPLAY:\n%s\n" content))
+      content)))
+
 (test-with pg-available
   "Test ProofGeneral is available"
   nil
@@ -322,7 +333,6 @@
           (ignore-errors (extract-feature-theorems))
           (show-clusters-bis)
           (let ((result (get-and-kill-display)))
-            (test-msg (format "DISPLAY:\n%s\n" result))
             ;; Header text should appear
             (should (search "We have found the following clusters"
                             result))
@@ -341,20 +351,34 @@
               (should (equal (length found)
                              (length (remove-duplicates found)))))))))))
 
-(defun get-and-kill-display ()
-  "Kill the '*display*' buffer, returning its contents"
-  (let ((disp (get-buffer "*display*")))
-    (assert disp)
-    (unwind-protect
-        (with-current-buffer disp
-          (buffer-substring-no-properties (point-min) (point-max)))
-      (kill-buffer disp))))
-
 (test-with top-level-show-clusters-definitions
   "Show clusters definitions"
   nil
   (lambda ()
-    (should nil)))
+    (let ((names (coq-example-names)))
+      (with-coq-example
+       `(lambda ()
+          (goto-char (point-max))
+          ;; FIXME: The UI hits an error, but ignores it
+          (ignore-errors (extract-feature-theorems))
+          (cluster-definitions)
+          (let ((result (get-and-kill-display)))
+            ;; Header text should appear
+            (should (search "We have found the following clusters:"
+                            result))
+            ;; We should always have a few clusters (7 is arbitrary)
+            (dotimes (n 7)
+              (should (search (format "Cluster %s" (1+ n))
+                              result)))
+            ;; A few definitions should appear (4 is arbitrary)
+            (let ((found nil))
+              (dolist (name ',names)
+                (when (string-match (format "Definition %s (library .*)" name)
+                                    result)
+                  (append-to found name)))
+              (should (> (length found) 4))
+              ;; NOTE: Some names may appear twice! Probably a bug.
+              )))))))
 
 (test-with top-level-show-similar-theorems
   "Show similar theorems"
