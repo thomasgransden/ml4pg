@@ -11,3 +11,11 @@
      (let ((result args))
        (dolist (func (reverse ',funcs) (car result))
          (setq result (list (apply func result)))))))
+
+(defun strip-regexp (str &rest res)
+  (let ((result str))
+    (dolist (to-strip res result)
+      (setq result (replace-regexp-in-string to-strip "" result)))))
+
+(defun strip-str (str &rest strs)
+  (apply 'strip-regexp (cons str (mapcar 'regexp-quote strs))))
