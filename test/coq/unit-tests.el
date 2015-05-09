@@ -315,30 +315,36 @@
   (lambda ()
     (should nil)))
 
+(defun clean-ml4pg-dir ()
+  "Delete temp files"
+  (mapcar (lambda (path)
+            (ignore-errors (delete-file path)))
+          (list "temp.csv" "temp.gv" "temp.html" "temp.png" "out.arff"
+                "out_bis.arff" "temp3.arff")))
+
 (test-with top-level-term-tree
   "Generate term tree of a lemma statement"
   (list-of (gen-elem (coq-example-names)))
   (lambda (name)
-    (let ((gv              "temp.gv")
-          (chosen-coq-name name)
+    (let ((chosen-coq-name name)
           (lib-store-dir   "/tmp/"))
-      (ignore-errors (delete-file gv))
       (with-coq-example
        `(lambda ()
+          (clean-ml4pg-dir)
           (goto-char (point-max))
           (ignore-errors (extract-feature-theorems))
           (test-msg "Running showtreegraphthm")
           (showtreegraphthm)
           (test-msg "Finished showtreegraphthm")
-          (should (file-exists-p gv))
-          (let ((result (get-file-contents gv)))
+          (should (file-exists-p "temp.gv"))
+          (let ((result (get-file-contents "temp.gv")))
             (should (string-match "[0-9]+ -> [0-9]+.arrowhead=none.;"
-                                  result)))))
-      (ignore-errors (delete-file gv)))))
+                                  result)))
+          (clean-ml4pg-dir))))))
 
 (defun get-file-contents (path)
   (with-temp-buffer
-    (insert-file-contents gv)
+    (insert-file-contents path)
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (test-with top-level-show-clusters
@@ -348,6 +354,7 @@
     (let ((names (coq-example-names)))
       (with-coq-example
        `(lambda ()
+          (clean-ml4pg-dir)
           (goto-char (point-max))
           ;; FIXME: We shouldn't, but that's how the UI behaves!
           (ignore-errors (extract-feature-theorems))
@@ -369,7 +376,8 @@
               (should (> (length found) 10))
               ;; No name should be found twice
               (should (equal (length found)
-                             (length (remove-duplicates found)))))))))))
+                             (length (remove-duplicates found))))))
+          (clean-ml4pg-dir))))))
 
 (test-with top-level-show-clusters-definitions
   "Show clusters definitions"
@@ -378,6 +386,7 @@
     (let ((names (coq-example-names)))
       (with-coq-example
        `(lambda ()
+          (clean-ml4pg-dir)
           (goto-char (point-max))
           ;; FIXME: The UI hits an error, but ignores it
           (ignore-errors (extract-feature-theorems))
@@ -398,7 +407,8 @@
                   (append-to found name)))
               (should (> (length found) 4))
               ;; NOTE: Some names may appear twice! Probably a bug.
-              )))))))
+              ))
+          (clean-ml4pg-dir))))))
 
 (test-with top-level-show-similar-theorems
   "Show similar theorems"

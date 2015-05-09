@@ -1,3 +1,5 @@
 Many tests fail
 
 "Show Cluster Libraries" and "Show Similar Theorems" don't seem to work for Coq mode
+
+"Similarity graph of proofs" says temp.map doesn't exist
