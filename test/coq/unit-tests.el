@@ -317,9 +317,29 @@
 
 (test-with top-level-term-tree
   "Generate term tree of a lemma statement"
-  nil
-  (lambda ()
-    (should nil)))
+  (list-of (gen-elem (coq-example-names)))
+  (lambda (name)
+    (let ((gv              "temp.gv")
+          (chosen-coq-name name)
+          (lib-store-dir   "/tmp/"))
+      (ignore-errors (delete-file gv))
+      (with-coq-example
+       `(lambda ()
+          (goto-char (point-max))
+          (ignore-errors (extract-feature-theorems))
+          (test-msg "Running showtreegraphthm")
+          (showtreegraphthm)
+          (test-msg "Finished showtreegraphthm")
+          (should (file-exists-p gv))
+          (let ((result (get-file-contents gv)))
+            (should (string-match "[0-9]+ -> [0-9]+.arrowhead=none.;"
+                                  result)))))
+      (ignore-errors (delete-file gv)))))
+
+(defun get-file-contents (path)
+  (with-temp-buffer
+    (insert-file-contents gv)
+    (buffer-substring-no-properties (point-min) (point-max))))
 
 (test-with top-level-show-clusters
   "Show clusters"

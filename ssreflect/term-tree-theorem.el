@@ -307,11 +307,11 @@
     )
   ))
 
-
 (defun showtreegraphthm ()
   (interactive)
-  (let* ((thm (read-string "Introduce the name of a theorem that you have previously defined: "))
-	(t1 (obtain-theorem thm)))
+  (let* ((thm (or chosen-coq-name
+                  (read-string "Introduce the name of a theorem that you have previously defined: ")))
+         (t1  (obtain-theorem thm)))
     (if (search "Error" t1)
 	(message (format "Theorem %s is undefined" thm))
       (showtreegraph (thm-for-tree thm)))))

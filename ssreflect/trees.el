@@ -31,8 +31,9 @@
 (defun show-diagram-tree (text)
   (with-temp-file "temp.gv"
     (insert text))
-  (progn (shell-command "rm temp.png")
-         (shell-command "dot -Tpng temp.gv -o temp.png; xdg-open temp.png &")))
+  (shell-command "rm temp.png")
+  (shell-command "dot -Tpng temp.gv -o temp.png")
+  (unless noninteractive (shell-command "xdg-open temp.png")))
 
 
 
