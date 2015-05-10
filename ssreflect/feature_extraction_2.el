@@ -992,17 +992,17 @@
 		      )
 		  (ignore-errors (addthm name))
 		  ))
-	  (t (progn (setf ts (get-top-symbol))
-		    (setf ng (get-number-of-goals))
-		    (proof-assert-next-command-interactive)
-		    (setf ng2 (get-number-of-goals))
-		    (export-theorem-aux (cons (append (get-numbers cmd ts current-level) (list ts) (list ng2)) result)
-				       name)
-		    (add-info-to-level (list 0 0 0 0 0 0 0 0 0 0 0 ng2 (if (< ng2 ng) 1 0)) current-level)
-		    (setf current-level (1+ current-level))
-		    
-		    ))))))
-     
+          (t
+           (add-hypotheses name)
+           (setf ts (get-top-symbol))
+           (setf ng (get-number-of-goals))
+           (proof-assert-next-command-interactive)
+           (setf ng2 (get-number-of-goals))
+           (export-theorem-aux (cons (append (get-numbers cmd ts current-level) (list ts) (list ng2)) result)
+                               name)
+           (add-info-to-level (list 0 0 0 0 0 0 0 0 0 0 0 ng2 (if (< ng2 ng) 1 0)) current-level)
+           (setf current-level (1+ current-level)))))))
+
 
 
 
@@ -1198,7 +1198,7 @@
 
 ;; Function which extract the information from all the theorems up to a point
 
-(defun extract-feature-theorems ()
+(defun extract-feature-theorems-aux ()
   (interactive)
   (let ((final (point))
 	(current-level 1)

@@ -1075,12 +1075,6 @@
     )
   (setf saved-theorems (remove-nil-cases)))
 
-(defun extract-feature-theorems ()
-  (interactive)
-  (setq proof-hypotheses nil)
-  (ignore-errors (extract-feature-theorems-aux))
-  (write-hypotheses))
-
 (defun remove-nil-cases ()
   (do ((temp saved-theorems (cdr temp))
        (temp2 nil))

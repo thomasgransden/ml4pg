@@ -7,6 +7,28 @@
 (defconst hypotheses-file (getenv "HYPOTHESES_FILE")
   "File to write hypotheses to")
 
+(defconst example-hypotheses
+  '(("app_nil_l"
+     (() ("l") ("l") ("l") ("l" "a0" "l0") ()))
+
+    ("app_nil_l_shorter"
+     (() ("l") ()))
+
+    ("app_nil_l_shorterb"
+     (() ("l") ("l") ()))
+
+    ("app_nil_l2"
+     (() ("l") () ("a" "l" "IHl") ("a" "l" "IHl") ("a" "l" "IHl") ()))
+
+    ("app_nil_l2b"
+     (() () ("a" "l" "IHl") ("a" "l" "IHl") ("a" "l" "IHl") ()))
+
+    ("mult_n_O"
+     (() () ("n" "IHn") ())))
+  "These are some hypotheses extracted from ml4pg.v, to give some idea of what
+   we're doing. The test suite ensures these examples are up to date.")
+
+
 (defun set-hypotheses-file (f)
   "Set the file to write hypotheses to"
   (setq hypotheses-file f))

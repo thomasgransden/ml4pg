@@ -1,0 +1,5 @@
+(defun extract-feature-theorems ()
+  (interactive)
+  (setq proof-hypotheses nil)
+  (ignore-errors (extract-feature-theorems-aux))
+  (write-hypotheses))

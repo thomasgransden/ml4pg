@@ -291,3 +291,52 @@
                ',gens
                (choose-partitions (max size (length ',gens))
                                   (length ',gens)))))
+
+(defun make-goal-string (names goal n)
+  "Generates a plausible Coq context. NAMES is a list of (name . type) pairs for
+   the hypotheses, GOAL a string for the goal and N is the number of '=' to
+   separate them with. In practice N=28, but we encourage robustness. For
+   example:
+
+   (make-goal-string '((\"hello\" . \"world\") (\"foo\" . \"bar\"))
+                     \"my-goal\"
+                     3)
+
+   hello:world
+   foo:bar
+   ===
+   my-goal"
+  (concat (join-strings (mapcar (lambda (line)
+                                  (concat (car line)   ; Coq name
+                                          ":"          ; "has type"
+                                          (cdr line))) ; Type
+                                names)
+                        "\n")
+          "\n"
+          (make-string n ?=)
+          "\n"
+          goal))
+
+(defun gen-proof-hypotheses ()
+  "Generate plausible values for proof-hypothesis"
+  (compose (lambda (hyps)
+             "Dedupe based on name"
+             (let ((names  nil)
+                   (result nil))
+               (dolist (def hyps result)
+                 (unless (member (car def) names)
+                   (append-to result def)
+                   (append-to names (car def))))))
+           (unsize
+            (gen-sized-list
+             (list-of-sized (unsized (gen-string))  ; Names
+                            (gen-hypotheses))))))   ; Hypotheses
+
+(defun list-of-sized (&rest gens)
+  "Like list-of, but divides up a size between each generator"
+  `(lambda (size)
+     (choose-partitions (length ',gens))))
+
+(defun gen-hypotheses ()
+  "Generate plausible lists of hypotheses"
+  (gen-sized-list (gen-sized-list (unsized (gen-string)))))
