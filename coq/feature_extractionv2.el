@@ -794,7 +794,8 @@
 		  (if name 
 		      (split-feature-vector name (flat (reverse result))))
 		  (ignore-errors (addthm name)))))
-	  (pos_space
+          (pos_space
+           (add-hypotheses name)
 	   (progn (setf ts (get-top-symbol))
 		  (setf ng (get-number-of-goals))
 		  (proof-assert-next-command-interactive)
