@@ -222,7 +222,7 @@
      `(lambda ()
         (should-not proof-hypotheses)
         (goto-char (point-max))
-        (extract-feature-theorems)
+        (ignore-errors (extract-feature-theorems))
         (should proof-hypotheses)))
     (should proof-hypotheses)
     (setq proof-hypotheses nil)))
@@ -239,7 +239,7 @@
         (setq hypotheses-file ,hyp-file)
         (setq proof-hypotheses nil)
         (goto-char (point-max))
-        (extract-feature-theorems)
+        (ignore-errors (extract-feature-theorems))
         (setq hypotheses-file nil)))
     (should (file-exists-p hyp-file))
     (with-temp-buffer
