@@ -27,6 +27,9 @@
   "Nil iff any element of LST is nil"
   (apply 'f-and lst))
 
+(defun remove-whitespace (string)
+  (strip-regexp string "[\s\n\r\t]"))
+
 (defun extract-coq-names-from (str)
   (mapcar (lambda (s)
             (strip-regexp s  (format "\\(%s\\)\\|[\s\n]+" coq-declaration-re)))

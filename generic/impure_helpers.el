@@ -45,6 +45,20 @@
                                          ,f)))))
       (delete-directory dir t nil))))
 
+(defun step-over-proof ()
+  "Step forward by one command; if it wasn't 'Proof.', step back again."
+  (let* ((start (proof-queue-or-locked-end))
+         (foo   (proof-assert-next-command-interactive))
+         (end   (proof-queue-or-locked-end))
+         (cmd   (remove-whitespace
+                 (buffer-substring-no-properties start end))))
+    (unless (equal "Proof." cmd)
+      (message "FIXME: Can we avoid waiting for the prover?")
+      (goto-char start)
+      (sit-for 0.5)
+      (proof-goto-point)
+      (sit-for 0.5))))
+
 (defun choose-distinct (size &optional num)
   "Generate a list of length NUM, containing distinct random numbers, each less
    than SIZE.
@@ -83,3 +97,12 @@
                                  (list (+ diff (car (last result))))))
             (append-to result diff))))
     result))
+
+(defun proof-to-def (name)
+  "Move the proof marker to the start of the named definition"
+  ;; FIXME: Doesn't take comments or strings into account
+  (goto-char (point-min))
+  (re-search-forward (coq-declaration-re-with-name name))
+  ;; FIXME: Won't work for names like "MyLemma"
+  (re-search-backward coq-declaration-re)  ;; Move to start
+  (proof-goto-point))
