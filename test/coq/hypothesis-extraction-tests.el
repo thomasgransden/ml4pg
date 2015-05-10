@@ -178,3 +178,27 @@
       (delete-file hyp-file)
       (should (equal (buffer-string)
                      (format-hypotheses proof-hypotheses))))))
+
+(test-with written-hypotheses-follow-example
+  "Our examples match the output of hypothesis extraction"
+  nil
+  (lambda ()
+    (let ((hypotheses-file (make-temp-file "ml4pg-test")))
+      (should (file-exists-p hypotheses-file))
+      (unwind-protect
+          (progn (with-coq-example
+                  (lambda ()
+                    (goto-char (point-max))
+                    (extract-feature-theorems)))
+                 (test-msg (format "Hypotheses file: %s" hypotheses-file))
+                 (should (file-exists-p hypotheses-file))
+                 (test-msg (format "Examples:\n%S" example-hypotheses))
+                 (should example-hypotheses)
+                 (let* ((contents   (get-file-contents hypotheses-file))
+                        (hypotheses (car (read-from-string contents))))
+                   (test-msg (format "File contents:\n%s" contents))
+                   (test-msg (format "Read back: %S" hypotheses))
+                   (dolist (def example-hypotheses)
+                     (test-msg (format "Looking for %s" (car def)))
+                     (should (member def hypotheses)))))
+        (delete-file hypotheses-file)))))

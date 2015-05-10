@@ -839,8 +839,8 @@
 			    (1+ current-level)
 			    dot-level
 			    (1+ i))))))
-          (t (progn (setf ts (get-top-symbol))
-                    (add-hypotheses name)
+          (t (progn (add-hypotheses name)
+                    (setf ts (get-top-symbol))
 		    (setf ng (get-number-of-goals))
 		    (proof-assert-next-command-interactive)
 		    

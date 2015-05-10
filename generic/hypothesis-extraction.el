@@ -4,30 +4,29 @@
 (defvar proof-hypotheses nil
   "Build up the hypotheses available at each step in each proof")
 
-(defconst hypotheses-file (getenv "HYPOTHESES_FILE")
+(defvar hypotheses-file (getenv "HYPOTHESES_FILE")
   "File to write hypotheses to")
 
 (defconst example-hypotheses
   '(("app_nil_l"
-     (() ("l") ("l") ("l") ("l" "a0" "l0") ()))
+     (() ("l") ("l") ("l") ("l" "a0" "l0")))
 
     ("app_nil_l_shorter"
-     (() ("l") ()))
+     (() ("l")))
 
     ("app_nil_l_shorterb"
-     (() ("l") ("l") ()))
+     (() ("l") ("l")))
 
     ("app_nil_l2"
-     (() ("l") () ("a" "l" "IHl") ("a" "l" "IHl") ("a" "l" "IHl") ()))
+     (() ("l") () ("a" "l" "IHl") ("a" "l" "IHl") ("a" "l" "IHl")))
 
     ("app_nil_l2b"
-     (() () ("a" "l" "IHl") ("a" "l" "IHl") ("a" "l" "IHl") ()))
+     (() () ("a" "l" "IHl") ("a" "l" "IHl") ("a" "l" "IHl")))
 
     ("mult_n_O"
-     (() () ("n" "IHn") ())))
+     (() () ("n" "IHn"))))
   "These are some hypotheses extracted from ml4pg.v, to give some idea of what
    we're doing. The test suite ensures these examples are up to date.")
-
 
 (defun set-hypotheses-file (f)
   "Set the file to write hypotheses to"
@@ -75,10 +74,10 @@
         (dolist (def hypotheses)
           (if (equal name (car def))
               (progn (setq found t)
-                     (append-to result (cons name (append (cdr def) (list new-hyps)))))
+                     (append-to result (cons name (list (append (cadr def) (list new-hyps))))))
             (append-to result def)))
         (unless found
-          (append-to result (cons name (list new-hyps))))
+          (append-to result (list name (list new-hyps))))
         result)))
 
 (defun write-hypotheses ()
