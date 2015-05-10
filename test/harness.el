@@ -113,3 +113,26 @@
 
 (defconst example-names nil
   "The names used in ml4pg.v (access via coq-example-names)")
+
+(defun get-file-contents (path)
+  (with-temp-buffer
+    (insert-file-contents path)
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(defun get-and-kill-display ()
+  "Kill the '*display*' buffer, returning its contents"
+  (let ((disp (get-buffer "*display*")))
+    (assert disp)
+    (let ((content (unwind-protect
+                       (with-current-buffer disp
+                         (buffer-substring-no-properties (point-min) (point-max)))
+                     (kill-buffer disp))))
+      (test-msg (format "DISPLAY:\n%s\n" content))
+      content)))
+
+(defun clean-ml4pg-dir ()
+  "Delete temp files"
+  (mapcar (lambda (path)
+            (ignore-errors (delete-file path)))
+          (list "temp.csv" "temp.gv" "temp.html" "temp.png" "out.arff"
+                "out_bis.arff" "temp3.arff")))
