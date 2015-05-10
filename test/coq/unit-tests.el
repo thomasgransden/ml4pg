@@ -2,6 +2,11 @@
 ;; As much as possible, these functions should be broken down into simple,
 ;; pure functions, with separate tests.
 
+(defun get-file-contents (path)
+  (with-temp-buffer
+    (insert-file-contents path)
+    (buffer-substring-no-properties (point-min) (point-max))))
+
 (defun get-and-kill-display ()
   "Kill the '*display*' buffer, returning its contents"
   (let ((disp (get-buffer "*display*")))
@@ -12,6 +17,13 @@
                      (kill-buffer disp))))
       (test-msg (format "DISPLAY:\n%s\n" content))
       content)))
+
+(defun clean-ml4pg-dir ()
+  "Delete temp files"
+  (mapcar (lambda (path)
+            (ignore-errors (delete-file path)))
+          (list "temp.csv" "temp.gv" "temp.html" "temp.png" "out.arff"
+                "out_bis.arff" "temp3.arff")))
 
 (test-with pg-available
   "Test ProofGeneral is available"
@@ -307,20 +319,48 @@
   "Generate similarity graph of lemma statements"
   nil
   (lambda ()
-    (should nil)))
+    (let ((names (coq-example-names)))
+      (with-coq-example
+       `(lambda ()
+          (clean-ml4pg-dir)
+          (goto-char (point-max))
+          (ignore-errors (extract-feature-theorems))
+          (dependencygraph-statements)
+          ;; Temp files should be created
+          (should (file-exists-p "temp.html"))
+          (should (file-exists-p "temp.png"))
+          (should (file-exists-p "temp.map"))
+          (should (file-exists-p "temp.gv"))
+          (let ((html (get-file-contents "temp.html"))
+                (map  (get-file-contents "temp.map"))
+                (gv   (get-file-contents "temp.gv")))
+            ;; We should get some hierarchical clusters (10 is arbitrary)
+            (dotimes (n 10)
+              (should (search (format "subgraph cluster%s {" (1+ n)) gv)))
+            ;; We should get some names and links (10 is arbitrary)
+            (let ((found-gv  nil)
+                  (found-map nil))
+             (dolist (name ',names)
+               (when (string-match (format
+                         "%s .URL=.\./[a-zA-Z1-9]+\.html#%s..; %s -> .+.style=invis."
+                         name name name)
+                       gv)
+                 (append-to found-gv name))
+               (when (string-match (format
+                         "<area shape=.poly. id=.node[0-9]+. href=.+ title=.%s. alt=.. coords=.[0-9,]+.>"
+                         name)
+                       map)
+                 (append-to found-map name)))
+             (should (> (length found-gv)  10))
+             (should (> (length found-map) 10))))
+          (clean-ml4pg-dir))))))
 
 (test-with top-level-graph-of-proofs
   "Generate similarity graph of proofs"
   nil
   (lambda ()
+    ;; FIXME: This feature seems to be broken at the moment
     (should nil)))
-
-(defun clean-ml4pg-dir ()
-  "Delete temp files"
-  (mapcar (lambda (path)
-            (ignore-errors (delete-file path)))
-          (list "temp.csv" "temp.gv" "temp.html" "temp.png" "out.arff"
-                "out_bis.arff" "temp3.arff")))
 
 (test-with top-level-term-tree
   "Generate term tree of a lemma statement"
@@ -341,11 +381,6 @@
             (should (string-match "[0-9]+ -> [0-9]+.arrowhead=none.;"
                                   result)))
           (clean-ml4pg-dir))))))
-
-(defun get-file-contents (path)
-  (with-temp-buffer
-    (insert-file-contents path)
-    (buffer-substring-no-properties (point-min) (point-max))))
 
 (test-with top-level-show-clusters
   "Show clusters"
