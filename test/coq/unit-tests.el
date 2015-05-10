@@ -313,7 +313,43 @@
   "Generate similarity graph of definitions"
   nil
   (lambda ()
-    (should nil)))
+    (let ((names (coq-example-names)))
+      (with-coq-example
+       `(lambda ()
+          (clean-ml4pg-dir)
+          (goto-char (point-max))
+          (ignore-errors (extract-feature-theorems))
+          (dependencygraph-defs)
+          (dolist (file '("out.arff" "out_bis.arff" "temp3.arff" "temp.csv"
+                          "temp.gv"  "temp.html" "temp.map" "temp.png"))
+            (should (file-exists-p file)))
+          (let ((temp-gv  (get-file-contents "temp.gv"))
+                (temp-map (get-file-contents "temp.map")))
+            ;; Should find some clusters (10 is arbitrary)
+            (dotimes (n 10)
+              (should (search (format "subgraph cluster%s {" (1+ n)) temp-gv)))
+            ;; Should find some names (10 is arbitrary)
+            (let ((found-gv  nil)
+                  (found-map nil))
+              (dolist (name ',names)
+                (when (string-match (format
+                          "^%s .URL=\"\./[^\"]+\".; %s -> .*.style=invis.$"
+                          name name)
+                        temp-gv)
+                  (append-to found-gv name))
+                (when (string-match (format
+                          "<area %s %s %s title=\"%s\" %s %s>"
+                          "shape=\"poly\""
+                          "id=\"node[0-9]+\""
+                          "href=\"\./[^\"]+\""
+                          name
+                          "alt=\"\""
+                          "coords=\"[0-9,]+\"")
+                        temp-map)
+                  (append-to found-map name)))
+              (should (> (length found-gv)  4))
+              (should (> (length found-map) 4))))
+          (clean-ml4pg-dir))))))
 
 (test-with top-level-graph-of-lemmas
   "Generate similarity graph of lemma statements"
