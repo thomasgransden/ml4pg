@@ -838,7 +838,8 @@
 			    (1+ current-level)
 			    dot-level
 			    (1+ i))))))
-	  (t (progn (setf ts (get-top-symbol))
+          (t (progn (setf ts (get-top-symbol))
+                    (add-hypotheses name)
 		    (setf ng (get-number-of-goals))
 		    (proof-assert-next-command-interactive)
 		    
@@ -1063,7 +1064,7 @@
 
 ;; Function which extract the information from all the theorems up to a point
 
-(defun extract-feature-theorems ()
+(defun extract-feature-theorems-aux ()
   (interactive)
   (let ((final (point))
 	(current-level 1))
@@ -1073,6 +1074,11 @@
     )
   (setf saved-theorems (remove-nil-cases)))
 
+(defun extract-feature-theorems ()
+  (interactive)
+  (setq proof-hypotheses nil)
+  (ignore-errors (extract-feature-theorems-aux))
+  (write-hypotheses))
 
 (defun remove-nil-cases ()
   (do ((temp saved-theorems (cdr temp))
