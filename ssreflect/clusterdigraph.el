@@ -38,10 +38,10 @@
 (defun show-diagram-clusters (text)
   (with-temp-file "temp.gv"
     (insert text))
-  (progn (shell-command "dot -Tcmap temp.gv -o temp.map")
-	 (shell-command "dot -Tpng temp.gv -o temp.png")
-	 (createwebpage)
-	 (shell-command "xdg-open temp.html")))
+  (shell-command "dot -Tcmap temp.gv -o temp.map")
+  (shell-command "dot -Tpng temp.gv -o temp.png")
+  (createwebpage)
+  (unless noninteractive (shell-command "xdg-open temp.html")))
 
 
 (defun showclustergraph (lol)
