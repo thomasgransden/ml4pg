@@ -1,5 +1,7 @@
 (defun extract-feature-theorems ()
   (interactive)
   (setq proof-hypotheses nil)
-  (ignore-errors (extract-feature-theorems-aux))
+  (condition-case err
+      (extract-feature-theorems-aux)
+    (error (message "ERROR: %S" err)))
   (write-hypotheses))

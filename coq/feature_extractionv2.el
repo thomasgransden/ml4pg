@@ -747,13 +747,13 @@
 						  (search " " cmd :start2 (1+ (search " " cmd))))
 					  current-level dot-level i
 							      ))
-	       (proof-assert-next-command-interactive)
-	       )
-	  ((search "Lemma" cmd)
-	   (progn (proof-assert-next-command-interactive)
-		  
-		  (export-theorem-aux result 
-				      (remove-jumps (subseq cmd (1+ (search " " cmd)) 
+               ;(proof-assert-next-command-interactive)
+               )
+          ((search "Lemma" cmd)
+           (progn (proof-assert-next-command-interactive)
+
+                  (export-theorem-aux result
+                                      (remove-jumps (subseq cmd (1+ (search " " cmd))
 					      (search " " cmd :start2 (1+ (search " " cmd)))))
 				      current-level dot-level i))
 	   )

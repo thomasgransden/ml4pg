@@ -960,7 +960,7 @@
 					  (subseq cmd (1+ (search " " cmd)) 
 						  (search " " cmd :start2 (1+ (search " " cmd))))
 							      ))
-	       (proof-assert-next-command-interactive)
+               ;(proof-assert-next-command-interactive)
 	       )
 
 	      ((search "Lemma" cmd)

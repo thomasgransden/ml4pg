@@ -93,7 +93,7 @@
   (lambda (new-name new-hyps hyps)
     (dolist (def (append-to-hypotheses new-name new-hyps hyps))
       (when (equal new-name (car def))
-        (let ((these-hyps (cdr def)))
+        (let ((these-hyps (cadr def)))
           (should (equal new-hyps (car (last these-hyps)))))))))
 
 (test-with appended-hypotheses-remain-intact
