@@ -55,9 +55,9 @@
     (unless (equal "Proof." cmd)
       (message "FIXME: Can we avoid waiting for the prover?")
       (goto-char start)
-      (sit-for 0.5)
+      (proof-shell-wait)
       (proof-goto-point)
-      (sit-for 0.5))))
+      (proof-shell-wait))))
 
 (defun choose-distinct (size &optional num)
   "Generate a list of length NUM, containing distinct random numbers, each less
