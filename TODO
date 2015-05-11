@@ -1,5 +1,13 @@
-Many tests fail
+Integrate code improvements from 'refactored' branch.
+ - NOTE: That branch is buggy WRT extracting features/generating graphs, so make sure critical behaviour is being tested!
 
-"Show Cluster Libraries" and "Show Similar Theorems" don't seem to work for Coq mode
+Tests have been imported wholesale from the 'refactored' branch. Many are failing, many aren't needed.
 
-"Similarity graph of proofs" says temp.map doesn't exist
+Some FIXMEs in unit-tests.el:
+
+ - "Show Cluster Libraries" and "Show Similar Theorems" don't seem to work for Coq mode.
+ - "Similarity graph of proofs" says temp.map doesn't exist.
+
+'ml4pg-top-level-graph-of-lemmas' often runs out of stack space (eg. it works when it's the only test being run, but fails during a run of all tests)
+
+"Fact" should be treated like "Theorem"/"Lemma"/etc. (see 'refactored' branch)
