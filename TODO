@@ -11,3 +11,15 @@ Some FIXMEs in unit-tests.el:
 'ml4pg-top-level-graph-of-lemmas' often runs out of stack space (eg. it works when it's the only test being run, but fails during a run of all tests)
 
 "Fact" should be treated like "Theorem"/"Lemma"/etc. (see 'refactored' branch)
+
+We often run out of stack, probably due to export-theorem-aux. Short-term fix is to do:
+
+  (setq max-specpdl-size    10000)  ;; Default is 600
+  (setq max-lisp-eval-depth 10000)  ;; Default is 500
+
+Subgoal focussing, eg. with "{...}" and "2:auto" don't work.
+
+The keywords "Scheme" and "Context" also cause the feature extraction to
+stop.
+
+Speed! Tom Gransden's been waiting up to a day to process a proof!
