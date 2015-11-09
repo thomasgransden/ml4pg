@@ -12,8 +12,6 @@ stdenv.mkDerivation {
     ## FIXME: Weka is in Nix
   ];
 
-  buildPhase = "";
-
   doCheck = true;
 
   checkPhase = ''
