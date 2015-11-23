@@ -3,7 +3,8 @@ with import <nixpkgs> {};
 stdenv.mkDerivation {
   name = "ml4pg";
   src = ./.;
-  buildInputs = [
+  propagatedBuildInputs = [
+    xdg_utils
     jre
     emacs
     emacs24Packages.proofgeneral
