@@ -5,7 +5,11 @@ then
     TESTS="coq ssreflect"
 fi
 
-cd $ML4PG_HOME
+cd "$ML4PG_HOME" || {
+    echo "Couldn't cd to '$ML4PG_HOME'" >> /dev/stderr
+    exit 1
+}
+
 for TEST_SUITE in $TESTS
 do
     export TEST_SUITE
