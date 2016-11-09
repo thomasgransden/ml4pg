@@ -1,4 +1,12 @@
-with import <nixpkgs> {};
+# Use this system's <nixpkgs> to fetch a known-good version (release 16.03)
+with (let pkgs = import <nixpkgs> {};
+          src  = pkgs.fetchFromGitHub {
+            owner  = "NixOS";
+            repo   = "nixpkgs";
+            rev    = "d231868"; # 16.03 release
+            sha256 = "0m2b5ignccc5i5cyydhgcgbyl8bqip4dz32gw0c6761pd4kgw56v";
+          };
+       in import "${src}" {});
 
 stdenv.mkDerivation {
   name = "ml4pg";
