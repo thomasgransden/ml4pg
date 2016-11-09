@@ -30,6 +30,9 @@
 (defun any-which (lst p)
   (apply 'or (mapcar p lst)))
 
+(defun string-split (str sep)
+  (split-string str (regexp-quote sep)))
+
 (defun remove-whitespace (string)
   (strip-regexp string "[\s\n\r\t]"))
 
