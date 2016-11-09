@@ -82,13 +82,6 @@
      (lambda (str sep bits)
        (should (equal (string-split str sep) bits)))))
 
-(test-with after-space
-  "Finding the position of the text after a single space"
-  (list-of (gen-string-without " ") (gen-nonempty-string))
-  (lambda (start end)
-    (should (equal (after-space (concat start " " end))
-                   (1+ (length start))))))
-
 (test-with take-n
   "Should extract N items from a list"
   (list-of (gen-list (gen-string)) (gen-num))
