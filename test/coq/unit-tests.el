@@ -28,14 +28,6 @@
     (should (equal (get-type-id-aux (concat name " : " type " "))
                    type))))
 
-(test-with append-hyp
-  "Check we can append to the hypothesis"
-  (list-of (gen-list (gen-string)) (gen-string))
-  (lambda (hyp s)
-    (let ((hypothesis hyp))
-      (append-hyp s)
-      (should (equal hypothesis (append hyp s))))))
-
 (test-with remove-if-empty
   "Test removing empty theorems"
   nil
