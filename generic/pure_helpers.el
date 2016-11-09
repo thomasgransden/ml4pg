@@ -27,6 +27,9 @@
   "Nil iff any element of LST is nil"
   (apply 'f-and lst))
 
+(defun any-which (lst p)
+  (apply 'or (mapcar p lst)))
+
 (defun remove-whitespace (string)
   (strip-regexp string "[\s\n\r\t]"))
 
