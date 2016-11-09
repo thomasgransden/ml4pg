@@ -9,94 +9,6 @@
     (should (fboundp 'coq-mode))
     (should (fboundp 'coq-build-prog-args))))
 
-(test-with lookup-type-id
-  "Looks up types in an assoc list"
-  (list-of (gen-types-id))
-  (lambda (alist)
-    (dotimes (n (length alist))
-      (let* ((type (car (nth n alist)))
-             (id   (cdr (assoc type alist))))
-        (should (equal (lookup-type-id alist type)
-                                id))))))
-
-(test-with get-type-id
-  "Extracts a type from a string of Coq and looks up its ID"
-  (lambda () (mapcar (apply-partially 'replace-regexp-in-string "[:\n ]" "")
-                     (funcall (list-of (gen-nonempty-string)
-                                       (gen-nonempty-string)))))
-  (lambda (name type)
-    (should (equal (get-type-id-aux (concat name " : " type " "))
-                   type))))
-
-(test-with remove-if-empty
-  "Test removing empty theorems"
-  nil
-  (lambda ()
-    (let ((thms '(("a") ("b") ("") ("d") ("") ("") ("g") ("")))
-          (ids  '((6 3 3) (8) nil (2) (1 7 6 6) nil (4 5 3))))
-      (should (equal (remove-if-empty-aux ids thms)
-                     '((4) nil (7 1) (2) nil nil nil))))))
-
-(test-with extract-defs-empty
-  "Test extracting definitions from an empty buffer"
-  nil
-  (lambda ()
-    (let ((result (ml4pg-load-and-extract-info "" 'dependencygraph-defs-aux)))
-      (should (tree-of-numbers result))
-      (process-with-cmd "dot" (clusterofseveral-pure result
-                                                     tables-definitions
-                                                     number-of-defs)))))
-
-(test-with extract-defs-theorem
-  "Try extracting definitions given a single theorem."
-  (list-of (gen-coq-correct-theorem))
-  (lambda (str)
-    (ml4pg-load-and-extract-info str 'dependencygraph-defs-aux)))
-
-(test-with dependencygraph-statements-empty
-  "statements"
-  nil
-  (lambda ()
-    (list (ml4pg-load-and-extract-info ""
-                                       'dependencygraph-statements-aux))))
-
-(test-with dependencygraph-statements-theorem
-  "Try extracting statements given a single theorem"
-  (list-of (gen-coq-correct-theorem))
-  (lambda (str)
-    (ml4pg-load-and-extract-info str 'dependencygraph-statements-aux)))
-
-(test-with dependencygraph-proof-empty
-  "proofs"
-  nil
-  (lambda ()
-    (list (ml4pg-load-and-extract-info "" 'dependencygraph-proof-aux))))
-
-(test-with dependencygraph-proof-theorem
-  "Proof, given a theorem"
-  (list-of (gen-coq-correct-theorem))
-  (lambda (str)
-    (ml4pg-load-and-extract-info str 'dependencygraph-proof-aux)))
-
-(test-with showtreegraphthm-empty
-  "tree"
-  nil
-  (lambda ()
-    (ml4pg-load-and-extract-info ""
-                                 (lambda ()
-                                   (showtreegraphthm-aux "")))))
-
-(test-with showtreegraphthm-empty
-  "show tree graph of theorems, with no theorems"
-  (lambda ()
-    (let* ((name (funcall (gen-coq-name)))
-           (str  (funcall (gen-coq-correct-theorem (gen-const name)))))
-      (list name str)))
-  (lambda (name str)
-    (let ((result (ml4pg-load-and-extract-info str
-                                               `(lambda ()
-                                                  (showtreegraphthm-aux ,name))))))))
-
 (test-with show-cluster-bis-empty
   "clusters"
   nil
@@ -131,27 +43,6 @@
   (list-of (gen-coq-correct-theorem))
   (lambda (str)
     (ml4pg-load-and-extract-info str 'show-clusters-of-theorem)))
-
-(defun test-save-numbers ()
-  (unwind-protect
-      (save-numbers-mkdir "coq"
-                          'extract-names2
-                          'extract-feature-theorems
-                          "test/"
-                          t)
-    (delete-directory (concat home-dir "libs/coq/test") t)))
-
-(test-with save-numbers-empty
-  "savenumbers"
-  nil
-  (lambda ()
-    (ml4pg-load-and-extract-info "" 'test-save-numbers)))
-
-(test-with save-numbers-theorem
-  "Test save-numbers with a theorem"
-  (list-of (gen-coq-correct-theorem))
-  (lambda (str)
-    (ml4pg-load-and-extract-info str 'test-save-numbers)))
 
 (test-with exported-libraries-empty
   "clusterlibs"
@@ -235,14 +126,6 @@
       (dolist (name names)
         (should (member name got))))))
 
-(test-with example-showtreegraphthm
-  ""
-  nil
-  (lambda ()
-    (with-coq-example (lambda ()
-                        (dolist (thm (extract-coq-names-from (buffer-string)))
-                          (showtreegraphthm-aux thm))))))
-
 (test-with example-show-clusters-bis
   ""
   nil
@@ -263,13 +146,6 @@
   (lambda ()
     (with-coq-example (lambda ()
                         (show-clusters-of-theorem)))))
-
-(test-with example-save-numbers
-  ""
-  nil
-  (lambda ()
-    (with-coq-example (lambda ()
-                        (test-save-numbers)))))
 
 (test-with example-exported-libraries
   ""

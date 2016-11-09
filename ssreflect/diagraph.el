@@ -41,7 +41,7 @@ G%s [shape=plaintext,label=\"\"];" n (1+ n) ar n gs0 (1+ n) ))))
   (do ((temp arrows (cdr temp))
        (res "digraph G {\n graph [rankdir=LR]\n"))
       ((endp temp) (concatenate 'string res (several-last-arrows larrows)))
-    (setf res (concatenate 'string res 
+    (setf res (concatenate 'string res
 			   (arrow (nth 0 (car temp))
 				  (nth 1 (car temp))
 				  (nth 2 (car temp))
@@ -49,19 +49,19 @@ G%s [shape=plaintext,label=\"\"];" n (1+ n) ar n gs0 (1+ n) ))))
 			   "\n"))))
 
 ;;; (several-arrows '(((a b c) (c d e) (1 2) 0) ((a b c) (c d e) (3 4) 0) ((c d e) (f g) (5) 1)) '((f g) (5 6) 2))
- 
+
 
 
 (defun generate-arrow-parts (arrows last-arrows)
   (several-arrows arrows last-arrows))
-  
+
 
 
 (defun show-diagram (text)
   (with-temp-file "temp.gv"
     (insert text))
-  (shell-command "dot -Tpng temp.gv -o temp.png")
-  (unless noninteractive (shell-command "xdg-open temp.png")))
+  (verbose-command "dot -Tpng temp.gv -o temp.png")
+  (unless noninteractive (verbose-command "xdg-open temp.png")))
 
 
 
@@ -119,31 +119,31 @@ G%s [shape=plaintext,label=\"\"];" n (1+ n) ar n gs0 (1+ n) ))))
 					     (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 0 props)))))))
 	   (if (nth 1 props)
 	       (setf str (concat str (format "G0 -> G7 [style=invis];
-G1 -> G7[constraint=false,arrowhead=none];\nG7[shape=rectangle,label=\"%s\"];\n" 
+G1 -> G7[constraint=false,arrowhead=none];\nG7[shape=rectangle,label=\"%s\"];\n"
 					     (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 1 props)))))))
 	   (if (nth 2 props)
 	       (setf str (concat str (format "G1 -> G8 [style=invis];
-G2 -> G8[constraint=false,arrowhead=none];\nG8[shape=rectangle,label=\"%s\"];\n" 
+G2 -> G8[constraint=false,arrowhead=none];\nG8[shape=rectangle,label=\"%s\"];\n"
 					     (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 2 props)))))))
 	   (if (nth 3 props)
 	       (setf str (concat str (format "G2 -> G9 [style=invis];
-G3 -> G9[constraint=false,arrowhead=none];\nG9[shape=rectangle,label=\"%s\"];\n" 
+G3 -> G9[constraint=false,arrowhead=none];\nG9[shape=rectangle,label=\"%s\"];\n"
 					     (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 3 props)))))))
 	   (if (nth 4 props)
 	       (setf str (concat str (format "G3 -> G10 [style=invis];
-G4 -> G10[constraint=false,arrowhead=none];\nG10[shape=rectangle,label=\"%s\"];\n" 
+G4 -> G10[constraint=false,arrowhead=none];\nG10[shape=rectangle,label=\"%s\"];\n"
 					     (concatenate-string-list (mapcar (lambda (x) (format "%s\\n" x)) (nth 4 props))))))))))
 
 
 ;; (setf props '((arg1 arg2) nil (arg3 arg4) nil (arg5)))
 ;; (generate-props props)
-	     
 
 
 
 
- 
-	
+
+
+
 
 (require 'cl)
 
@@ -178,11 +178,11 @@ G4 -> G10[constraint=false,arrowhead=none];\nG10[shape=rectangle,label=\"%s\"];\
 ;;; (setf patches2 '(((a 1) (b 2) (c 3) (d 4) (e 5)) ((f 6) (g 7) (h 8) (i 9))))
 ;;; (setf props '((arg1 arg2) nil (arg3 arg4) nil (arg5)))
 ;;; (show-diagram (generate-diagram-from-patches patches2 props))
-;; (insert (generate-diagram-from-patches patches2 props))	    
+;; (insert (generate-diagram-from-patches patches2 props))
 
 
 
-;(setf patches 
+;(setf patches
  ;     '((("powersum1 (step 1)"  "elim")
 ;	 ("powersum1 (step 2)"   "rewrite")
 ;	 ("powersum1 (step 3)"   "move")
@@ -199,4 +199,3 @@ G4 -> G10[constraint=false,arrowhead=none];\nG10[shape=rectangle,label=\"%s\"];\
 
 
 ;(show-diagram (generate-diagram-from-patches patches props))
-

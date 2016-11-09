@@ -16,7 +16,7 @@
 
 
 (defun extract-theorem-proof2 (file name)
-  (with-temp-buffer 
+  (with-temp-buffer
       (insert-file-contents (concat home-dir "exported-libs/coq/" file ".v"))
     (let* ((b (beginning-of-buffer))
 	   (l (search-forward name))
@@ -41,19 +41,19 @@
 
 (defun save-trace (l)
   (let ((res (extract-theorem-proof-recursive l)))
-    (with-temp-file 
+    (with-temp-file
 	(concat home-dir "automaton/trace0.txt") (insert res))))
 
 
 (defvar buf nil)
 
 (defun generate-automaton (l)
-  (progn 
+  (progn
     (with-current-buffer (buffer-name buf)
     (save-trace l))
-    (with-temp-file 
+    (with-temp-file
 	(concat home-dir "automaton/obtaintrace")
-      (insert (format 
+      (insert (format
     "#!/bin/bash
 
 java -jar %spreprocessor.jar ss $1 > %strace.txt;
@@ -82,7 +82,7 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 (concat home-dir "automaton/")
 (concat home-dir "automaton/"))))
     (sit-for 1)
-    (shell-command (concat home-dir "automaton/obtaintrace "  
+    (verbose-command (concat home-dir "automaton/obtaintrace "
 			   (concat home-dir "automaton/trace0.txt")))))
 
 
@@ -103,13 +103,13 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 	 (res ""))
 	((endp temp) res)
 	(setf res (concat res (car temp) "\n")))))
-	
+
 
 
 
 (defun generate-file-patch (i patch)
   (let ((res (print-list-patch patch)))
-    (with-temp-file 
+    (with-temp-file
 	(concat home-dir "automaton/patchtrace" (format "%s" i) ".txt") (insert res))))
 
 
@@ -123,9 +123,9 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 
 
 (defun invoke-patch-automaton (l)
-  (with-temp-file 
+  (with-temp-file
 	(concat home-dir "automaton/obtaintrace")
-      (insert (format 
+      (insert (format
     "#!/bin/bash
 
 java -jar %spreprocessor.jar patches %s > %strace.txt;
@@ -139,7 +139,7 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 (do ((i 0 (1+ i))
      (res ""))
     ((equal i (length l)) res)
-    (setf res (concat res " " (concat home-dir "automaton/patchtrace" (format "%s" i) ".txt")))) 
+    (setf res (concat res " " (concat home-dir "automaton/patchtrace" (format "%s" i) ".txt"))))
 (concat home-dir "automaton/")
 (concat home-dir "automaton/")
 (concat home-dir "automaton/")
@@ -157,7 +157,7 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 (concat home-dir "automaton/")
 (concat home-dir "automaton/"))))
 (sit-for 1)
-    (shell-command (concat home-dir "automaton/obtaintrace" )))
+    (verbose-command (concat home-dir "automaton/obtaintrace" )))
 
 
 
@@ -168,7 +168,7 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
        (res nil))
       ((not (search "." temp)) (reverse res))
     (progn (setf res (cons (subseq temp 0 (search "." temp)) res))
-	   (setf temp (subseq temp (1+ (search "." temp))))))) 
+	   (setf temp (subseq temp (1+ (search "." temp)))))))
 
 
 (defun take (list n m)
@@ -176,13 +176,13 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 
 
 (defun merge (name patch tac-patches l)
-  (cond ((equal patch 'l) 
+  (cond ((equal patch 'l)
 	 (do ((temp tac-patches (cdr temp))
 	      (i (- l 5) (1+ i))
 	      (res nil))
 	     ((endp temp) (reverse res))
 	   (setf res (cons (list (format "%s (Step %s)" name i) (format "%s: %s" name (car temp))) res))))
-	((equal patch 'u) 
+	((equal patch 'u)
 	 (do ((temp tac-patches (cdr temp))
 	      (i 1 (1+ i))
 	      (res nil))
@@ -207,7 +207,7 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 			    ((equal patch 'u) (take tactics 0 5))
 			    (t (take tactics (* 5 (1- patch)) (+ 5 (* 5 (1- patch))))))))
     (merge name patch tac-patches (length tactics))))
-    
+
 
 
 
@@ -221,7 +221,7 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 	((and (equal (car (nth n saved-theorems)) (car (nth (- n 1) saved-theorems)))
 	      (not (equal (car (nth n saved-theorems)) (car (nth (+ n 1) saved-theorems)))))
 	 'l)
-	((equal (car (nth n saved-theorems)) (car (nth (- n 1) saved-theorems))) 
+	((equal (car (nth n saved-theorems)) (car (nth (- n 1) saved-theorems)))
 	 (which-patch (1- n) (1+ m)))
 	(t m)))
 
@@ -254,42 +254,42 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
       ((endp temp) nil)
     (let ((level (+ 1 (floor (car temp) 6)))
 	  (inst (+ 1 (mod (car temp) 6))))
-      (cond ((equal inst 1) 
+      (cond ((equal inst 1)
 	   (cond ((equal level 1) (setf sim (replace-i 0  (format " - Tactic(s) applied.") sim)))
 		 ((equal level 2) (setf sim (replace-i 1  (format " - Tactic(s) applied.") sim)))
 		 ((equal level 3) (setf sim (replace-i 2  (format " - Tactic(s) applied.") sim)))
 		 ((equal level 4) (setf sim (replace-i 3  (format " - Tactic(s) applied.") sim)))
 		 ((equal level 5) (setf sim (replace-i 4  (format " - Tactic(s) applied.") sim)))
 		 ))
-	    ((equal inst 2) 
+	    ((equal inst 2)
 	     (cond ((equal level 1) (setf sim (replace-i 0  (format " - Number of tactics.") sim)))
 		   ((equal level 2) (setf sim (replace-i 1  (format " - Number of tactics.") sim)))
 		   ((equal level 3) (setf sim (replace-i 2  (format " - Number of tactics.") sim)))
 		   ((equal level 4) (setf sim (replace-i 3  (format " - Number of tactics.") sim)))
 		   ((equal level 5) (setf sim (replace-i 4  (format " - Number of tactics.") sim)))
 		   ))
-	    ((equal inst 3) 
+	    ((equal inst 3)
 	     (cond ((equal level 1) (setf sim (replace-i 0  (format " - Type of tactic arguments.") sim)))
 		   ((equal level 2) (setf sim (replace-i 0  (format " - Type of tactic arguments.") sim)))
 		   ((equal level 3) (setf sim (replace-i 0  (format " - Type of tactic arguments.") sim)))
 		 ((equal level 4) (setf sim (replace-i 0  (format " - Type of tactic arguments.") sim)))
 		 ((equal level 5) (setf sim (replace-i 0  (format " - Type of tactic arguments.") sim)))
 		 ))
-	    ((equal inst 4) 
+	    ((equal inst 4)
 	     (cond ((equal level 1) (setf sim (replace-i 0  (format " - Applied lemma.") sim)))
 		   ((equal level 2) (setf sim (replace-i 1  (format " - Applied lemma.") sim)))
 		   ((equal level 3) (setf sim (replace-i 2  (format " - Applied lemma.") sim)))
 		   ((equal level 4) (setf sim (replace-i 3  (format " - Applied lemma.") sim)))
 		   ((equal level 5) (setf sim (replace-i 4  (format " - Applied lemma.") sim)))
 		   ))
-	    ((equal inst 5) 
+	    ((equal inst 5)
 	     (cond ((equal level 1) (setf sim (replace-i 0  (format " - Top symbol.") sim)))
 		   ((equal level 2) (setf sim (replace-i 1  (format " - Top symbol.") sim)))
 		   ((equal level 3) (setf sim (replace-i 2  (format " - Top symbol.") sim)))
 		   ((equal level 4) (setf sim (replace-i 3  (format " - Top symbol.") sim)))
 		   ((equal level 5) (setf sim (replace-i 4  (format " - Top symbol.") sim)))
 		   ))
-	    ((equal inst 6) 
+	    ((equal inst 6)
 	     (cond ((equal level 1) (setf sim (replace-i 0  (format " - Number of subgoals.") sim)))
 		   ((equal level 2) (setf sim (replace-i 1  (format " - Number of subgoals.") sim)))
 		   ((equal level 3) (setf sim (replace-i 2  (format " - Number of subgoals.") sim)))
@@ -297,8 +297,7 @@ dot -Tpng %strace.gv -o %strace.png;  xdg-open %strace.png &"
 		   ((equal level 5) (setf sim (replace-i 4  (format " - Number of subgoals.") sim)))
 		   ))
 	    )
-      
+
 			 )
 		      )
   sim))
-

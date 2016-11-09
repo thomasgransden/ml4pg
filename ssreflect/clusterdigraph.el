@@ -18,13 +18,13 @@
 				 (clusterofone (car temp))
 				 "\n}\n")))
       (if (and (cdr temp) (not (listp (cadr temp))))
-	  (setf res (concat res 
-			(format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n" (car (nth (1- (car temp)) tables-definitions)) 
+	  (setf res (concat res
+			(format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n" (car (nth (1- (car temp)) tables-definitions))
 				(library-belong (1- (car temp)))
 				(car (nth (1- (car temp)) tables-definitions))
-				(car (nth (1- (car temp)) tables-definitions)) 
+				(car (nth (1- (car temp)) tables-definitions))
 				(car (nth (1- (cadr temp)) tables-definitions)) )))
-	(setf res (concat res 
+	(setf res (concat res
 			  (format "%s [URL=\"./%s.html\"];\n" (car (nth (1- (car temp)) tables-definitions))
 				  (library-belong (1- (car temp))))))))))
 
@@ -38,10 +38,10 @@
 (defun show-diagram-clusters (text)
   (with-temp-file "temp.gv"
     (insert text))
-  (shell-command "dot -Tcmap temp.gv -o temp.map")
-  (shell-command "dot -Tpng temp.gv -o temp.png")
+  (verbose-command "dot -Tcmap temp.gv -o temp.map")
+  (verbose-command "dot -Tpng temp.gv -o temp.png")
   (createwebpage)
-  (unless noninteractive (shell-command "xdg-open temp.html")))
+  (unless noninteractive (verbose-command "xdg-open temp.html")))
 
 
 (defun showclustergraph (lol)
@@ -51,7 +51,7 @@
 
 (defun createwebpage ()
   (with-temp-file "temp.html"
-    (insert 
+    (insert
      (format "<head><title>Dependency Diagram</title></head>\n<body><img src=\"temp.png\" usemap=\"#depend\"/>
 <map id=\"depend\" name=\"depend\">%s</map></body>" (read-lines "temp.map")))))
 
@@ -59,7 +59,7 @@
 
 
 ;(showclustergraph '((1 2 3) ((2 5) (6 7)) 8 9))
- 
+
 (defun flatten (structure)
   (cond ((null structure) nil)
         ((atom structure) (list structure))
@@ -82,7 +82,7 @@
     (list cluster1)
   (if (listp (car cluster2))
 	(if (issubcluster cluster1 (car cluster2))
-	    (cons (replacecluster cluster1 (car cluster2)) 
+	    (cons (replacecluster cluster1 (car cluster2))
 		  (cdr cluster2))
 	  (cons (car cluster2) (replacecluster cluster1 (cdr cluster2))))
      (if (member (car cluster2) cluster1)
@@ -98,7 +98,7 @@
   ;     (flag nil)
    ;    (res nil))
     ;  ((or (endp temp) flag)
-     ;  (if flag 
+     ;  (if flag
 ;	   (reverse res)
 ;	 (append (reverse res) (list cluster1))))
  ;   (cond ((listp (car temp))
@@ -173,7 +173,7 @@
     (sleep-for 2)
     (setf clusters3 (cdr (form-clusters (extract-clusters-from-file-defs ) (floor (length tables-definitions) 2))))
     (showclustergraph (subclustersseveral  clusters3 clusters1 ))))
-	  
+
 
 
 
@@ -193,13 +193,13 @@
 				 (clusterofone-statements (car temp))
 				 "\n}\n")))
       (if (and (cdr temp) (not (listp (cadr temp))))
-	  (setf res (concat res 
-			(format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n" (car (nth (1- (car temp)) tables-thms)) 
+	  (setf res (concat res
+			(format "%s [URL=\"./%s.html#%s\"]; %s -> %s[style=invis]\n" (car (nth (1- (car temp)) tables-thms))
 				(library-belong-thm (1- (car temp)))
 				(car (nth (1- (car temp)) tables-thms))
-				(car (nth (1- (car temp)) tables-thms)) 
+				(car (nth (1- (car temp)) tables-thms))
 				(car (nth (1- (cadr temp)) tables-thms)) )))
-	(setf res (concat res 
+	(setf res (concat res
 			  (format "%s [URL=\"./%s.html\"];\n" (car (nth (1- (car temp)) tables-thms))
 				  (library-belong-thm (1- (car temp))))))))))
 
@@ -234,7 +234,7 @@
     (showclustergraph-statements (subclustersseveral  clusters3 clusters1 ) )
    ; (showclustergraph-statements clusters1 )
     ))
-	  
+
 
 
 
@@ -260,40 +260,40 @@
 		(thm2 nil))
 	    (progn (if (<= (car temp) (length saved-theorems))
 		       (setf thm (car (nth (1- (car temp)) saved-theorems)))
-		     (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+		     (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 						     (format "%s" (- (car temp) (length saved-theorems)))
-						  "p'")) 
+						  "p'"))
 			      (with-current-buffer "*Shell Command Output*"
 				(beginning-of-buffer)
 				(read (current-buffer))
-				(setf thm (format "%s"  (read (current-buffer)))))))	
+				(setf thm (format "%s"  (read (current-buffer)))))))
 		   (if (<= (car temp) (length saved-theorems))
 		       (setf thm2 (car (nth (1- (cadr temp)) saved-theorems)))
-		     (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+		     (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 						     (format "%s" (- (cadr temp) (length saved-theorems)))
-						  "p'")) 
+						  "p'"))
 			      (with-current-buffer "*Shell Command Output*"
 				(beginning-of-buffer)
 				(read (current-buffer))
 				(setf thm2 (format "%s"  (read (current-buffer)))))))
-		   (setf res (concat res 
-			(format "%s; %s -> %s[style=invis]\n" 
-				thm 
-				thm 
+		   (setf res (concat res
+			(format "%s; %s -> %s[style=invis]\n"
+				thm
+				thm
 				thm2)))))
 	(let ((thm nil))
 	    (progn (if (<= (car temp) (length saved-theorems))
 		       (setf thm (car (nth (1- (car temp)) saved-theorems)))
-		     (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+		     (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 						     (format "%s" (- (car temp) (length saved-theorems)))
-						  "p'")) 
+						  "p'"))
 			      (with-current-buffer "*Shell Command Output*"
 				(beginning-of-buffer)
 				(read (current-buffer))
-				(setf thm (format "%s"  (read (current-buffer)))))))	
+				(setf thm (format "%s"  (read (current-buffer)))))))
 		   (setf res (concat res (format "%s;\n" thm)))))))))
-				  
-				 
+
+
 
 
 (defun clusterofseveral-proof (lol)
@@ -331,7 +331,7 @@
     (sleep-for 2)
     (setf clusters3 (cdr (form-clusters (extract-clusters-from-file (floor (size-temp)  2)) (floor (size-temp)  2))))
     (showclustergraph-proof (subclustersseveral (removenil (remove-if-empty clusters3)) (removenil (remove-if-empty clusters1))))))
-	  
+
 
 
 
@@ -344,4 +344,3 @@
           ((endp temp2) (setf res (cons res2 res)))
           (if (not (string= "" (car (nth (1- (car temp2)) saved-theorems)) ))
               (setf res2 (cons (car temp2) res2))))))
-

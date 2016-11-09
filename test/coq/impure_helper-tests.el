@@ -16,20 +16,6 @@
                                       "-o"
                                       "[bdfi]")))))
 
-(test-with name-from-buf
-  "Test getting a filename from a buffer"
-  (lambda ()
-    (let* ((prefix (funcall (gen-string-without "."))))
-      (list prefix
-            (concat prefix "." (funcall (gen-string-without "."))))))
-  (lambda (prefix full)
-    (with-temp-buffer
-      (let ((name (rename-buffer full t)))
-        (should (equal (name-from-buf)
-                       (if (search "." name)
-                           (car (string-split name "."))
-                           name)))))))
-
 (test-with step-over-proof
   "We go forwards by one commands iff it's 'Proof.'"
   (list-of (gen-num))
@@ -143,80 +129,3 @@
 
 (defconst example-points (with-coq-example 'proof-steps-in-buffer)
   "The points between proof steps in the ml4pg.v example file")
-
-(test-with proof-to-char
-  "Test that proof-to-char moves proof point"
-  (list-of (gen-elem example-points))
-  (lambda (pt)
-    (with-coq-example
-     `(lambda ()
-        (proof-to-char ,pt)
-        (should (equal ,pt (proof-queue-or-locked-end)))))))
-
-(test-with proof-to-char-twice
-  "Test that proof-to-char is idempotent"
-  (list-of (gen-elem example-points))
-  (lambda (pt)
-    (with-coq-example
-     `(lambda ()
-        (proof-to-char ,pt)
-        ;; Sanity check
-        (should (equal ,pt (proof-queue-or-locked-end)))
-        ;; Real test
-        (proof-to-char ,pt)
-        (should (equal ,pt (proof-queue-or-locked-end)))))))
-
-(test-with proof-to-char-between
-  "Test that proof-to-char is idempotent, even between steps"
-  (list-of (gen-num))
-  (lambda (pt)
-    (with-coq-example
-     `(lambda ()
-        (proof-to-char ,(1+ pt))
-        (let ((old-pos (proof-queue-or-locked-end)))
-          (proof-to-char ,(1+ pt))
-          (when (get-buffer "*coq*")
-            (test-msg (format "COQQ\n%s\n/COQQ"
-                              (with-current-buffer
-                                  (get-buffer "*coq*")
-                                (buffer-string)))))
-          (should (equal old-pos (proof-queue-or-locked-end))))))))
-
-(test-with proof-to-char-any-number
-  "Test that proof-to-char stays idempotent, for any number of calls"
-  (list-of (gen-num) (gen-num))
-  (lambda (pt repeat)
-    (with-coq-example
-     `(lambda ()
-        (proof-to-char ,(1+ pt))
-        (let ((old-pos (proof-queue-or-locked-end)))
-          (dotimes (i ,(1+ repeat))
-            (proof-to-char ,(1+ pt))
-            (should (equal old-pos (proof-queue-or-locked-end)))))))))
-
-(test-with shuffle-list-length
-  "Shuffling a list doesn't change its length"
-  (list-of (gen-list (gen-num)))
-  (lambda (lst)
-    (should (equal (length lst)
-                   (length (shuffle-list lst))))))
-
-(test-with shuffle-list-elems
-  "Elements of a shuffled list don't change"
-  (list-of (gen-list (gen-num)))
-  (lambda (lst)
-    (let ((shuffled (shuffle-list lst)))
-      (dolist (elem lst)
-        (should (member elem shuffled)))
-      (dolist (elem shuffled)
-        (should (member elem lst))))))
-
-(test-with shuffle-sort-inverse
-  "Shuffling can be un-done with sorting"
-  (list-of (gen-list (gen-num)))
-  (lambda (lst)
-    (let ((sorted   lst)
-          (shuffled (shuffle-list lst)))
-      (setq sorted   (sort sorted '<))
-      (setq shuffled (sort shuffled '<))
-      (should (equal sorted shuffled)))))

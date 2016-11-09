@@ -1,1 +1,1 @@
-((intro . 1) (case . 2) (simpl . 3) (trivial . 4) (induction . 5) (rewrite . 6) (red . 7) (simpl+trivial . 34) (auto . 9) (reflexivity . 10) (tauto . 11) (compute . 12))
+((intro . 1) (case . 2) (simpl . 3) (trivial . 4) (induction . 5) (rewrite . 6) (red . 7) (simpl+trivial . 34) (auto . 9) (compute . 10) (tauto . 11) (reflexivity . 12))

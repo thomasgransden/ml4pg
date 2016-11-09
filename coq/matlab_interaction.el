@@ -3,8 +3,8 @@
 (defun init-clusters ()
   (interactive)
   (my-config-display)
-  (require 'comint)  
-   (apply 'make-comint "matlab" *matlab-program* nil 
+  (require 'comint)
+   (apply 'make-comint "matlab" *matlab-program* nil
 		(list "-nodesktop -r 0")))
 (defvar my-buffer "")
 
@@ -30,7 +30,7 @@
 		       ((equal signal 1) (print-similarities (split-clusters-aux2 my-buffer nil)))
 		       ;((equal signal 2) (print-clusters (split-clusters-aux my-buffer nil) (split-frequencies my-buffer nil)))
 		       ((equal signal 4) (print-clusters-bis (split-clusters-aux my-buffer nil) (split-frequencies my-buffer nil)))
-		       ((equal signal 3) (compute-clusters-and-values (split-clusters-aux (remove-jumps (subseq my-buffer (search "load" my-buffer :from-end t))) nil) 
+		       ((equal signal 3) (compute-clusters-and-values (split-clusters-aux (remove-jumps (subseq my-buffer (search "load" my-buffer :from-end t))) nil)
 								      (split-frequencies (remove-jumps  (subseq my-buffer (search "load" my-buffer :from-end t))) nil)))
 		       (t nil)))))
   output)
@@ -93,7 +93,7 @@
     (progn (setf temp2 (concatenate 'string temp2 (subseq temp 0 pos)))
 	   (setf temp (subseq temp (1+ pos)))
 	   (setf pos (search "\n" temp)))))
-      
+
 
 
 
@@ -106,7 +106,7 @@
       ((endp temp) temp2)
       (if (member (format "%s" n) (car temp))
 	  (append temp2 (list (car temp))))))
-	  
+
 
 
 (defun cluster-string-to-list (cluster)
@@ -116,8 +116,8 @@
       (progn (setf temp2 (append temp2 (list (subseq temp 0 (search "," temp)))))
 	     (setf temp (subseq temp (1+ (search "," temp)))))))
 
-      
-  
+
+
 
 
 (defun remove-occurrence (list n)
@@ -148,9 +148,9 @@
 			  (if (<= (string-to-number (car temp2)) (length saved-theorems))
 			      (progn (insert (format "- "))
 				     (insert-button-lemma (remove_last_colon(car (nth (- (string-to-number (car temp2)) 1) saved-theorems)))))
-			    (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+			    (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 							  (format "%s" (- (string-to-number (car temp2)) (length saved-theorems)))
-							  "p'")) 
+							  "p'"))
 				   (with-current-buffer "*Shell Command Output*"
 				     (beginning-of-buffer)
 				     (read (current-buffer))
@@ -167,14 +167,14 @@
 (defun print-similarities-matlab ()
   (with-current-buffer "*display*"
     (while (string= "0" (car (read-lines (expand-file-name "available.txt"))))
-      
+
       (progn (erase-buffer)
 	     (insert (format "Searching clusters...\n"))
 	     (sleep-for 1))
       )
     (erase-buffer)
     (let* ((clu (car (read-lines (expand-file-name "matlab_res.txt")))))
-      (cond 
+      (cond
 	((search "None" clu)
 	 (if (not iterative)
 	     (insert (format "Sorry, but we have not found any similarity using granularity %s\n" granularity-level))
@@ -190,9 +190,9 @@
 			  (if (<= (string-to-number (car temp2)) (length saved-theorems))
 			      (progn (insert (format "- "))
 				     (insert-button-lemma (remove_last_colon(car (nth (- (string-to-number (car temp2)) 1) saved-theorems)))))
-			    (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+			    (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 							  (format "%s" (- (string-to-number (car temp2)) (length saved-theorems)))
-							  "p'")) 
+							  "p'"))
 				   (with-current-buffer "*Shell Command Output*"
 				     (beginning-of-buffer)
 				     (read (current-buffer))
@@ -220,9 +220,9 @@
 	  (if (<= (car temp2) (length saved-theorems))
 	      (progn (insert (format "- "))
 		     (insert-button-lemma (remove_last_colon(car (nth (- (car temp2)  1) saved-theorems)))))
-	    (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+	    (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 					  (format "%s" (- (car temp2) (length saved-theorems)))
-					  "p'")) 
+					  "p'"))
 		   (with-current-buffer "*Shell Command Output*"
 		     (beginning-of-buffer)
 		     (read (current-buffer))
@@ -264,7 +264,7 @@
 
 
 
-			  
+
 (defvar times 0)
 
 (defun print-clusters (res freq)
@@ -281,11 +281,11 @@
        (temp-freq freq1 (cdr temp-freq))
        (i 1 (1+ i)))
       ((endp temp) (insert (format "------------------------------------------------------------------------------------------------------------\n")) )
-    (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq))) 
+    (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq)))
     (do ((temp2 (car temp) (cdr temp2)))
 	((endp temp2) (insert (format "\n")))
       (progn (insert (format "Lemma "))
-	     (insert-button-lemma 
+	     (insert-button-lemma
 	      (remove_last_colon
                  (car (nth (string-to-number (car temp2)) saved-theorems)))))))))))
 
@@ -304,16 +304,16 @@
        (temp-freq freq1 (cdr temp-freq))
        (i 1 (1+ i)))
       ((endp temp) (insert (format "------------------------------------------------------------------------------------------------------------\n")) )
-    (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq))) 
+    (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq)))
     (do ((temp2 (car temp) (cdr temp2)))
 	((endp temp2) (insert (format "\n")))
 	(if (< (string-to-number (car temp2)) (length saved-theorems))
 	    (progn (insert (format "Lemma "))
 		   (insert-button-lemma (remove_last_colon
 			     (car (nth (string-to-number (car temp2)) saved-theorems)))))
-	  (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+	  (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 						  (format "%s" (- (string-to-number (car temp2)) (length saved-theorems)))
-						  "p'")) 
+						  "p'"))
 		 (with-current-buffer "*Shell Command Output*"
 		   (beginning-of-buffer)
 		   (read (current-buffer))
@@ -340,7 +340,7 @@
 (defun print-clusters-matlab ()
   (with-current-buffer "*display*"
     (while (string= "0" (car (read-lines (expand-file-name "available.txt"))))
-      
+
       (progn (erase-buffer)
 	     (insert (format "Searching clusters...\n"))
 	     (sleep-for 1))
@@ -351,23 +351,23 @@
 	  (freq (cadr clu-freq))
 	  (temp0 (unzip (quicksort-pair (zip clu freq))))
 	  (res1 (car temp0))
-	  (freq1 (cadr  temp0))) 
+	  (freq1 (cadr  temp0)))
     (insert (format "We have found the following clusters:\n" ))
     (insert (format "------------------------------------------------------------------------------------------------------------\n"))
     (do ((temp res1 (cdr temp))
        (temp-freq freq1 (cdr temp-freq))
        (i 1 (1+ i)))
       ((endp temp) (insert (format "------------------------------------------------------------------------------------------------------------\n")) )
-    (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq))) 
+    (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq)))
     (do ((temp2 (cluster-string-to-list (car temp)) (cdr temp2)))
 	((endp temp2) (insert (format "\n")))
 	(if (< (string-to-number (car temp2)) (length saved-theorems))
 	    (progn (insert (format "Lemma "))
 		   (insert-button-lemma (remove_last_colon
 			     (car (nth (string-to-number (car temp2)) saved-theorems)))))
-	  (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+	  (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 						  (format "%s" (- (string-to-number (car temp2)) (length saved-theorems)))
-						  "p'")) 
+						  "p'"))
 		 (with-current-buffer "*Shell Command Output*"
 		   (beginning-of-buffer)
 		   (read (current-buffer))
@@ -388,7 +388,7 @@
       (erase-buffer)
       (insert (format "We have found the following clusters:\n" ))
       (insert (format "------------------------------------------------------------------------------------------------------------\n"))
-  
+
       (do ((temp res1 (cdr temp))
 	   (i 1 (1+ i)))
 	  ((endp temp) (insert (format "------------------------------------------------------------------------------------------------------------\n")) )
@@ -405,9 +405,9 @@
 				(insert-button-lemma (remove_last_colon
 						      (remove-jumps (car (nth (1- (car temp2)) saved-theorems)))))
 				(insert (format " (%s)\n" (which-patch (1- (car temp2)) 1)))))
-		       (ignore-errors (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+		       (ignore-errors (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 						     (format "%s" (- (car temp2) (length saved-theorems)))
-						  "p'")) 
+						  "p'"))
 			      (with-current-buffer "*Shell Command Output*"
 				(beginning-of-buffer)
 				(read (current-buffer))
@@ -415,8 +415,8 @@
 			      (insert (format "Lemma " ))
 			      (if (not (search "home" temp-res) )(insert (format "%s\n" temp-res)))))
 		       ))))
-      
-      
+
+
       )))
 
 
@@ -430,13 +430,13 @@
 	((and (equal (car (nth n saved-theorems)) (car (nth (- n 1) saved-theorems)))
 	      (not (equal (car (nth n saved-theorems)) (car (nth (+ n 1) saved-theorems)))))
 	 "last patch")
-	((equal (car (nth n saved-theorems)) (car (nth (- n 1) saved-theorems))) 
+	((equal (car (nth n saved-theorems)) (car (nth (- n 1) saved-theorems)))
 	 (which-patch (1- n) (1+ m)))
 	(t (format "patch %s" m))))
 
 
 
-  
+
 
 
 
@@ -447,9 +447,9 @@
     (if (<= (car temp) (length saved-theorems))
 	(setf res (append res (list (remove_last_colon
 				     (remove-jumps (car (nth (1- (car temp)) saved-theorems)))))))
-      (progn (shell-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '" 
+      (progn (verbose-command (concat "cat "(expand-file-name "names_temp.txt") " | sed -n '"
 						     (format "%s" (- (car temp) (length saved-theorems)))
-						  "p'")) 
+						  "p'"))
 			      (with-current-buffer "*Shell Command Output*"
 				(beginning-of-buffer)
 				(read (current-buffer))
@@ -470,20 +470,20 @@
 			'face (list 'link)
 			'follow-link t)
 	 ))
-  
+
 
 (defun insert-button-automaton-macro2 (l l2)
   (list 'lambda '(x)
 	(list 'generate-automaton2 l l2)))
 
-  
+
 
 (defun insert-button-automaton-macro (l)
   (list 'lambda '(x)
 	(list 'generate-automaton l)))
-;	(list 'progn 
+;	(list 'progn
 ;	      (list 'with-current-buffer '"*display*" (list 'split-window-vertically))
-;	      
+;
 ;	      (list 'image-dired-display-image (list 'concat home-dir "automaton/trace.png"))
 ;	      (list 'switch-to-buffer-other-window '"*image-dired-display-image*"))))
 
@@ -493,14 +493,14 @@
 ;			'face (list 'link)
 ;			'follow-link t)
 ;	 ))
-  
+
 
 (defun insert-button-automaton2-macro (l)
   (list 'lambda '(x)
 	(list 'generate-automaton-patches l)))
-;	(list 'progn 
+;	(list 'progn
 ;	      (list 'with-current-buffer '"*display*" (list 'split-window-vertically))
-;	      
+;
 ;	      (list 'image-dired-display-image (list 'concat home-dir "automaton/trace.png"))
 ;	      (list 'switch-to-buffer-other-window '"*image-dired-display-image*"))))
 
@@ -511,7 +511,7 @@
       (subseq str 0 (1- (length str)))
     str))
 
-      
+
 ;; This functions shows the cluster of a theorem
 
 
@@ -530,9 +530,9 @@
 			 ((eq 5 granularity-level-temp) 20)
 			 (t 3)))))
   (progn (setf signal 1)
-	 (shell-command  (concat "echo 0 > " (expand-file-name "available.txt")))
+	 (verbose-command  (concat "echo 0 > " (expand-file-name "available.txt")))
 	 (require 'comint)
-	 (comint-send-string (get-buffer-process "*matlab*") 
+	 (comint-send-string (get-buffer-process "*matlab*")
 			     (concat "load " (expand-file-name "temp.csv")
 				     (format "; %s(temp,%s,%s,'%s'); csvwrite('%s',1)\n" alg gra (1+ (length saved-theorems))
 					     (expand-file-name "matlab_res.txt") (expand-file-name "available.txt"))))
@@ -553,7 +553,7 @@
 			 ((eq 4 granularity-level-temp) 25)
 			 ((eq 5 granularity-level-temp) 50)
 			 (t 5)))))
-  (progn 
+  (progn
     (setq my-buffer "")
     (setf buf (current-buffer))
     (setf res (extract-info-up-to-here))
@@ -565,19 +565,19 @@
 	       (add-names)))
     (setf saved-theorems-libs (mapcar (lambda (x) (cadr x)) saved-theorems))
     (switch-to-buffer-other-window "*display*")
-    (cond ((string= ml-system "m") 
+    (cond ((string= ml-system "m")
 	   (progn (setf signal 1)
-		  (shell-command  (concat "echo 0 > " (expand-file-name "available.txt")))
+		  (verbose-command  (concat "echo 0 > " (expand-file-name "available.txt")))
 		  (require 'comint)
-		  (comint-send-string (get-buffer-process "*matlab*") 
+		  (comint-send-string (get-buffer-process "*matlab*")
 				      (concat "load " (expand-file-name "temp.csv")
 					      (format "; %s(temp,%s,%s,'%s'); csvwrite('%s',1)\n" alg gra (1+ (length saved-theorems))
 						      (expand-file-name "matlab_res.txt") (expand-file-name "available.txt"))))
 		  (print-similarities-matlab)
 		  ))
 
-	  ((string= ml-system "w") 
-	   (progn (setf signal 5) 
+	  ((string= ml-system "w")
+	   (progn (setf signal 5)
 		  (weka (cond  ((eq 2 granularity-level) (floor (size-temp)  7))
 			       ((eq 3 granularity-level) (floor (size-temp) 5))
 			       ((eq 4 granularity-level) (floor (size-temp)  4))
@@ -606,15 +606,15 @@
 	 (freq (cond  ((eq 2 frequency-precision) 500)
 		      ((eq 3 frequency-precision) 1000)
 		      (t 100))))
-    
-  (progn 
+
+  (progn
     (setf signal 2)
     (setf my-buffer "")
     (setf buf (current-buffer))
     (progn (with-temp-file (expand-file-name "temp1.csv") (insert (extract-features-1)))
 		  (switch-to-buffer-other-window "*display*")
 		  (require 'comint)
-		  (comint-send-string (get-buffer-process "*matlab*") 
+		  (comint-send-string (get-buffer-process "*matlab*")
 				      (concat "load " (expand-file-name "temp1.csv") (format "; %s(temp1,%s,%s)\n" alg gra freq))))
     )))
 
@@ -633,8 +633,8 @@
 	 (freq (cond  ((eq 2 frequency-precision) 500)
 		      ((eq 3 frequency-precision) 1000)
 		      (t 100))))
-    
-  (progn 
+
+  (progn
     (setf signal 4)
     (setf my-buffer "")
     (if libs-menus
@@ -646,16 +646,16 @@
       (with-temp-file (expand-file-name "temp.csv") (insert (extract-features-1))))
     (setf saved-theorems-libs (mapcar (lambda (x) (cadr x)) saved-theorems))
     (switch-to-buffer-other-window "*display*")
-    (cond ((string= ml-system "m") 
+    (cond ((string= ml-system "m")
 	   (progn
-	     (shell-command  (concat "echo 0 > " (expand-file-name "available.txt")))
+	     (verbose-command  (concat "echo 0 > " (expand-file-name "available.txt")))
 	     (require 'comint)
-	     (comint-send-string (get-buffer-process "*matlab*") 
+	     (comint-send-string (get-buffer-process "*matlab*")
 				 (concat "load " (expand-file-name "temp.csv") (format "; %s(temp,%s,%s,'%s'); csvwrite('%s',1)\n" alg gra freq
 											     (expand-file-name "matlab_res.txt") (expand-file-name "available.txt"))))
 		  (print-clusters-matlab)))
-	  ((string= ml-system "w") 
-	   (progn (setf signal 5) 
+	  ((string= ml-system "w")
+	   (progn (setf signal 5)
 		  (weka (cond  ((eq 2 granularity-level) (floor (size-temp)  7))
 			       ((eq 3 granularity-level) (floor (size-temp) 5))
 			       ((eq 4 granularity-level) (floor (size-temp)  4))
@@ -668,14 +668,14 @@
 			       ((eq 5 granularity-level) (floor (size-temp) 2))
 			       (t (floor (size-temp) 8)))))
 	   )
-      
+
     )))
   (proof-shell-invisible-cmd-get-result (format "Unset Printing All"))
 )
 
 
 (defun size-temp ()
-  (shell-command  (concat "wc -l " (expand-file-name "temp.csv")))
+  (verbose-command  (concat "wc -l " (expand-file-name "temp.csv")))
   (let ((n nil)
 	(i 0))
   (with-current-buffer "*Shell Command Output*"
@@ -693,7 +693,7 @@
 
 (defun add-to-saved-theorems-libs (file)
   (let* ((lines (read-lines file))
-	(res (mapcar (lambda (x) (mapcar (lambda (y) (car (read-from-string y))) 
+	(res (mapcar (lambda (x) (mapcar (lambda (y) (car (read-from-string y)))
 				(cluster-string-to-list x)))
 	    lines)))
     (setf saved-theorems-libs (append saved-theorems-libs res))))
@@ -704,27 +704,27 @@
 (defun add-libraries ()
   (do ((temp libs-menus (cdr temp)))
       ((endp temp) nil)
-      (cond ((string= level "g") (progn 
-					(shell-command  (concat "cat " home-dir "libs/coq/" (car temp) ".csv >> " (expand-file-name "temp1.csv")))
+      (cond ((string= level "g") (progn
+					(verbose-command  (concat "cat " home-dir "libs/coq/" (car temp) ".csv >> " (expand-file-name "temp1.csv")))
 					(add-to-saved-theorems-libs (concat home-dir "libs/coq/" (car temp) ".csv"))))
-	    ((string= level "t") (shell-command  (concat "cat " home-dir "libs/coq/" (car temp) "_tactics.csv >> " (expand-file-name "temp1.csv"))))
-	    ((string= level "p") (shell-command  (concat "cat " home-dir "libs/coq/" (car temp) "_tree.csv >> " (expand-file-name "temp1.csv")))))))
+	    ((string= level "t") (verbose-command  (concat "cat " home-dir "libs/coq/" (car temp) "_tactics.csv >> " (expand-file-name "temp1.csv"))))
+	    ((string= level "p") (verbose-command  (concat "cat " home-dir "libs/coq/" (car temp) "_tree.csv >> " (expand-file-name "temp1.csv")))))))
 
 (defun add-libraries-temp ()
   (do ((temp libs-menus (cdr temp)))
       ((endp temp) nil)
-      (cond ((string= level "g") (progn 
-					(shell-command  (concat "cat " home-dir "libs/coq/" (car temp) ".csv >> " (expand-file-name "temp.csv")))
+      (cond ((string= level "g") (progn
+					(verbose-command  (concat "cat " home-dir "libs/coq/" (car temp) ".csv >> " (expand-file-name "temp.csv")))
 					(add-to-saved-theorems-libs (concat home-dir "libs/coq/" (car temp) ".csv"))))
-	    ((string= level "t") (shell-command  (concat "cat " home-dir "libs/coq/" (car temp) "_tactics.csv >> " (expand-file-name "temp.csv"))))
-	    ((string= level "p") (shell-command  (concat "cat " home-dir "libs/coq/" (car temp) "_tree.csv >> " (expand-file-name "temp.csv")))))))
+	    ((string= level "t") (verbose-command  (concat "cat " home-dir "libs/coq/" (car temp) "_tactics.csv >> " (expand-file-name "temp.csv"))))
+	    ((string= level "p") (verbose-command  (concat "cat " home-dir "libs/coq/" (car temp) "_tree.csv >> " (expand-file-name "temp.csv")))))))
 
 (defun add-names ()
-  (shell-command (concat "rm " (expand-file-name "names_temp.txt")))
-  (shell-command (concat "touch " (expand-file-name "names_temp.txt")))
+  (verbose-command (concat "rm " (expand-file-name "names_temp.txt")))
+  (verbose-command (concat "touch " (expand-file-name "names_temp.txt")))
   (do ((temp libs-menus (cdr temp)))
       ((endp temp) nil)
-      (shell-command  (concat "cat " home-dir "libs/coq/" (car temp) "_names >> " (expand-file-name "names_temp.txt")))))
+      (verbose-command  (concat "cat " home-dir "libs/coq/" (car temp) "_names >> " (expand-file-name "names_temp.txt")))))
 
 
 
@@ -745,7 +745,7 @@
        (temp-freq freq1 (cdr temp-freq))
        (i 1 (1+ i)))
       ((endp temp) (insert (format "------------------------------------------------------------------------------------------------------------\n")))
-    (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq))) 
+    (progn (insert (format "Cluster %s with frequency %s%%\n" i (car temp-freq)))
     (do ((temp2 (car temp) (cdr temp2)))
 	((endp temp2) (insert (format "\n")))
       (insert (format "Lemma %s\n"
@@ -775,7 +775,7 @@ nil
   (interactive)
   (setf buf (current-buffer))
   (setf granularity-dynamic (read-string "Introduce the granularity level (values from 1 to 5): "))
-  (progn 
+  (progn
     (setf signal 3)
     (setf my-buffer "")
     (with-temp-file (expand-file-name "temp.csv") (insert (extract-features-dynamic)))
@@ -792,12 +792,12 @@ nil
 	  ((string= "5" granularity-dynamic)
 	   (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,20,100)\n")))
 	  (t (show-clusters-dynamic)))
-    
+
   ))
 
 (defun show-clusters-dynamic-b ()
   (interactive)
-  (progn 
+  (progn
     (setf signal 3)
     (setf buf (current-buffer))
     (setf my-buffer "")
@@ -815,6 +815,6 @@ nil
 	   (comint-send-string (get-buffer-process "*matlab*") (concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,20,100)\n")))
 	  (t (show-clusters-dynamic)))
     ;(comint-send-string (get-buffer-process "*matlab*")
-;			(concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp," 
-;				(format "%s" (floor (length (extract-list-without-strings saved-theorems2)) 5) ) ",100)\n"))   
+;			(concat "load " (expand-file-name "temp.csv") "; kmeans_clusters_and_frequencies(temp,"
+;				(format "%s" (floor (length (extract-list-without-strings saved-theorems2)) 5) ) ",100)\n"))
   ))

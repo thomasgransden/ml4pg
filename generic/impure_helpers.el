@@ -3,7 +3,7 @@
 
 (defun process-with-cmd (cmd stdin &optional handler &rest args)
   "Run command CMD, with string STDIN as its stdin. ARGS can contain additional
-   arguments for CMD. Returns the stdout as a string. If the exist code is
+   arguments for CMD. Returns the stdout as a string. If the exit code is
    nonzero, it will be passed to HANDLER. If HANDLER is nil, an error occurs."
   (with-temp-buffer
     (insert stdin)
@@ -106,3 +106,9 @@
   ;; FIXME: Won't work for names like "MyLemma"
   (re-search-backward coq-declaration-re)  ;; Move to start
   (proof-goto-point))
+
+(defun verbose-command (cmd)
+  (message "Running command: %s" cmd)
+  (let ((result (shell-command cmd)))
+    (message "Finished running: %s" cmd)
+    result))

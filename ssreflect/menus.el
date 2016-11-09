@@ -1,8 +1,8 @@
 ;;; The menu interaction
 
 (easy-menu-define statistics-menu global-map "Statistics"
-  '("Statistics" 
-    ("Configuration" 
+  '("Statistics"
+    ("Configuration"
      ("ML system"
        ["Weka" (change-ml-system "w")
 	:selected (string= ml-system "w")
@@ -67,43 +67,43 @@
 
 (easy-menu-remove-item global-map '("menu-bar") "Statistics")
 
-(easy-menu-add-item nil nil statistics-menu "help-menu") 
+(easy-menu-add-item nil nil statistics-menu "help-menu")
 
 (defun activate-icons ()
   (interactive)
-  (progn 
+  (progn
     (easy-menu-remove-item nil '("Statistics") "Activate Icons")
     (define-key coq-mode-map [tool-bar statistical-hint-statements]
       (list 'menu-item "Similar Theorems" 'show-similarities-statement
 		  :help "Similar Theorems"
-		  :image (list 'image :type 'xpm 
+		  :image (list 'image :type 'xpm
 				:file (concat home-dir "icons/sh-hint-thm.xpm"))))
     (define-key coq-mode-map [tool-bar clustering-statements]
       (list 'menu-item "Clustering Statements" 'cluster-statements
 		  :help "Clustering Statements"
-		  :image (list 'image :type 'xpm 
+		  :image (list 'image :type 'xpm
 				:file (concat home-dir "icons/clustering-thms.xpm"))))
     (define-key coq-mode-map [tool-bar statistical-hint-defs]
       (list 'menu-item "Similar Definitions" 'show-similarities-last-def
 		  :help "Similar Definitions"
-		  :image (list 'image :type 'xpm 
+		  :image (list 'image :type 'xpm
 				:file (concat home-dir "icons/sh-hint-def.xpm"))))
     (define-key coq-mode-map [tool-bar clustering-defs]
       (list 'menu-item "Clustering Definitions" 'cluster-definitions
 		  :help "Clustering Definitions"
-		  :image (list 'image :type 'xpm 
+		  :image (list 'image :type 'xpm
 				:file (concat home-dir "icons/clustering-defs.xpm"))))
     (define-key coq-mode-map [tool-bar statistical-hint]
       (list 'menu-item "Statistical Hint" 'show-clusters-of-theorem
 		  :help "Statistical Hint"
-		  :image (list 'image :type 'xpm 
+		  :image (list 'image :type 'xpm
 				:file (concat home-dir "icons/sh-hint.xpm"))))
     (define-key coq-mode-map [tool-bar clustering]
       (list 'menu-item "Clustering" 'show-clusters-bis
 		  :help "Clustering"
-		  :image (list 'image :type 'xpm 
+		  :image (list 'image :type 'xpm
 				:file (concat home-dir "icons/clustering.xpm"))))
-    
+
     ))
 
 
@@ -129,7 +129,7 @@
 	 (setq iterative nil)
 	 ))
   )
-  
+
 (defun change-granularity (n)
   (setq granularity-level n))
 
@@ -142,22 +142,22 @@
 (defun change-save ()
   (setq save-automatically (not save-automatically)))
 
-      
-;(easy-menu-add-item nil '("Statistics") statistics-menu "help-menu") 
+
+;(easy-menu-add-item nil '("Statistics") statistics-menu "help-menu")
 
 (defun change-algorithm-interactive ()
   (interactive)
-  (let ((alg (read-string 
+  (let ((alg (read-string
 	      "What algorithm do you want to use (k-means -> k, Gaussian -> g): ")))
-    (setf algorithm (cond ((string= "g" alg) "g") 
+    (setf algorithm (cond ((string= "g" alg) "g")
 			  ((string= "k" alg) "k")
 			  (t algorithm)))))
 
 (defun change-granularity-interactive ()
   (interactive)
-  (let ((alg (read-string 
+  (let ((alg (read-string
 	      "Introduce the granularity level (values from 1 to 5): ")))
-    (setf granularity-level (cond ((string= "1" alg) 1) 
+    (setf granularity-level (cond ((string= "1" alg) 1)
 				  ((string= "2" alg) 2)
 				  ((string= "3" alg) 3)
 				  ((string= "4" alg) 4)
@@ -166,18 +166,18 @@
 
 (defun change-frequency-interactive ()
   (interactive)
-  (let ((alg (read-string 
+  (let ((alg (read-string
  "Introduce the precision of the frequencies that you want to obtain (values from 1 to 3): ")))
-    (setf frequency-precision (cond ((string= "1" alg) 1) 
+    (setf frequency-precision (cond ((string= "1" alg) 1)
 				  ((string= "2" alg) 2)
 				  ((string= "3" alg) 3)
 				  (t frequency-precision)))))
 
 (defun change-iterative-interactive ()
   (interactive)
-  (let ((alg (read-string 
+  (let ((alg (read-string
  "Do you want to perform iterative search? (yes -> y, no -> n): ")))
-    (setf iterative (cond ((string= "y" alg) 1) 
+    (setf iterative (cond ((string= "y" alg) 1)
 			  ((string= "n" alg) 2)
 			  (t iterative)))))
 
@@ -186,7 +186,7 @@
 (defun exported-libraries ()
   (interactive)
   (easy-menu-remove-item nil '("Statistics") "Show cluster libraries")
-  (easy-menu-add-item nil '("Statistics") 
+  (easy-menu-add-item nil '("Statistics")
 		      (cons "Available libraries for clustering:"
 			   (cons ["Current" nil
 			    :selected t
@@ -212,13 +212,13 @@
 (defvar libs nil)
 
 (defun available-libraries ()
-  (shell-command  (concat "ls " home-dir "libs/ssreflect | grep .csv | wc -l"))
+  (verbose-command  (concat "ls " home-dir "libs/ssreflect | grep .csv | wc -l"))
   (let ((n nil)
 	(i 0))
   (with-current-buffer "*Shell Command Output*"
     (beginning-of-buffer)
     (setq n (string-to-number (format "%s"  (read (current-buffer))))))
-  (shell-command  (concat "ls " home-dir "libs/ssreflect | grep .csv"))
+  (verbose-command  (concat "ls " home-dir "libs/ssreflect | grep .csv"))
   (with-current-buffer "*Shell Command Output*"
     (progn (beginning-of-buffer)
 	   (while (< i n)
@@ -231,13 +231,13 @@
 (defvar dirs nil)
 
 (defun available-dirs ()
-  (shell-command  (concat "ls -d " home-dir "libs/ssreflect/*/ | wc -l"))
+  (verbose-command  (concat "ls -d " home-dir "libs/ssreflect/*/ | wc -l"))
   (let ((n nil)
 	(i 0))
   (with-current-buffer "*Shell Command Output*"
     (beginning-of-buffer)
     (setq n (string-to-number (format "%s"  (read (current-buffer))))))
-  (shell-command  (concat "ls -d " home-dir "libs/ssreflect/*/"))
+  (verbose-command  (concat "ls -d " home-dir "libs/ssreflect/*/"))
   (with-current-buffer "*Shell Command Output*"
     (progn (beginning-of-buffer)
 	   (while (< i n)
@@ -254,18 +254,18 @@
        (temp2 nil))
       ((endp temp) temp2)
       (setf temp2 (append temp2 (list (append (list (car temp)) (libraries-dir (car temp))))))))
-      
+
 
 
 (defun libraries-dir (dir)
-  (shell-command  (concat "ls " home-dir "libs/ssreflect/" dir "/ | grep _names | wc -l"))
+  (verbose-command  (concat "ls " home-dir "libs/ssreflect/" dir "/ | grep _names | wc -l"))
   (let ((n nil)
 	(i 0)
 	(temp nil))
   (with-current-buffer "*Shell Command Output*"
     (beginning-of-buffer)
     (setq n (string-to-number (format "%s"  (read (current-buffer))))))
-  (shell-command  (concat "ls " home-dir "libs/ssreflect/" dir "/ | grep _names"))
+  (verbose-command  (concat "ls " home-dir "libs/ssreflect/" dir "/ | grep _names"))
   (with-current-buffer "*Shell Command Output*"
     (progn (beginning-of-buffer)
 	   (while (< i n)
@@ -279,13 +279,13 @@
 
 
 (defun menu-library-dir (item dir)
-  (vector item (list 'change-library (concat dir "/" item)) 
+  (vector item (list 'change-library (concat dir "/" item))
     :selected (list 'string-member (concat dir "/" item) 'libs-menus)
     :style 'toggle
     :help (format "Use the %s library for clustering" item)))
 
 (defun menu-library (item)
-  (vector item (list 'change-library item) 
+  (vector item (list 'change-library item)
     :selected (list 'string-member item 'libs-menus)
     :style 'toggle
     :help (format "Use the %s library for clustering" item)))
@@ -314,15 +314,3 @@
       ((endp temp) (setf libs-menus temp2))
       (if (not (string= string (car temp)))
 	  (setf temp2 (append temp2 (list (car temp)))))))
-
-
-
-
-  
-
-
-	  
-
-
-
-

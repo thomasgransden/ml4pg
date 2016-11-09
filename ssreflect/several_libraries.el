@@ -18,4 +18,4 @@
 
 
 
-(shell-command  (concat "ls " home-dir "libs/ssreflect | grep .csv"))
+(verbose-command  (concat "ls " home-dir "libs/ssreflect | grep .csv"))

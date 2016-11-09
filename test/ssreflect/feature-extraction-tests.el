@@ -276,17 +276,6 @@
       (message "INPUT: %S" str)
       (message "OUTPUT: " (transform-match str)))))
 
-(test-with add-parentheses-match0
-  "Test behaviour of add-parentheses-match0"
-  (list-of (gen-string-without "|"))
-  (lambda (str)
-    (let ((result (add-parentheses-match0 str)))
-      (test-msg (format "BEFORE: %S" str))
-      (test-msg (format "AFTER: %S" result))
-      (should (equal "(" (subseq                 result  0 1)))
-      (should (equal ")" (subseq (string/reverse result) 0 1)))
-      (should-not (search ">" result)))))
-
 (test-with take-30
   "Test we can take 30 elements from a list"
   (list-of (gen-list (gen-string)))

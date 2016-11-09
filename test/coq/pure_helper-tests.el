@@ -8,52 +8,6 @@
     (should (equal (flatten '((1 2) (((3) 4 (5 (6 7))) 8) 9))
                    '(1 2 3 4 5 6 7 8 9)))))
 
-(test-with first-dot
-  "Test looking for '.' in strings"
-  (list-of (gen-string-without ".")
-           (gen-string))
-  (lambda (start end)
-    (should (equal (first-dot (concat start "." end))
-                   (length start)))))
-
-(test-with pos-to-dot
-  "Test chopping up to dots"
-  (lambda ()
-    (let ((prefix (funcall (gen-nonempty-string)))
-          (middle (funcall (gen-string-without ".")))
-          (suffix (funcall (gen-nonempty-string))))
-      (list (concat prefix middle "." suffix) middle (length prefix))))
-  (lambda (str middle n)
-    (should (equal (pos-to-dot str n) middle))))
-
-(test-with first-space
-  "Check we can find the first space in a string"
-  (list-of (gen-string-without " ")
-           (gen-nonempty-string))
-  (lambda (s1 s2)
-    (should (equal (first-space (concat s1 " " s2)) (length s1)))))
-
-(test-with str-between
-  "Test extracting strings"
-  (lambda ()
-    (let* ((start  (funcall (gen-nonempty-string)))
-           (end    (funcall (gen-nonempty-string)))
-           (prefix (funcall (gen-string-without start)))
-           (middle (funcall (gen-string-without end)))
-           (suffix (funcall (gen-nonempty-string))))
-      (list start end middle (concat prefix start middle end suffix))))
-  (lambda (start end desired str)
-    (should (equal (str-between str start end) desired))))
-
-(test-with str-up-to
-  "Test extracting prefixes of strings"
-  (lambda ()
-    (let* ((end    (funcall (gen-nonempty-string)))
-           (prefix (funcall (gen-string-without end))))
-      (list (concat prefix end (funcall (gen-string))) end prefix)))
-  (lambda (str end prefix)
-    (should (equal (str-up-to str end) prefix))))
-
 ;; These tests are pretty similar, so they share a generator
 (let ((generator (lambda ()
                    (let* ((sep      (funcall (gen-any (gen-nonempty-string)
@@ -112,21 +66,6 @@
     (should (equal (length thm) n))
     (should (equal (find-max-length (cons thm thms)) n))))
 
-(test-with replace-nth
-  "Test substituting elements in lists"
-  (lambda ()
-    (let* ((prefix  (funcall (gen-list (gen-num))))
-           (suffix  (funcall (gen-list (gen-num))))
-           (pre     (funcall (gen-num)))
-           (post    (funcall (gen-num))))
-      (list (append prefix (list pre) suffix)
-            (length prefix)
-            post
-            (append prefix (list post) suffix))))
-  (lambda (before n elem after)
-    (should (equal (replace-nth before n elem)
-                   after))))
-
 (test-with any-which-none
   "Check if any element of a list passes a test"
   (compose (lambda (args) (list (funcall (list-of (car args)))
@@ -152,70 +91,8 @@
     (let ((result (remove-whitespace str)))
       (should-not (search " "  result))
       (should-not (search "\n" result))
-      (should-not (search nl   result))
       (should-not (search "\t" result))
       (should-not (search "\r" result)))))
-
-(test-with string/reverse-ends
-  "String reversal swaps the start and end"
-  (list-of (gen-nonempty-string))
-  (lambda (str)
-    (should (equal (subseq (string/reverse str) 0 (1- (length str)))
-                   (string/reverse (subseq str 1))))))
-
-(test-with string/reverse-length
-  "String reversal preserves length"
-  (list-of (gen-string))
-  (lambda (str)
-    (should (equal (length str) (length (string/reverse str))))))
-
-(test-with string/reverse-inverse
-  "String reversal is its own inverse"
-  (list-of (gen-string))
-  (lambda (str)
-    (should (equal str (string/reverse (string/reverse str))))))
-
-(test-with match-at-end-reflexive
-  "Strings match themselves"
-  (list-of (gen-string))
-  (lambda (str)
-    (should (match-at-end str str))))
-
-(test-with match-at-end-concat
-  "Concat yields a match"
-  (list-of (gen-string) (gen-string))
-  (lambda (str1 str2)
-    (should (match-at-end (concat str1 str2) str2))))
-
-(test-with match-at-end-too-short
-  "Can't get a match if it doesn't fit"
-  (compose (lambda (strs)
-             (let* ((str1 (car  strs))
-                    (str2 (cadr strs))
-                    ;; Ensure one string is shorter than the other
-                    (trimmed (if (= (length str1) (length str2))
-                                 (subseq str2 1)
-                               str2)))
-               ;; Return the longest then the shortest
-               (if (> (length str1) (length trimmed))
-                   (list str1    trimmed)
-                   (list trimmed str1))))
-           (list-of (gen-nonempty-string) (gen-nonempty-string)))
-  (lambda (big small)
-    (should (> (length big) (length small)))
-    (should-not (match-at-end small big))))
-
-(test-with strip-trailing
-  "Test stripping trailing strings"
-  (list-of (gen-string) (gen-list (gen-nonempty-string)))
-  (lambda (str strs)
-    (let* ((result (apply 'strip-trailing (cons str strs)))
-           (lenr   (length result)))
-      (dolist (end strs)
-        (let ((lene (length end)))
-          (if (> lenr lene)
-              (should-not (equal end (subseq result (- lenr lene))))
-              (should-not (equal end result))))))))
 
 (test-with can-strip-control-chars
   "Strip control characters from strings"
