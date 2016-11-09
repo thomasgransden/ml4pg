@@ -8,15 +8,6 @@
     (should (equal (flatten '((1 2) (((3) 4 (5 (6 7))) 8) 9))
                    '(1 2 3 4 5 6 7 8 9)))))
 
-(test-with between-spaces
-  "Test between-spaces, for extracting Coq names"
-  (gen-list (gen-nonempty-string) (lambda () (+ 3 (funcall (gen-num)))))
-  (lambda (&rest in-strs)
-    (let* ((str  (mapconcat 'identity in-strs " "))
-           (strs (string-split str " ")))
-      (should (equal (between-spaces "foo bar baz") "bar"))
-      (should (equal (between-spaces str) (nth 1 strs))))))
-
 (test-with first-dot
   "Test looking for '.' in strings"
   (list-of (gen-string-without ".")
@@ -241,18 +232,6 @@
       (unless (member char control-chars)
         (should (search (string char)
                         (strip-control-chars str)))))))
-
-(test-with between-spaces-equiv
-  "Test whether a particular use of search is equivalent to between-spaces"
-  (list-of (gen-string) (gen-string) (gen-string))
-  (lambda (str1 str2 str3)
-    (let* ((str     (concat str1 " " str2 " " str3))
-           (between (between-spaces str))
-           (bit1    (search " " str))
-           (bit2    (1+ (or bit1 0)))
-           (bit3    (search " " str :start2 bit2))
-           (substr  (subseq str bit2 bit3)))
-      (should (equal substr between)))))
 
 (test-with bump-to-above
   "Test bumping up numbers works"
