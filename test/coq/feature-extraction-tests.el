@@ -29,7 +29,7 @@
        `(lambda ()
           (let ((name ,this-name))
             (proof-to-def name)
-            (show-pos (format "RUNNING export-theorem '%s'" name))
+            (message "RUNNING export-theorem '%s'" name)
             (export-theorem)
             (test-msg (format "VARIABLES: %S"
                               (list 'tdl1         tdl1

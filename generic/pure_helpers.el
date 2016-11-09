@@ -28,7 +28,10 @@
   (apply 'f-and lst))
 
 (defun any-which (lst p)
-  (apply 'or (mapcar p lst)))
+  (let (result)
+    (dolist (elem lst result)
+      (unless result
+        (setf result (funcall p elem))))))
 
 (defun string-split (str sep)
   (split-string str (regexp-quote sep)))
@@ -114,6 +117,14 @@
     (dolist (elem lst result)
       (when (funcall pred elem)
         (append-to result elem)))))
+
+(defun drop-n (n lst)
+  (if (<= n 0)
+      lst
+      (drop-n (- n 1)
+              (if lst
+                  (cdr lst)
+                  nil))))
 
 (defun elems-lesseq-than (x lst)
   (filter-list `(lambda (elem) (<= elem x)) lst))
