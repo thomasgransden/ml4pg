@@ -680,7 +680,7 @@
 
 (defvar useless-terms '("Structure" "Section" "Add Ring" "Hypothesis" "Hypotheses" "Include" "Export" "Parameter" "Axiom" 
 "End" "Notation" "Hint" "Inductive" "Variable" "Implicit" "Import" "Canonical" "Coercion" "Next" "Local" "Set" "Instance"
-"Module" "Ltac" "Let" "Opaque" "Bind" "Scope" "Require" "Infix" "Record" "Fact" "Print" "Arguments" "Function"))
+"Module" "Ltac" "Let" "Opaque" "Bind" "Scope" "Require" "Infix" "Record" "Fact" "Print" "Arguments" "Function" "End" "Scheme"))
 
 (defvar problematic-lemmas '("exists T; auto." "assert (Mem.perm m1 b i Max Nonempty)." "assert (UNCHANGED:" "destruct idg as"
 			     "eapply T.lub_right; eauto." "eapply T.glb_right; eauto." "+ subst e'; simpl in *." "eapply T.glb_left; eauto. "))
